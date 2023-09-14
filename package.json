@@ -1,0 +1,35 @@
+{
+  "name": "@scom/scom-liquidity-provider",
+  "author": "",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "plugin": "dist",
+  "pluginTypes": "pluginTypes/index.d.ts",
+  "types": "pluginTypes/index.d.ts",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "rm -rf dist && npx @ijstech/compiler",
+    "test": "cd test && npm run test && cd .."
+  },
+  "dependencies": {
+    "@ijstech/components": "^0.1.47",
+    "@ijstech/eth-contract": "^0.1.14",
+    "@ijstech/eth-wallet": "^0.1.52",
+    "@scom/scom-dapp-container": "^0.1.2",
+    "@scom/scom-network-list": "^0.1.0",
+    "@scom/scom-token-list": "^0.1.8",
+    "@scom/scom-token-input": "^0.1.1",
+    "@scom/scom-network-picker": "^0.1.1",
+    "@scom/scom-wallet-modal": "^0.1.0",
+    "@scom/scom-tx-status-modal": "^0.1.0",
+    "@scom/oswap-openswap-contract": "^0.1.0",
+    "@scom/oswap-chainlink-contract": "^0.1.0",
+    "@scom/oswap-oracle-adaptor-contract": "^0.1.0"
+  },
+  "devDependencies": {
+    "@ijstech/cli": "^0.1.28",
+    "@ijstech/compiler": "^0.1.22"
+  }
+}
