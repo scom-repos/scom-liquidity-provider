@@ -1,3 +1,6 @@
+import ScomNetworkPicker from "@scom/scom-network-picker";
+import ScomTokenInput from "@scom/scom-token-input";
+
 const theme = {
     type: 'object',
     properties: {
@@ -7,11 +10,6 @@ const theme = {
         },
         fontColor: {
             type: 'string',
-            format: 'color'
-        },
-        textSecondary: {
-            type: 'string',
-            title: 'Campaign Font Color',
             format: 'color'
         },
         inputBackgroundColor: {
@@ -93,44 +91,81 @@ export default {
                 ]
             }
         ]
-    }
-}
-
-export function getProjectOwnerSchema() {
-    return {
-        dataSchema: {
-            type: 'object',
-            properties: {
-                chainId: {
-                    type: 'number',
-                    required: true
+    },
+    customControls(rpcWalletId: string) {
+        let networkPicker: ScomNetworkPicker;
+        let firstTokenInput: ScomTokenInput;
+        let secondTokenInput: ScomTokenInput;
+        return {
+            "#/properties/chainId": {
+                render: () => {
+                    networkPicker = new ScomNetworkPicker(undefined, {
+                        type: 'combobox',
+                        networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v } }),
+                        onCustomNetworkSelected: () => {
+                            const chainId = networkPicker.selectedNetwork?.chainId;
+                            firstTokenInput.chainId = chainId;
+                            secondTokenInput.chainId = chainId;
+                        }
+                    });
+                    return networkPicker;
                 },
-                tokenIn: {
-                    type: 'string',
-                    required: true
+                getData: (control: ScomNetworkPicker) => {
+                    return control.selectedNetwork?.chainId;
                 },
-                tokenOut: {
-                    type: 'string',
-                    required: true
+                setData: (control: ScomNetworkPicker, value: number) => {
+                    control.setNetworkByChainId(value);
+                    if (firstTokenInput) firstTokenInput.chainId = value;
+                    if (secondTokenInput) secondTokenInput.chainId = value;
+                }
+            },
+            "#/properties/tokenIn": {
+                render: () => {
+                    firstTokenInput = new ScomTokenInput(undefined, {
+                        type: 'combobox',
+                        isBalanceShown: false,
+                        isBtnMaxShown: false,
+                        isInputShown: false,
+                        maxWidth: 300
+                    });
+                    firstTokenInput.rpcWalletId = rpcWalletId;
+                    const chainId = networkPicker?.selectedNetwork?.chainId;
+                    if (chainId && firstTokenInput.chainId !== chainId) {
+                        firstTokenInput.chainId = chainId;
+                    }
+                    return firstTokenInput;
+                },
+                getData: (control: ScomTokenInput) => {
+                    return control.token?.address || control.token?.symbol;
+                },
+                setData: (control: ScomTokenInput, value: string) => {
+                    control.address = value;
+                }
+            },
+            "#/properties/tokenOut": {
+                render: () => {
+                    secondTokenInput = new ScomTokenInput(undefined, {
+                        type: 'combobox',
+                        isBalanceShown: false,
+                        isBtnMaxShown: false,
+                        isInputShown: false,
+                        maxWidth: 300
+                    });
+                    secondTokenInput.rpcWalletId = rpcWalletId;
+                    const chainId = networkPicker?.selectedNetwork?.chainId;
+                    if (chainId && secondTokenInput.chainId !== chainId) {
+                        secondTokenInput.chainId = chainId;
+                    }
+                    return secondTokenInput;
+                },
+                getData: (control: ScomTokenInput) => {
+                    return control.token?.address || control.token?.symbol;
+                },
+                setData: (control: ScomTokenInput, value: string) => {
+                    control.address = value;
                 }
             }
-        },
-        uiSchema: {
-            type: 'VerticalLayout',
-            elements: [
-                {
-                    type: 'Control',
-                    scope: '#/properties/chainId'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/tokenIn'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/tokenOut'
-                }
-            ]
         }
+
     }
 }

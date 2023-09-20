@@ -1,20 +1,19 @@
-import { BigNumber, IERC20ApprovalAction, Wallet } from "@ijstech/eth-wallet";
+import { BigNumber, IERC20ApprovalAction } from "@ijstech/eth-wallet";
 import {
   limitDecimals,
   toWeiInv,
-  DefaultDateFormat
+  DefaultDateFormat,
+  IAllocation
 } from '../global/index';
 import {
-  getGroupQueuePairInfo as getQueuePairInfo,
+  getPairInfo,
   getToBeApprovedTokens,
-  getEstimatedAmountInUSD,
-  addLiquidityToGroupQueue,
+  addLiquidity,
   getQueueStakeToken,
   getLiquidityProviderAddress
 } from './API';
 import { State, getTokenDecimals } from '../store/index';
-import { application, IEventBus, moment } from '@ijstech/components';
-import { Contracts } from "@scom/oswap-openswap-contract";
+import { moment } from '@ijstech/components';
 import { ITokenObject, tokenStore } from "@scom/scom-token-list";
 
 export enum Stage {
@@ -33,14 +32,6 @@ export enum Stage {
   SUBMIT,
 }
 
-export enum Action {
-  JOIN = 'join',
-  ADD = 'add',
-  REMOVE = 'remove',
-  MOVE = 'move',
-  COLLECT = 'collect',
-}
-
 export enum OfferState {
   Everyone = 'Everyone',
   Whitelist = 'Whitelist Addresses'
@@ -49,15 +40,6 @@ export enum OfferState {
 export enum LockState {
   Locked = 'Locked',
   Unlocked = 'Unlocked'
-}
-
-export interface InputData {
-  fromTokenInputText: string,
-  offerPriceText: string,
-  startDateStr: string,
-  endDateStr: string,
-  switchLock: LockState,
-  addresses: any[]
 }
 
 let onApproving: any;
@@ -84,8 +66,6 @@ export class Model {
   private isFirstLoad = true;
   private pairCustomParams: any;
   private fromTokenInput = new BigNumber(0);
-  private estimatedAmountInUSD = new BigNumber(0);
-  private govTokenInput = new BigNumber(0);
   private fromTokenInputText = '';
   private offerPriceText = '';
   private offerTo = OfferState.Everyone;
@@ -95,10 +75,11 @@ export class Model {
   private startDate: any;
   private endDate: any;
   private switchLock = LockState.Unlocked;
-  private addresses: any[] = [];
+  private addresses: IAllocation[] = [];
 
   private approvalModelAction: IERC20ApprovalAction;
-  private $eventBus: IEventBus;
+  onShowTxStatus: (status: 'success' | 'warning' | 'error', content: string | Error) => void;
+  onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean, resetForm?: boolean) => void;
 
   private get fromTokenObject() {
     const tokenMap = tokenStore.getTokenMapByChainId(this.state.getChainId());
@@ -111,9 +92,6 @@ export class Model {
   private get fromTokenSymbol() {
     return this.fromTokenObject ? this.fromTokenObject.symbol : '';
   }
-  private get toTokenSymbol() {
-    return this.toTokenObject ? this.toTokenObject.symbol : '';
-  }
 
   private summaryData: any = {
     amount: '0',
@@ -122,7 +100,7 @@ export class Model {
     startDate: null,
     endDate: null,
     switchLock: '',
-    addresses: [] as any[],
+    addresses: [] as IAllocation[],
     reserve: '0',
     maxDur: 3600 * 24 * 180, // default 3 months
   }
@@ -137,7 +115,7 @@ export class Model {
 
   private get offerPriceInputValid(): boolean {
     return this.offerPriceText && new BigNumber(this.offerPriceText).gt(0);
-  };
+  }
 
   private get fromTokenBalanceExact() {
     const tokenBalances = tokenStore.tokenBalances || {};
@@ -147,15 +125,15 @@ export class Model {
   }
 
   private get govTokenBalanceExact() {
-    let StakeToken = getQueueStakeToken(this.state.getChainId());
-    if (!StakeToken) return new BigNumber(0);
+    let stakeToken = getQueueStakeToken(this.state.getChainId());
+    if (!stakeToken) return new BigNumber(0);
     const tokenBalances = tokenStore.tokenBalances || {};
-    return tokenBalances[StakeToken.address!]
-      ? new BigNumber(tokenBalances[StakeToken!.address!])
+    return tokenBalances[stakeToken.address!]
+      ? new BigNumber(tokenBalances[stakeToken!.address!])
       : new BigNumber(0);
   }
 
-  private get getJoinGroupQueueValidation() {
+  private get getJoinValidation() {
     switch (this.currentStage) {
       case Stage.SET_AMOUNT:
         return this.fromTokenInputValid;
@@ -172,7 +150,8 @@ export class Model {
   }
 
   private isProceedButtonDisabled = () => {
-    if (!this.getJoinGroupQueueValidation) return true;
+    if (!this.state.isRpcWalletConnected()) return false;
+    if (!this.getJoinValidation) return true;
     if ([Stage.NONE, Stage.WAITING_FOR_FIRST_TOKEN_APPROVAL, Stage.WAITING_FOR_GOV_TOKEN_APPROVAL].includes(this.currentStage)) {
       return true;
     }
@@ -180,8 +159,11 @@ export class Model {
   }
 
   private get proceedButtonText() {
-    const StakeToken = getQueueStakeToken(this.state.getChainId());
-    if (!StakeToken) return '';
+    if (!this.state.isRpcWalletConnected()) {
+      return 'Switch Network';
+    }
+    const stakeToken = getQueueStakeToken(this.state.getChainId());
+    if (!stakeToken) return '';
     if (this.fromTokenInput.gt(this.fromTokenBalanceExact)) {
       return `Insufficient ${this.fromTokenSymbol} balance`;
     }
@@ -192,7 +174,7 @@ export class Model {
       return 'Offer Price must be greater than 0';
     }
     if (new BigNumber(this.fee).gt(this.govTokenBalanceExact)) {
-      return `Insufficient ${StakeToken.symbol} balance`;
+      return `Insufficient ${stakeToken.symbol} balance`;
     }
     if (this.currentStage === Stage.FIRST_TOKEN_APPROVAL) {
       return `APPROVE ${this.fromTokenSymbol} (1/2)`;
@@ -210,11 +192,14 @@ export class Model {
       return `Submit`;
     }
     return `Submit`;
-  };
+  }
 
   private get nextButtonText() {
-    const StakeToken = getQueueStakeToken(this.state.getChainId());
-    if (!StakeToken) return '';
+    if (!this.state.isRpcWalletConnected()) {
+      return 'Switch Network';
+    }
+    const stakeToken = getQueueStakeToken(this.state.getChainId());
+    if (!stakeToken) return '';
     if (this.fromTokenInput.gt(this.fromTokenBalanceExact)) {
       return `Insufficient ${this.fromTokenSymbol} balance`;
     }
@@ -237,33 +222,33 @@ export class Model {
       }
     }
     if (new BigNumber(this.fee).gt(this.govTokenBalanceExact) && this.currentStage === Stage.SUBMIT) {
-      return `Insufficient ${StakeToken.symbol} balance`;
+      return `Insufficient ${stakeToken.symbol} balance`;
     }
     return `Next`;
-  };
+  }
 
   private get isFirstTokenApproved() {
     return this.currentStage >= Stage.GOV_TOKEN_APPROVAL;
-  };
+  }
 
   private get isGovTokenApproved() {
     return this.currentStage == Stage.SUBMIT;
-  };
+  }
 
   private get isWaitingForApproval() {
     return [Stage.WAITING_FOR_FIRST_TOKEN_APPROVAL, Stage.WAITING_FOR_GOV_TOKEN_APPROVAL].includes(this.currentStage);
-  };
+  }
 
   private get newAmount() {
     return this.fromTokenInput;
-  };
+  }
 
   private get listAddress() {
     const newAddresses = this.addresses || [];
     const oldAddresses = this.summaryData.addresses || [];
-    let list: any = [];
+    let list: IAllocation[] = [];
     for (const item of newAddresses.concat(oldAddresses)) {
-      if (!list.find((f: any) => f.address === item.address)) {
+      if (!list.find((f: IAllocation) => f.address === item.address)) {
         list.push(item);
       }
     }
@@ -272,12 +257,12 @@ export class Model {
 
   private get newTotalAddress() {
     return this.listAddress.length;
-  };
+  }
 
   private get newTotalAllocation() {
-    const totalAddress = this.listAddress.reduce((pv: any, cv: any) => pv + parseFloat(cv.allocation), 0);
+    const totalAddress = this.listAddress.reduce((pv: number, cv: any) => pv + parseFloat(cv.allocation), 0);
     return totalAddress;
-  };
+  }
 
   private setCurrentStage = (stage: Stage) => {
     this.currentStage = stage;
@@ -293,7 +278,6 @@ export class Model {
       toTokenObject: () => this.toTokenObject,
       fromTokenInput: () => this.fromTokenInput,
       fromTokenInputText: () => this.fromTokenInputText,
-      estimatedAmountInUSD: () => this.estimatedAmountInUSD,
       isProceedButtonDisabled: this.isProceedButtonDisabled,
       proceedButtonText: () => this.proceedButtonText,
       nextButtonText: () => this.nextButtonText,
@@ -329,10 +313,10 @@ export class Model {
       newTotalAllocation: () => this.newTotalAllocation,
       setSummaryData: (value: boolean) => this.setSummaryData({}, value),
     };
-  };
+  }
 
   private fetchData = async () => {
-    const response = await getQueuePairInfo(this.state, this.pairAddress, this.fromTokenAddress);
+    const response = await getPairInfo(this.state, this.pairAddress, this.fromTokenAddress);
     this.toTokenAddress = response.toTokenAddress || '';
     if (this.isFirstLoad) {
       this.isFirstLoad = false;
@@ -391,8 +375,8 @@ export class Model {
   }
 
   private proceed = async () => {
-    const StakeToken = getQueueStakeToken(this.state.getChainId());
-    if (!StakeToken) return;
+    const stakeToken = getQueueStakeToken(this.state.getChainId());
+    if (!stakeToken) return;
     if (this.currentStage === Stage.SET_AMOUNT) {
       this.currentStage = Stage.SET_OFFER_PRICE;
     } else if (this.currentStage === Stage.SET_OFFER_PRICE) {
@@ -413,23 +397,10 @@ export class Model {
     } else if (this.currentStage === Stage.FIRST_TOKEN_APPROVAL) {
       await this.approveToken(this.fromTokenObject);
     } else if (this.currentStage === Stage.GOV_TOKEN_APPROVAL) {
-      await this.approveToken(StakeToken);
+      await this.approveToken(stakeToken);
     } else if (this.currentStage === Stage.SUBMIT) {
       this.approvalModelAction.doPayAction();
     }
-  };
-
-  private get validateEmptyInput() {
-    const fromTokenInputCheck = this.fromTokenInput && this.fromTokenInput.gt(0);
-    const offerPriceCheck = this.offerPriceInputValid;
-    const startDateCheck = !!this.startDate;
-    const endDateCheck = !!this.endDate;
-    const stateCheck = !!this.switchLock;
-    const addressesCheck = this.addresses && this.addresses.length;
-    if (!fromTokenInputCheck || !offerPriceCheck || !startDateCheck || !endDateCheck || !stateCheck || !addressesCheck) {
-      return false;
-    }
-    return true;
   }
 
   private get fromTokenBalance() {
@@ -492,7 +463,7 @@ export class Model {
         break;
     }
     return arr;
-  };
+  }
 
   constructor(state: State, pairAddress: string, fromTokenAddress: string, offerIndex: number) {
     this.state = state;
@@ -500,9 +471,20 @@ export class Model {
     this.fromTokenAddress = fromTokenAddress;
     this.offerIndex = offerIndex;
     this.currentStage = Stage.SET_AMOUNT;
-    this.$eventBus = application.EventBus;
     tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
     this.initApprovalModelAction();
+  }
+
+  private showTxStatus(status: 'success' | 'warning' | 'error', content: string | Error) {
+    if (this.onShowTxStatus) {
+      this.onShowTxStatus(status, content);
+    }
+  }
+
+  private setSubmitBtnStatus(isLoading: boolean, isApproval?: boolean, resetForm?: boolean) {
+    if (this.onSubmitBtnStatus) {
+      this.onSubmitBtnStatus(isLoading, isApproval, resetForm);
+    }
   }
 
   async initApprovalModelAction() {
@@ -520,45 +502,32 @@ export class Model {
       onApproving: async (token: ITokenObject, receipt?: string) => {
         let waitingStage = this.currentStage === Stage.FIRST_TOKEN_APPROVAL ? Stage.WAITING_FOR_FIRST_TOKEN_APPROVAL : Stage.WAITING_FOR_GOV_TOKEN_APPROVAL;
         this.currentStage = waitingStage;
-        // this.$eventBus.dispatch(EventId.SetResultMessage, {
-        //   status: 'success',
-        //   txtHash: receipt,
-        // });
-        // this.$eventBus.dispatch(EventId.ShowResult);
+        this.showTxStatus('success', receipt);
+        this.setSubmitBtnStatus(true, true);
         if (onApproving)
           onApproving(token, receipt);
       },
       onApproved: async (token: ITokenObject) => {
         await this.getNextTokenApprovalStage();
+        this.setSubmitBtnStatus(false, true);
         if (onApproved)
           onApproved(token);
       },
       onApprovingError: async (token: ITokenObject, err: Error) => {
-        // this.$eventBus.dispatch(EventId.SetResultMessage, {
-        //   status: 'error',
-        //   content: err,
-        // });
-        // this.$eventBus.dispatch(EventId.ShowResult);
+        this.showTxStatus('error', err);
+        this.setSubmitBtnStatus(false, true);
       },
       onPaying: async (receipt?: string) => {
-        // setGroupQueueActionsStatus(this.actionKey, true, this.keyTab);
-        // this.$eventBus.dispatch(EventId.SetResultMessage, {
-        //   status: 'success',
-        //   txtHash: receipt,
-        //   customRedirect: { name: 'group-queue', params: { keyTab: this.keyTab } },
-        // });
-        // this.$eventBus.dispatch(EventId.ShowResult);
+        this.showTxStatus('success', receipt);
+        this.setSubmitBtnStatus(true);
       },
       onPaid: async (receipt?: any) => {
         tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
-        // setGroupQueueActionsStatus(this.actionKey, false, this.keyTab);
+        this.setSubmitBtnStatus(false, false, true);
       },
       onPayingError: async (err: Error) => {
-        // this.$eventBus.dispatch(EventId.SetResultMessage, {
-        //   status: 'error',
-        //   content: err,
-        // });
-        // this.$eventBus.dispatch(EventId.ShowResult);
+        this.showTxStatus('error', err);
+        this.setSubmitBtnStatus(false);
       }
     });
     this.state.approvalModel.spenderAddress = address;
@@ -569,22 +538,13 @@ export class Model {
     this.fromTokenInput = new BigNumber(this.fromTokenInputText);
     if (this.fromTokenInput.isNaN()) {
       this.fromTokenInput = new BigNumber(0);
-      this.estimatedAmountInUSD = new BigNumber(0);
-    } else {
-      this.fromTokenInputChange();
     }
-  };
+  }
 
   private setMaxBalanceToFromToken = () => {
     this.fromTokenInput = this.fromTokenBalanceExact;
     this.fromTokenInputText = this.fromTokenInput.toString();
-    this.fromTokenInputChange();
-  };
-
-  private fromTokenInputChange = async () => {
-    let amount = await getEstimatedAmountInUSD(this.state.getChainId(), this.fromTokenObject, this.fromTokenInput.toString());
-    this.estimatedAmountInUSD = new BigNumber(amount);
-  };
+  }
 
   private offerPriceInputTextChange = (value: string) => {
     this.offerPriceText = value;
@@ -607,7 +567,7 @@ export class Model {
     }
   }
 
-  private addressChange = (value: any) => {
+  private addressChange = (value: IAllocation[]) => {
     this.addresses = value;
   }
 
@@ -618,8 +578,8 @@ export class Model {
 
   private async getNextTokenApprovalStage() {
     const chainId = this.state.getChainId();
-    const StakeToken = getQueueStakeToken(chainId);
-    if (!StakeToken) return;
+    const stakeToken = getQueueStakeToken(chainId);
+    if (!stakeToken) return;
     const tokens: string[] = await getToBeApprovedTokens(
       chainId,
       this.fromTokenObject,
@@ -629,7 +589,7 @@ export class Model {
     if (tokens && tokens.length > 0) {
       if (tokens.includes(this.fromTokenAddress)) {
         this.currentStage = Stage.FIRST_TOKEN_APPROVAL;
-      } else if (tokens.includes(StakeToken.address!)) {
+      } else if (tokens.includes(stakeToken.address!)) {
         this.currentStage = Stage.GOV_TOKEN_APPROVAL;
       }
     } else {
@@ -638,25 +598,17 @@ export class Model {
   }
 
   private async approveToken(tokenObj: ITokenObject) {
-    // this.$eventBus.dispatch(EventId.SetResultMessage, {
-    //   status: 'warning',
-    //   content: `Approving ${tokenObj.symbol} allowance`
-    // });
-    // this.$eventBus.dispatch(EventId.ShowResult);
+    this.showTxStatus('warning', `Approving ${tokenObj.symbol} allowance`);
     const amount = this.currentStage === Stage.FIRST_TOKEN_APPROVAL ? this.fromTokenInput.toString() : this.fee.toString();
     this.approvalModelAction.doApproveAction(tokenObj, amount);
   }
 
   private async addLiquidityAction(endDate: number, deadline: number) {
-    // this.$eventBus.dispatch(EventId.SetResultMessage, {
-    //   status: 'warning',
-    //   content: '',
-    // });
+    this.showTxStatus('warning', '');
     const restrictedPrice = toWeiInv(this.offerPriceText).shiftedBy(-Number(18)).toFixed();
     const allowAll = this.offerTo === OfferState.Everyone;
-    const arrWhitelist = (allowAll || this.switchLock === LockState.Locked) ? [] : this.addresses as any;
-    // this.$eventBus.dispatch(EventId.ShowResult);
-    addLiquidityToGroupQueue(
+    const arrWhitelist = (allowAll || this.switchLock === LockState.Locked) ? [] : this.addresses;
+    addLiquidity(
       this.state.getChainId(),
       this.fromTokenObject,
       this.toTokenObject,

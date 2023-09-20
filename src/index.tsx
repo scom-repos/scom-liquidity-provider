@@ -1,4 +1,4 @@
-import { Module, Panel, Label, Container, ControlElement, application, customModule, customElements, Styles, IEventBus } from '@ijstech/components';
+import { Module, Panel, Label, Container, ControlElement, customModule, customElements } from '@ijstech/components';
 import { Constants, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
 import Assets from './assets';
 import {
@@ -12,12 +12,10 @@ import ScomDappContainer from '@scom/scom-dapp-container';
 import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 import { INetworkConfig } from '@scom/scom-network-picker';
-import formSchema, { getProjectOwnerSchema } from './formSchema';
-import { LiquidityForm, LiquiditySummary } from './detail/index';
-import { Model, getPair, isPairRegistered } from './liquidity-utils/index';
+import formSchema from './formSchema';
+import { LiquidityForm, LiquidityHelp, LiquiditySummary } from './detail/index';
+import { Model, Stage, getPair, isPairRegistered } from './liquidity-utils/index';
 import { ILiquidityProvider } from './global/index';
-
-const Theme = Styles.Theme.ThemeVars;
 
 interface ScomLiquidityProviderElement extends ControlElement, ILiquidityProvider {
 	lazyLoad?: boolean;
@@ -46,13 +44,13 @@ export default class ScomLiquidityProvider extends Module {
 
 	private detailForm: LiquidityForm;
 	private detailSummary: LiquiditySummary;
-	// private helpInfo: QueueHelp;
+	private detailHelp: LiquidityHelp;
 
 	private model: Model;
 	private modelState: any;
-	private $eventBus: IEventBus;
 	private panelLiquidity: Panel;
-	private lbConnectNetwork: Label;
+	private panelMsg: Panel;
+	private lbMsg: Label;
 
 	private rpcWalletEvents: IEventBusRegistry[] = [];
 
@@ -114,43 +112,15 @@ export default class ScomLiquidityProvider extends Module {
 					},
 					userInputDataSchema: formSchema.dataSchema,
 					userInputUISchema: formSchema.uiSchema,
-					// customControls: formSchema.customControls
+					customControls: formSchema.customControls(this.rpcWallet?.instanceId)
 				}
 			);
 		}
 		return actions;
 	}
 
-	private getProjectOwnerActions() {
-		const formSchema = getProjectOwnerSchema();
-		const actions: any[] = [
-			{
-				name: 'Settings',
-				userInputDataSchema: formSchema.dataSchema,
-				userInputUISchema: formSchema.uiSchema
-			}
-		];
-		return actions;
-	}
-
 	getConfigurators() {
 		return [
-			{
-				name: 'Project Owner Configurator',
-				target: 'Project Owners',
-				getProxySelectors: async (chainId: number) => {
-					return [];
-				},
-				getActions: () => {
-					return this.getProjectOwnerActions();
-				},
-				getData: this.getData.bind(this),
-				setData: async (data: any) => {
-					await this.setData(data);
-				},
-				getTag: this.getTag.bind(this),
-				setTag: this.setTag.bind(this)
-			},
 			{
 				name: 'Builder Configurator',
 				target: 'Builders',
@@ -237,7 +207,6 @@ export default class ScomLiquidityProvider extends Module {
 		const themeVar = this.dappContainer?.theme || 'light';
 		this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
 		this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
-		this.updateStyle('--text-secondary', this.tag[themeVar]?.textSecondary);
 		this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryColor);
 		this.updateStyle('--colors-secondary-contrast_text', this.tag[themeVar]?.secondaryFontColor);
 		this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
@@ -343,48 +312,69 @@ export default class ScomLiquidityProvider extends Module {
 	}
 
 	private fetchData = async () => {
-    try {
-      await this.modelState.fetchData();
-      this.detailSummary.fromTokenAddress = this.fromTokenAddress;
-      this.detailSummary.summaryData = this.modelState.summaryData();
-    } catch (err) {
-      console.log(err)
-    }
-  }
+		try {
+			this.model.getState()
+			await this.modelState.fetchData();
+			this.detailSummary.fromTokenAddress = this.fromTokenAddress;
+			this.detailSummary.summaryData = this.modelState.summaryData();
+		} catch (err) {
+			console.log(err)
+		}
+	}
 
 	private renderForm = async () => {
 		const chainId = this.state.getChainId();
 		const tokenMap = tokenStore.getTokenMapByChainId(chainId);
 		const tokenA = tokenMap[this.fromTokenAddress];
 		const tokenB = tokenMap[this.toTokenAddress];
-		const pairAddress = await getPair(this.state.getChainId(), tokenA, tokenB);
+		const pairAddress = await getPair(this.state, tokenA, tokenB);
 		this.model = new Model(this.state, pairAddress, this.fromTokenAddress, 0);
+		this.model.onShowTxStatus = (status, content) => {
+			this.showMessage(status, content);
+		}
+		this.model.onSubmitBtnStatus = (isLoading, isApproval, isResetForm) => {
+			this.detailForm.onSubmitBtnStatus(isLoading, isApproval);
+			if (isResetForm) {
+				this.initializeWidgetConfig();
+			}
+		}
 		this.modelState = this.model.getState();
 		this.detailForm.state = this.state;
 		this.detailSummary.state = this.state;
 		this.detailSummary.fetchData = this.fetchData.bind(this);
+		this.detailForm.updateHelpContent = () => {
+			this.detailHelp.adviceTexts = this.modelState.adviceTexts();
+		}
 		this.detailForm.updateSummary = async () => {
-      await this.modelState.setSummaryData(true);
-      this.detailSummary.summaryData = this.modelState.summaryData();
-    }
+			await this.modelState.setSummaryData(true);
+			this.detailSummary.summaryData = this.modelState.summaryData();
+		}
+		this.detailForm.onFieldChanged = (stage: Stage) => {
+			this.detailSummary.updateSummaryUI(stage);
+		}
+		this.detailForm.onFocusChanged = (stage: Stage) => {
+			this.detailSummary.onHighlight(stage);
+		}
+		this.detailHelp.adviceTexts = this.modelState.adviceTexts();
+
 		try {
-      await this.modelState.fetchData();
-      this.detailSummary.fromTokenAddress = this.fromTokenAddress;
-      this.detailSummary.summaryData = this.modelState.summaryData();
-      this.lbConnectNetwork.visible = false;
-      this.panelLiquidity.visible = true;
-    } catch (err) {
-      this.lbConnectNetwork.caption = 'Cannot fetch data!';
-      this.lbConnectNetwork.visible = true;
-      this.panelLiquidity.visible = false;
-      console.log(err)
-    }
-    this.detailForm.model = this.modelState;
+			await this.modelState.fetchData();
+			this.detailSummary.fromTokenAddress = this.fromTokenAddress;
+			this.detailSummary.summaryData = this.modelState.summaryData();
+			this.panelMsg.visible = false;
+			this.lbMsg.caption = '';
+			this.panelLiquidity.visible = true;
+		} catch (err) {
+			this.lbMsg.caption = 'Cannot fetch data!';
+			this.panelMsg.visible = true;
+			this.panelLiquidity.visible = false;
+		}
+		this.detailForm.model = this.modelState;
 	}
 
 	private renderEmpty = async (msg?: string) => {
-		this.lbConnectNetwork.caption = msg ?? (!isClientWalletConnected() ?  'Please connect with your wallet' : 'Invalid configurator data');
-		this.lbConnectNetwork.visible = true;
+		this.lbMsg.caption = msg ?? (!isClientWalletConnected() ? 'Please connect with your wallet' : 'Invalid configurator data');
+		this.panelMsg.visible = true;
 		this.panelLiquidity.visible = false;
 		if (this.loadingElm) {
 			this.loadingElm.visible = false;
@@ -411,22 +401,6 @@ export default class ScomLiquidityProvider extends Module {
 		}
 		this.txStatusModal.message = { ...params };
 		this.txStatusModal.showModal();
-	}
-
-	private connectWallet = async () => {
-		if (!isClientWalletConnected()) {
-			if (this.mdWallet) {
-				await application.loadPackage('@scom/scom-wallet-modal', '*');
-				this.mdWallet.networks = this.networks;
-				this.mdWallet.wallets = this.wallets;
-				this.mdWallet.showModal();
-			}
-			return;
-		}
-		if (!this.state.isRpcWalletConnected()) {
-			const clientWallet = Wallet.getClientInstance();
-			await clientWallet.switchNetwork(this.chainId);
-		}
 	}
 
 	private checkValidation = () => {
@@ -472,7 +446,12 @@ export default class ScomLiquidityProvider extends Module {
 										/>
 									</i-vstack>
 								</i-vstack>
-								<i-label id="lbConnectNetwork" visible={false} caption="Please connect with your wallet" />
+								<i-panel id="panelMsg" visible={false}>
+									<i-vstack gap={10} verticalAlignment="center" alignItems="center">
+										<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
+										<i-label id="lbMsg" />
+									</i-vstack>
+								</i-panel>
 								<i-panel id="panelLiquidity">
 									<i-hstack gap="20px" margin={{ bottom: 16 }} wrap="wrap">
 										<i-panel class="custom-container">
@@ -482,7 +461,7 @@ export default class ScomLiquidityProvider extends Module {
 											<i-panel id="summarySection" >
 												<liquidity-summary id="detailSummary" />
 											</i-panel>
-											{/* <queue-help id="helpInfo" /> */}
+											<liquidity-help id="detailHelp" />
 										</i-panel>
 									</i-hstack>
 								</i-panel>

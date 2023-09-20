@@ -45,7 +45,7 @@ export class LiquidityProgress extends Module {
           this.runProgress();
         }, 1000);
       }
-    }, 100);
+    }, 300);
   }
   reStartProgress() {
     if (this.enabled && this._onProgressDone) {

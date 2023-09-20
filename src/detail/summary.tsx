@@ -1,9 +1,9 @@
-import { Module, customElements, ControlElement, IEventBus, application, Label, Panel, Container } from '@ijstech/components';
+import { Module, customElements, ControlElement, Label, Panel, Container } from '@ijstech/components';
 import { State, tokenSymbol } from '../store/index';
-import { DefaultDateTimeFormat, formatDate, renderBalanceTooltip } from '../global/index';
+import { DefaultDateTimeFormat, IAllocation, formatDate, renderBalanceTooltip } from '../global/index';
 import { BigNumber } from '@ijstech/eth-wallet';
-import { ManageWhitelist } from '../whitelist/index';
-import { Action, Stage, toLastSecond, OfferState } from '../liquidity-utils/index';
+import { ManageWhitelist } from './whitelist';
+import { Stage, OfferState } from '../liquidity-utils/index';
 import { tokenStore } from '@scom/scom-token-list';
 import { LiquidityProgress } from './progress';
 
@@ -35,7 +35,6 @@ interface ISummaryData {
 export class LiquiditySummary extends Module {
   private _state: State;
   private summarySection: Panel;
-  private settingLb: Label;
   private amountRow: Panel;
   private offerPriceRow: Panel;
   private startDateRow: Panel;
@@ -46,7 +45,6 @@ export class LiquiditySummary extends Module {
   private receiveRow: Panel;
   private feeRow: Panel;
   private _summaryData: any;
-  private $eventBus: IEventBus;
   private _fromTokenAddress: string;
   private isSummaryLoaded: boolean;
   private _fetchData: any;
@@ -54,19 +52,6 @@ export class LiquiditySummary extends Module {
 
   constructor(parent?: Container, options?: any) {
     super(parent, options);
-    this.$eventBus = application.EventBus;
-    this.registerEvent();
-  }
-
-  registerEvent() {
-    // this.$eventBus.register(this, EventId.IsWalletConnected, this.onWalletConnect)
-    // this.$eventBus.register(this, EventId.IsWalletDisconnected, this.onWalletConnect)
-    // this.$eventBus.register(this, EventId.EmitFocusField, this.onHighlightQueue)
-    // this.$eventBus.register(this, EventId.EmitFieldChange, this.onFormFieldChange)
-  }
-
-  onWalletConnect = async (connected: boolean) => {
-    this.renderSetting(connected);
   }
 
   set state(value: State) {
@@ -117,11 +102,7 @@ export class LiquiditySummary extends Module {
     return formatDate(date, DefaultDateTimeFormat, true);
   }
 
-  showSetting() {
-    // this.$eventBus.dispatch(EventId.ShowTransactionModal);
-  }
-
-  showAddresses(addresses: any) {
+  showAddresses(addresses: IAllocation[]) {
     this.manageWhitelist.props = {
       isReadOnly: true,
       tokenSymbol: tokenSymbol(this.chainId, this.summaryData.fromTokenAddress),
@@ -415,20 +396,6 @@ export class LiquiditySummary extends Module {
     })
   }
 
-  renderSetting(value: boolean) {
-    if (!this.settingLb) return;
-    this.settingLb.innerHTML = '';
-    const elm = (
-      value ?
-        <i-icon name="cog" width="24" height="24"
-          class="inline-block ml-0-3 pointer" fill="#fff"
-          onClick={this.showSetting.bind(this)}
-        /> :
-        <i-label />
-    )
-    this.settingLb.appendChild(elm);
-  }
-
   init() {
     super.init();
   }
@@ -451,9 +418,7 @@ export class LiquiditySummary extends Module {
     this.feeRow?.classList.remove("highlight-row");
   }
 
-  onHighlightQueue(params: { source: string, stage: Stage }) {
-    const { source, stage } = params;
-    if (source !== 'GroupQueueFrom') return;
+  onHighlight(stage: Stage) {
     this.resetHighlight();
     switch (stage) {
       case Stage.SET_AMOUNT:
@@ -478,20 +443,13 @@ export class LiquiditySummary extends Module {
     }
   }
 
-  onFormFieldChange(params: { source: string, stage: Stage }) {
-    const { source, stage } = params;
-    if (source !== 'GroupQueueFrom') return;
-    this.updateSummaryUI(stage);
-  }
-
   render() {
     return (
       <i-panel class='detail-col detail-col--summary'>
         <i-hstack class="detail-col_header" horizontalAlignment="space-between">
           <i-label caption="Order Summary" />
           <i-hstack verticalAlignment="center" class="custom-group--icon">
-            <liquidity-progress onProgressDone={this.onFetchData.bind(this)} />
-            <i-label id="settingLb" />
+            <liquidity-progress onProgressDone={this.onFetchData} />
           </i-hstack>
         </i-hstack>
         <i-panel id="summarySection" class="summary" />

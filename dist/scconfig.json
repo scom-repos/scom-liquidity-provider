@@ -12,10 +12,9 @@
         "@scom/scom-wallet-modal",
         "@scom/scom-tx-status-modal",
         "@scom/scom-network-picker",
-        "@scom/oswap-openswap-contract",
-        "@scom/oswap-chainlink-contract",
-        "@ijstech/eth-contract",
         "@scom/scom-token-modal",
-        "@scom/scom-token-input"
+        "@scom/scom-token-input",
+        "@scom/oswap-openswap-contract",
+        "@ijstech/eth-contract"
     ]
 }

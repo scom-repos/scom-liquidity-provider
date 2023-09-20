@@ -276,6 +276,7 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
         }
     });
     exports.liquidityProviderComponent = components_4.Styles.style({
+        padding: '1rem',
         $nest: {
             'span': {
                 letterSpacing: '0.15px',
@@ -325,7 +326,6 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
         }
     });
     exports.liquidityProviderForm = components_4.Styles.style({
-        width: '90%',
         maxWidth: 920,
         margin: '0 auto',
         $nest: {
@@ -336,40 +336,16 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                 width: '100%'
             },
             '.red-color i-label *': {
-                color: '#BD4F5A'
+                color: '#f15e61'
             },
             '.green-color *': {
                 color: '#77D394'
-            },
-            '.queue-header': {
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%'
-            },
-            '.ml-0-5': {
-                marginLeft: '.5rem',
-            },
-            '.mr-0-5': {
-                marginRight: '.5rem',
-            },
-            '.ml-0-3': {
-                marginLeft: '.3rem',
-            },
-            '.mr-0-3': {
-                marginRight: '.3rem',
-            },
-            '.mx-0-5': {
-                marginLeft: '.5rem',
-                marginRight: '.5rem'
             },
             'i-icon': {
                 display: 'inline-block'
             },
             'i-button i-icon.loading-icon': {
                 display: 'inline-flex'
-            },
-            '.text--grey *': {
-                color: Theme.text.secondary
             },
             '.text--primary *': {
                 color: Theme.colors.primary.main
@@ -380,6 +356,7 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
             },
             '.custom-container': {
                 width: 'calc(50% - 10px)',
+                marginInline: 'auto'
             },
             '.detail-col': {
                 font: `normal normal 700 1.5rem/1.5rem ${Theme.typography.fontFamily}`,
@@ -390,16 +367,10 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                 marginBottom: '1.5rem',
                 fontWeight: 'normal',
                 $nest: {
-                    '.custom-label *': {
-                        fontWeight: 700
-                    },
                     '.icon-right': {
                         display: 'inline-block',
                         marginRight: '1rem'
                     },
-                    // 'i-icon svg': {
-                    //   verticalAlign: 'middle'
-                    // },
                     '.detail-col_header': {
                         borderBottom: `2px solid ${Theme.divider}`,
                         padding: '1rem 1rem 1rem 0'
@@ -414,9 +385,6 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                     '.input--token-container': {
                         padding: '0.5rem 0',
                     },
-                    'i-label.text--grey *': {
-                        color: 'hsla(0,0%,100%,0.55)'
-                    },
                     '.btn-max': {
                         borderRadius: '0.5rem',
                         marginLeft: '0.5rem',
@@ -428,13 +396,13 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                         margin: '0.5rem 0'
                     },
                     '.input--token-box': {
-                        padding: '0.75rem 1rem',
-                        background: '#0c1234',
-                        border: '2px solid #0c1234',
+                        padding: '0.25rem 0.5rem',
+                        background: Theme.input.background,
+                        border: `2px solid ${Theme.input.background}`,
                         borderRadius: '0.75rem',
                         $nest: {
                             '&.bordered': {
-                                border: '2px solid #f15e61'
+                                border: `2px solid ${Theme.colors.primary.main}`
                             },
                             'i-button': {
                                 padding: '0.3rem 0.5rem',
@@ -456,18 +424,19 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                                 }
                             },
                             'i-input': {
-                                width: '100%'
+                                width: '100%',
+                                height: '100% !important'
                             },
                             'i-input > input': {
                                 width: '100%',
-                                height: 'auto !important',
+                                height: '100% !important',
                                 padding: '.375rem .75rem',
                                 paddingRight: '0.25rem',
                                 paddingLeft: 0,
                                 borderRadius: '0.25rem',
                                 border: 'none',
                                 background: 'transparent',
-                                color: '#fff',
+                                color: Theme.input.fontColor,
                                 fontSize: '1.25rem'
                             },
                             'i-icon svg': {
@@ -498,7 +467,6 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                         display: 'inline-block',
                         padding: '3px',
                         marginLeft: 'auto',
-                        background: '#252a48',
                         border: '2px solid transparent',
                         borderRadius: '50%',
                         transform: 'rotate(90deg)',
@@ -513,10 +481,11 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                                 border: 'none',
                                 padding: '1rem 0.75rem',
                                 fontSize: '1.25rem',
-                                color: '#fff',
+                                color: Theme.input.fontColor,
                                 $nest: {
                                     '&::placeholder': {
-                                        color: '#8d8fa3',
+                                        color: Theme.input.fontColor,
+                                        opacity: 0.8
                                     },
                                 }
                             },
@@ -569,9 +538,6 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                         height: 20,
                         borderRadius: '50%'
                     },
-                    '.px-0': {
-                        paddingInline: 0,
-                    },
                     '.item-status': {
                         alignItems: 'center',
                         fontSize: '1rem',
@@ -584,7 +550,7 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                         },
                     },
                     '.btn-dropdown': {
-                        paddingInline: '1rem',
+                        paddingInline: '0.25rem',
                         width: '100%',
                         $nest: {
                             '.caption': {
@@ -603,15 +569,16 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                                 padding: '0.25rem 0',
                                 marginTop: 0,
                                 border: `2px solid ${Theme.colors.primary.main}`,
-                                background: '#1f1e4f',
+                                background: Theme.background.modal,
                                 borderRadius: 4,
                                 minWidth: 0,
                                 width: '100%',
+                                maxWidth: 410,
                                 $nest: {
                                     'i-button': {
                                         display: 'block',
                                         padding: '0.5rem 1rem',
-                                        background: '#1f1e4f',
+                                        background: 'transparent',
                                         borderRadius: '0',
                                         border: 'none',
                                         boxShadow: 'none',
@@ -620,7 +587,7 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                                         textAlign: 'left',
                                         $nest: {
                                             '&:hover': {
-                                                background: '#252a48',
+                                                opacity: 0.8,
                                             },
                                             'i-image': {
                                                 display: 'flex',
@@ -680,10 +647,11 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                                 font: `normal normal bold 1rem/1rem ${Theme.typography.fontFamily}`,
                                 fontSize: '.9rem',
                                 lineHeight: '1.5rem',
-                                color: '#d2d2d2'
+                                opacity: 0.8
                             },
                             '.summary-row_body i-label *': {
-                                color: Theme.text.primary
+                                color: Theme.text.primary,
+                                opacity: 1
                             },
                             '&.highlight-row .summary-row_body i-label.highlight-value *': {
                                 color: Theme.colors.primary.main
@@ -700,7 +668,7 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                                         justifyContent: 'space-between'
                                     },
                                     '.second-data *': {
-                                        color: '#d2d2d2',
+                                        opacity: 0.8,
                                         fontSize: '.9rem'
                                     }
                                 }
@@ -732,22 +700,22 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
             '.custom-group--icon': {
                 $nest: {
                     'i-icon': {
-                        display: 'flex',
+                        display: 'flex'
                     },
                     '#settingLb > i-icon': {
                         marginLeft: '1rem !important',
-                    },
-                },
+                    }
+                }
             },
             '#confirmationModal': {
                 $nest: {
                     '.modal': {
-                        background: '#192046',
+                        background: Theme.background.modal,
                         width: 600,
                         maxWidth: '95%',
                         padding: '0.75rem 1rem',
                         borderRadius: '1rem',
-                        color: '#fff'
+                        color: Theme.text.primary
                     },
                     '.i-modal_header': {
                         display: 'none',
@@ -762,8 +730,8 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                         $nest: {
                             'i-icon': {
                                 fill: Theme.colors.primary.main,
-                            },
-                        },
+                            }
+                        }
                     },
                     '.text-warning *': {
                         color: Theme.colors.primary.main,
@@ -782,28 +750,25 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                         margin: '0.5rem',
                     },
                     '.btn-cancel': {
-                        background: '#eaecef !important',
-                        color: `${Theme.background.default} !important`,
-                    },
-                },
+                        background: `${Theme.text.primary} !important`,
+                        color: `${Theme.background.main} !important`,
+                    }
+                }
             },
             '@media screen and (max-width: 768px)': {
                 $nest: {
                     '.custom-container': {
                         width: '480px',
-                        maxWidth: '100%',
-                        marginInline: 'auto',
+                        maxWidth: '100%'
                     }
                 },
             },
         }
     });
 });
-define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports"], function (require, exports) {
+define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@scom/scom-network-picker", "@scom/scom-token-input"], function (require, exports, scom_network_picker_1, scom_token_input_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getProjectOwnerSchema = void 0;
-    ///<amd-module name='@scom/scom-liquidity-provider/formSchema.ts'/> 
     const theme = {
         type: 'object',
         properties: {
@@ -813,11 +778,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports"], fu
             },
             fontColor: {
                 type: 'string',
-                format: 'color'
-            },
-            textSecondary: {
-                type: 'string',
-                title: 'Campaign Font Color',
                 format: 'color'
             },
             inputBackgroundColor: {
@@ -898,52 +858,96 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports"], fu
                     ]
                 }
             ]
-        }
-    };
-    function getProjectOwnerSchema() {
-        return {
-            dataSchema: {
-                type: 'object',
-                properties: {
-                    chainId: {
-                        type: 'number',
-                        required: true
+        },
+        customControls(rpcWalletId) {
+            let networkPicker;
+            let firstTokenInput;
+            let secondTokenInput;
+            return {
+                "#/properties/chainId": {
+                    render: () => {
+                        networkPicker = new scom_network_picker_1.default(undefined, {
+                            type: 'combobox',
+                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                            onCustomNetworkSelected: () => {
+                                var _a;
+                                const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                firstTokenInput.chainId = chainId;
+                                secondTokenInput.chainId = chainId;
+                            }
+                        });
+                        return networkPicker;
                     },
-                    tokenIn: {
-                        type: 'string',
-                        required: true
+                    getData: (control) => {
+                        var _a;
+                        return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                     },
-                    tokenOut: {
-                        type: 'string',
-                        required: true
+                    setData: (control, value) => {
+                        control.setNetworkByChainId(value);
+                        if (firstTokenInput)
+                            firstTokenInput.chainId = value;
+                        if (secondTokenInput)
+                            secondTokenInput.chainId = value;
+                    }
+                },
+                "#/properties/tokenIn": {
+                    render: () => {
+                        var _a;
+                        firstTokenInput = new scom_token_input_1.default(undefined, {
+                            type: 'combobox',
+                            isBalanceShown: false,
+                            isBtnMaxShown: false,
+                            isInputShown: false,
+                            maxWidth: 300
+                        });
+                        firstTokenInput.rpcWalletId = rpcWalletId;
+                        const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        if (chainId && firstTokenInput.chainId !== chainId) {
+                            firstTokenInput.chainId = chainId;
+                        }
+                        return firstTokenInput;
+                    },
+                    getData: (control) => {
+                        var _a, _b;
+                        return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                    },
+                    setData: (control, value) => {
+                        control.address = value;
+                    }
+                },
+                "#/properties/tokenOut": {
+                    render: () => {
+                        var _a;
+                        secondTokenInput = new scom_token_input_1.default(undefined, {
+                            type: 'combobox',
+                            isBalanceShown: false,
+                            isBtnMaxShown: false,
+                            isInputShown: false,
+                            maxWidth: 300
+                        });
+                        secondTokenInput.rpcWalletId = rpcWalletId;
+                        const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        if (chainId && secondTokenInput.chainId !== chainId) {
+                            secondTokenInput.chainId = chainId;
+                        }
+                        return secondTokenInput;
+                    },
+                    getData: (control) => {
+                        var _a, _b;
+                        return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                    },
+                    setData: (control, value) => {
+                        control.address = value;
                     }
                 }
-            },
-            uiSchema: {
-                type: 'VerticalLayout',
-                elements: [
-                    {
-                        type: 'Control',
-                        scope: '#/properties/chainId'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/tokenIn'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/tokenOut'
-                    }
-                ]
-            }
-        };
-    }
-    exports.getProjectOwnerSchema = getProjectOwnerSchema;
+            };
+        }
+    };
 });
 define("@scom/scom-liquidity-provider/global/utils/helper.ts", ["require", "exports", "@ijstech/eth-wallet", "@ijstech/components"], function (require, exports, eth_wallet_2, components_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.toWeiInv = exports.limitDecimals = exports.limitInputNumber = exports.isInvalidInput = exports.formatNumberValue = exports.renderBalanceTooltip = exports.formatNumberWithSeparators = exports.formatNumber = exports.formatDate = exports.DefaultDateFormat = exports.DefaultDateTimeFormat = void 0;
+    exports.toWeiInv = exports.limitDecimals = exports.limitInputNumber = exports.isInvalidInput = exports.formatNumberValue = exports.renderBalanceTooltip = exports.formatNumber = exports.formatDate = exports.DefaultDateFormat = exports.DefaultDateTimeFormat = void 0;
     ;
     exports.DefaultDateTimeFormat = 'DD/MM/YYYY HH:mm:ss';
     exports.DefaultDateFormat = 'DD/MM/YYYY';
@@ -968,30 +972,9 @@ define("@scom/scom-liquidity-provider/global/utils/helper.ts", ["require", "expo
         if (val != 0 && new eth_wallet_2.BigNumber(val).lt(minValue)) {
             return `<${minValue}`;
         }
-        return (0, exports.formatNumberWithSeparators)(val, decimals || 4);
+        return components_5.FormatUtils.formatNumberWithSeparators(val, decimals || 4);
     };
     exports.formatNumber = formatNumber;
-    const formatNumberWithSeparators = (value, precision) => {
-        if (!value)
-            value = 0;
-        if (precision) {
-            let outputStr = '';
-            if (value >= 1) {
-                const unit = Math.pow(10, precision);
-                const rounded = Math.floor(value * unit) / unit;
-                outputStr = rounded.toLocaleString('en-US', { maximumFractionDigits: precision });
-            }
-            else {
-                outputStr = value.toLocaleString('en-US', { maximumSignificantDigits: precision });
-            }
-            if (outputStr.length > 18) {
-                outputStr = outputStr.substring(0, 18) + '...';
-            }
-            return outputStr;
-        }
-        return value.toLocaleString('en-US');
-    };
-    exports.formatNumberWithSeparators = formatNumberWithSeparators;
     const renderBalanceTooltip = (params, tokenMap, isBold) => {
         const data = (0, exports.formatNumberValue)(params, tokenMap);
         if (typeof data === "object") {
@@ -1161,58 +1144,34 @@ define("@scom/scom-liquidity-provider/global/utils/helper.ts", ["require", "expo
     };
     exports.toWeiInv = toWeiInv;
 });
-define("@scom/scom-liquidity-provider/global/utils/common.ts", ["require", "exports", "@ijstech/eth-wallet"], function (require, exports, eth_wallet_3) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.registerSendTxEvents = void 0;
-    const registerSendTxEvents = (sendTxEventHandlers) => {
-        const wallet = eth_wallet_3.Wallet.getClientInstance();
-        wallet.registerSendTxEvents({
-            transactionHash: (error, receipt) => {
-                if (sendTxEventHandlers.transactionHash) {
-                    sendTxEventHandlers.transactionHash(error, receipt);
-                }
-            },
-            confirmation: (receipt) => {
-                if (sendTxEventHandlers.confirmation) {
-                    sendTxEventHandlers.confirmation(receipt);
-                }
-            },
-        });
-    };
-    exports.registerSendTxEvents = registerSendTxEvents;
-});
 define("@scom/scom-liquidity-provider/global/utils/interfaces.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("@scom/scom-liquidity-provider/global/utils/index.ts", ["require", "exports", "@scom/scom-liquidity-provider/global/utils/helper.ts", "@scom/scom-liquidity-provider/global/utils/common.ts", "@scom/scom-liquidity-provider/global/utils/interfaces.ts"], function (require, exports, helper_1, common_1, interfaces_1) {
+define("@scom/scom-liquidity-provider/global/utils/index.ts", ["require", "exports", "@scom/scom-liquidity-provider/global/utils/helper.ts", "@scom/scom-liquidity-provider/global/utils/interfaces.ts"], function (require, exports, helper_1, interfaces_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.registerSendTxEvents = void 0;
     ///<amd-module name='@scom/scom-liquidity-provider/global/utils/index.ts'/> 
     __exportStar(helper_1, exports);
-    Object.defineProperty(exports, "registerSendTxEvents", { enumerable: true, get: function () { return common_1.registerSendTxEvents; } });
     __exportStar(interfaces_1, exports);
 });
-define("@scom/scom-liquidity-provider/global/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/utils/index.ts"], function (require, exports, eth_wallet_4, index_1) {
+define("@scom/scom-liquidity-provider/global/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/utils/index.ts"], function (require, exports, eth_wallet_3, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isAddressValid = void 0;
     __exportStar(index_1, exports);
     const isAddressValid = async (address) => {
-        let wallet = eth_wallet_4.Wallet.getClientInstance();
+        let wallet = eth_wallet_3.Wallet.getClientInstance();
         const isValid = wallet.web3.utils.isAddress(address);
         return isValid;
     };
     exports.isAddressValid = isAddressValid;
 });
-define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "exports", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/oswap-openswap-contract", "@scom/oswap-chainlink-contract", "@scom/scom-token-list", "@ijstech/eth-contract"], function (require, exports, index_2, eth_wallet_5, index_3, oswap_openswap_contract_1, oswap_chainlink_contract_1, scom_token_list_2, eth_contract_1) {
+define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "exports", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/oswap-openswap-contract", "@scom/scom-token-list", "@ijstech/eth-contract"], function (require, exports, index_2, eth_wallet_4, index_3, oswap_openswap_contract_1, scom_token_list_2, eth_contract_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.convertGroupQueueWhitelistedAddresses = exports.getQueueStakeToken = exports.addLiquidityToGroupQueue = exports.approvePairMax = exports.getEstimatedAmountInUSD = exports.getLiquidityProviderAddress = exports.approveLPMax = exports.getToBeApprovedTokens = exports.getGroupQueuePairInfo = exports.isPairRegistered = exports.getPair = exports.getAddresses = void 0;
+    exports.convertWhitelistedAddresses = exports.getQueueStakeToken = exports.addLiquidity = exports.getLiquidityProviderAddress = exports.getToBeApprovedTokens = exports.getPairInfo = exports.isPairRegistered = exports.getPair = exports.getAddresses = void 0;
     const ConfigStore = 'OSWAP_ConfigStore';
-    const INFINITE = new eth_wallet_5.BigNumber("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     const getAddressFromCore = (chainId, key) => {
         let Address = getAddresses(chainId);
         return Address[key];
@@ -1225,70 +1184,11 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         return getAddressFromCore(chainId, key);
     };
     function toTokenAmount(token, amount) {
-        return (eth_wallet_5.BigNumber.isBigNumber(amount) ? amount : new eth_wallet_5.BigNumber(amount.toString())).shiftedBy(Number(token.decimals)).decimalPlaces(0, eth_wallet_5.BigNumber.ROUND_FLOOR);
+        return (eth_wallet_4.BigNumber.isBigNumber(amount) ? amount : new eth_wallet_4.BigNumber(amount.toString())).shiftedBy(Number(token.decimals)).decimalPlaces(0, eth_wallet_4.BigNumber.ROUND_FLOOR);
     }
     function toWei(amount) {
-        return (eth_wallet_5.BigNumber.isBigNumber(amount) ? amount : new eth_wallet_5.BigNumber(amount.toString())).shiftedBy(18).decimalPlaces(0);
+        return (eth_wallet_4.BigNumber.isBigNumber(amount) ? amount : new eth_wallet_4.BigNumber(amount.toString())).shiftedBy(18).decimalPlaces(0);
     }
-    const getTokenPrice = async (chainId, token) => {
-        const wallet = eth_wallet_5.Wallet.getClientInstance();
-        let tokenPrice;
-        // get price from price feed 
-        let tokenPriceFeedAddress = scom_token_list_2.ToUSDPriceFeedAddressesMap[chainId][token.toLowerCase()];
-        if (tokenPriceFeedAddress) {
-            const aggregatorProxy = new oswap_chainlink_contract_1.Contracts.AggregatorProxy(wallet, tokenPriceFeedAddress);
-            let tokenLatestRoundData = await aggregatorProxy.latestRoundData();
-            let tokenPriceFeedDecimals = await aggregatorProxy.decimals();
-            return new eth_wallet_5.BigNumber(tokenLatestRoundData.answer).shiftedBy(-tokenPriceFeedDecimals).toFixed();
-        }
-        // get price from AMM
-        let referencePair = scom_token_list_2.tokenPriceAMMReference[chainId] && scom_token_list_2.tokenPriceAMMReference[chainId][token.toLowerCase()];
-        if (!referencePair)
-            return null;
-        const pairContract = new oswap_openswap_contract_1.Contracts.OSWAP_Pair(wallet, referencePair);
-        let token0 = await pairContract.token0();
-        let token1 = await pairContract.token1();
-        let reserves = await pairContract.getReserves();
-        let token0PriceFeedAddress = scom_token_list_2.ToUSDPriceFeedAddressesMap[chainId] && scom_token_list_2.ToUSDPriceFeedAddressesMap[chainId][token0.toLowerCase()];
-        let token1PriceFeedAddress = scom_token_list_2.ToUSDPriceFeedAddressesMap[chainId] && scom_token_list_2.ToUSDPriceFeedAddressesMap[chainId][token1.toLowerCase()];
-        if (token0PriceFeedAddress || token1PriceFeedAddress) {
-            if (token0PriceFeedAddress) {
-                const aggregatorProxy = new oswap_chainlink_contract_1.Contracts.AggregatorProxy(wallet, token0PriceFeedAddress);
-                let token0LatestRoundData = await aggregatorProxy.latestRoundData();
-                let token0PriceFeedDecimals = await aggregatorProxy.decimals();
-                let token0USDPrice = new eth_wallet_5.BigNumber(token0LatestRoundData.answer).shiftedBy(-token0PriceFeedDecimals).toFixed();
-                if (new eth_wallet_5.BigNumber(token.toLowerCase()).lt(token0.toLowerCase())) {
-                    tokenPrice = new eth_wallet_5.BigNumber(reserves.reserve1).div(reserves.reserve0).times(token0USDPrice).toFixed();
-                }
-                else {
-                    tokenPrice = new eth_wallet_5.BigNumber(reserves.reserve0).div(reserves.reserve1).times(token0USDPrice).toFixed();
-                }
-            }
-            else {
-                const aggregatorProxy = new oswap_chainlink_contract_1.Contracts.AggregatorProxy(wallet, token1PriceFeedAddress);
-                let token1LatestRoundData = await aggregatorProxy.latestRoundData();
-                let token1PriceFeedDecimals = await aggregatorProxy.decimals();
-                let token1USDPrice = new eth_wallet_5.BigNumber(token1LatestRoundData.answer).shiftedBy(-token1PriceFeedDecimals).toFixed();
-                if (new eth_wallet_5.BigNumber(token.toLowerCase()).lt(token1.toLowerCase())) {
-                    tokenPrice = new eth_wallet_5.BigNumber(reserves.reserve1).div(reserves.reserve0).times(token1USDPrice).toFixed();
-                }
-                else {
-                    tokenPrice = new eth_wallet_5.BigNumber(reserves.reserve0).div(reserves.reserve1).times(token1USDPrice).toFixed();
-                }
-            }
-        }
-        else {
-            if (token0.toLowerCase() == token.toLowerCase()) { //for other reference pair
-                let token1Price = await getTokenPrice(chainId, token1) || '';
-                tokenPrice = new eth_wallet_5.BigNumber(token1Price).times(reserves.reserve1).div(reserves.reserve0).toFixed();
-            }
-            else {
-                let token0Price = await getTokenPrice(chainId, token0) || '';
-                tokenPrice = new eth_wallet_5.BigNumber(token0Price).times(reserves.reserve0).div(reserves.reserve1).toFixed();
-            }
-        }
-        return tokenPrice;
-    };
     const getQueueStakeToken = (chainId) => {
         if (!scom_token_list_2.DefaultERC20Tokens[chainId])
             return null;
@@ -1331,8 +1231,9 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         return getAddressByKey(chainId, "OSWAP_RestrictedLiquidityProvider");
     };
     exports.getLiquidityProviderAddress = getLiquidityProviderAddress;
-    const getPair = async (chainId, tokenA, tokenB) => {
-        const wallet = eth_wallet_5.Wallet.getClientInstance();
+    const getPair = async (state, tokenA, tokenB) => {
+        const wallet = state.getRpcWallet();
+        const chainId = state.getChainId();
         let tokens = mapTokenObjectSet(chainId, { tokenA, tokenB });
         let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
         let factoryAddress = getFactoryAddress(chainId);
@@ -1360,18 +1261,18 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             endDates,
         };
     }
-    const getRestrictedPairCustomParams = async (chainId) => {
+    const getRestrictedPairCustomParams = async (state) => {
         const FEE_PER_ORDER = "RestrictedPair.feePerOrder";
         const FEE_PER_TRADER = "RestrictedPair.feePerTrader";
         const MAX_DUR = "RestrictedPair.maxDur";
-        let wallet = eth_wallet_5.Wallet.getClientInstance();
-        const address = getAddressByKey(chainId, ConfigStore);
+        let wallet = state.getRpcWallet();
+        const address = getAddressByKey(state.getChainId(), ConfigStore);
         const configStoreContract = new oswap_openswap_contract_1.Contracts.OSWAP_ConfigStore(wallet, address);
-        let feePerOrderRaw = await configStoreContract.customParam(eth_wallet_5.Utils.stringToBytes32(FEE_PER_ORDER).toString());
-        let feePerOrder = eth_wallet_5.Utils.fromDecimals(feePerOrderRaw).toString();
-        let feePerTraderRaw = await configStoreContract.customParam(eth_wallet_5.Utils.stringToBytes32(FEE_PER_TRADER).toString());
-        let feePerTrader = eth_wallet_5.Utils.fromDecimals(feePerTraderRaw).toString();
-        let maxDur = await configStoreContract.customParam(eth_wallet_5.Utils.stringToBytes32(MAX_DUR).toString());
+        let feePerOrderRaw = await configStoreContract.customParam(eth_wallet_4.Utils.stringToBytes32(FEE_PER_ORDER).toString());
+        let feePerOrder = eth_wallet_4.Utils.fromDecimals(feePerOrderRaw).toString();
+        let feePerTraderRaw = await configStoreContract.customParam(eth_wallet_4.Utils.stringToBytes32(FEE_PER_TRADER).toString());
+        let feePerTrader = eth_wallet_4.Utils.fromDecimals(feePerTraderRaw).toString();
+        let maxDur = await configStoreContract.customParam(eth_wallet_4.Utils.stringToBytes32(MAX_DUR).toString());
         maxDur = parseInt(maxDur, 16).toString();
         return {
             feePerOrder,
@@ -1379,13 +1280,13 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             maxDur
         };
     };
-    const getGroupQueuePairInfo = async (state, pairAddress, tokenAddress, provider, offerIndex) => {
+    const getPairInfo = async (state, pairAddress, tokenAddress, provider, offerIndex) => {
         var _a, _b, _c, _d;
         const wallet = state.getRpcWallet();
         const chainId = state.getChainId();
         const nativeToken = (0, index_3.getChainNativeToken)(chainId);
         const WETH9Address = getAddressByKey(chainId, 'WETH9');
-        const _offerIndex = offerIndex ? new eth_wallet_5.BigNumber(offerIndex) : new eth_wallet_5.BigNumber(0);
+        const _offerIndex = offerIndex ? new eth_wallet_4.BigNumber(offerIndex) : new eth_wallet_4.BigNumber(0);
         if (tokenAddress == nativeToken.symbol)
             tokenAddress = WETH9Address;
         const factoryAddress = getFactoryAddress(chainId);
@@ -1399,21 +1300,21 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         let token0 = getTokenObjectByAddress(chainId, token0Address);
         let token1 = getTokenObjectByAddress(chainId, token1Address);
         let token = getTokenObjectByAddress(chainId, tokenAddress);
-        let directDirection = !(new eth_wallet_5.BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase()));
+        let directDirection = !(new eth_wallet_4.BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase()));
         let direction = directDirection ? token1Address.toLowerCase() != tokenAddress.toLowerCase() : token0Address.toLowerCase() != tokenAddress.toLowerCase();
         let queueSize = (await groupPair.counter(direction)).toNumber();
         let rawOffers = await groupPair.getOffers({ direction, start: 0, length: queueSize });
         let { amounts, endDates } = breakDownGroupQOffers(rawOffers);
         let tokenDecimals = token.decimals;
         let now = new Date().getTime();
-        let totalAmount = new eth_wallet_5.BigNumber("0");
+        let totalAmount = new eth_wallet_4.BigNumber("0");
         let againstToken = (token0Address.toLowerCase() == tokenAddress.toLowerCase()) ? token1 : token0;
         for (let i = 0; i < amounts.length; i++) {
             if (now >= new Date(endDates[i].toNumber() * 1000).getTime())
                 continue;
             totalAmount = totalAmount.plus(amounts[i]);
         }
-        let customParams = await getRestrictedPairCustomParams(chainId);
+        let customParams = await getRestrictedPairCustomParams(state);
         let returnObj = Object.assign({ pairAddress: pairAddress.toLowerCase(), fromTokenAddress: ((_a = token.address) === null || _a === void 0 ? void 0 : _a.toLowerCase()) == WETH9Address.toLowerCase() ? nativeToken.symbol : (_b = token.address) === null || _b === void 0 ? void 0 : _b.toLowerCase(), toTokenAddress: ((_c = againstToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) == WETH9Address.toLowerCase() ? nativeToken.symbol : (_d = againstToken.address) === null || _d === void 0 ? void 0 : _d.toLowerCase(), pairIndex: pairIndex }, customParams);
         if (provider && offerIndex) {
             const getProviderQueuePairInfo = async function () {
@@ -1422,10 +1323,10 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
                     getTradersAllocation(groupPair, direction, _offerIndex, tokenDecimals),
                     groupPair.offers({ param1: direction, param2: _offerIndex })
                 ]);
-                const restrictedPrice = new eth_wallet_5.BigNumber(offer.restrictedPrice).shiftedBy(-18).toFixed();
+                const restrictedPrice = new eth_wallet_4.BigNumber(offer.restrictedPrice).shiftedBy(-18).toFixed();
                 return {
-                    amount: new eth_wallet_5.BigNumber(offer.amount).shiftedBy(-Number(tokenDecimals)).toFixed(),
-                    reserve: new eth_wallet_5.BigNumber(offer.receiving).shiftedBy(-Number(againstTokenDecimals)).toFixed(),
+                    amount: new eth_wallet_4.BigNumber(offer.amount).shiftedBy(-Number(tokenDecimals)).toFixed(),
+                    reserve: new eth_wallet_4.BigNumber(offer.receiving).shiftedBy(-Number(againstTokenDecimals)).toFixed(),
                     startDate: new Date(offer.startDate.toNumber() * 1000),
                     expire: new Date(offer.expire.toNumber() * 1000),
                     locked: offer.locked,
@@ -1439,7 +1340,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         }
         return returnObj;
     };
-    exports.getGroupQueuePairInfo = getGroupQueuePairInfo;
+    exports.getPairInfo = getPairInfo;
     const getToBeApprovedTokens = async (chainId, tokenObj, amount, stake) => {
         const WETH9Address = getAddressByKey(chainId, 'WETH9');
         let tokens = mapTokenObjectSet(chainId, { tokenObj });
@@ -1448,20 +1349,20 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         // Check token in allowance
         if (tokens.tokenObj.address.toLowerCase() != WETH9Address.toLowerCase()) {
             let allowance = await getTokenAllowance(tokens.tokenObj.address, tokens.tokenObj.decimals, liqProviderAddress);
-            if (new eth_wallet_5.BigNumber(amount).gt(allowance))
+            if (new eth_wallet_4.BigNumber(amount).gt(allowance))
                 tokenList.push(tokens.tokenObj.address.toLowerCase());
         }
         // Check stake token allowance
-        if (new eth_wallet_5.BigNumber(stake).gt(0)) {
+        if (new eth_wallet_4.BigNumber(stake).gt(0)) {
             let StakeToken = getQueueStakeToken(chainId);
             if (!StakeToken || !StakeToken.address)
                 return tokenList;
             let allowance = await getTokenAllowance(StakeToken.address, StakeToken.decimals, liqProviderAddress);
-            if (new eth_wallet_5.BigNumber(stake).gt(allowance))
+            if (new eth_wallet_4.BigNumber(stake).gt(allowance))
                 tokenList.push(StakeToken.address.toLowerCase());
             // If stake token is also token in
             if (tokens.tokenObj.address.toLowerCase() == StakeToken.address.toLowerCase()) {
-                if (new eth_wallet_5.BigNumber(stake).plus(amount).gt(allowance))
+                if (new eth_wallet_4.BigNumber(stake).plus(amount).gt(allowance))
                     tokenList.push(StakeToken.address.toLowerCase());
             }
         }
@@ -1469,32 +1370,13 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
     };
     exports.getToBeApprovedTokens = getToBeApprovedTokens;
     const getTokenAllowance = async (tokenAddress, tokenDecimals, contractAddress) => {
-        let wallet = eth_wallet_5.Wallet.getClientInstance();
+        let wallet = eth_wallet_4.Wallet.getClientInstance();
         const selectedAddress = wallet.address;
         const ERC20 = new oswap_openswap_contract_1.Contracts.ERC20(wallet, tokenAddress);
         let allowance = await ERC20.allowance({ owner: selectedAddress, spender: contractAddress });
         return allowance.shiftedBy(-tokenDecimals);
     };
-    const approveLPMax = async (chainId, tokenObj, callback, confirmationCallback) => {
-        let amount = INFINITE;
-        let receipt = await new oswap_openswap_contract_1.Contracts.ERC20(eth_wallet_5.Wallet.getClientInstance(), tokenObj.address).approve({ spender: getLiquidityProviderAddress(chainId), amount });
-        return receipt;
-    };
-    exports.approveLPMax = approveLPMax;
-    const getEstimatedAmountInUSD = async (chainId, tokenObj, amount) => {
-        let tokens = mapTokenObjectSet(chainId, { tokenObj });
-        let tokenPrice = await getTokenPrice(chainId, tokens.tokenObj.address.toLowerCase());
-        return tokenPrice != null ? new eth_wallet_5.BigNumber(amount).times(tokenPrice).toFixed() : new eth_wallet_5.BigNumber(amount).toFixed();
-    };
-    exports.getEstimatedAmountInUSD = getEstimatedAmountInUSD;
-    const approvePairMax = async (chainId, pairAddress, callback, confirmationCallback) => {
-        let amount = INFINITE;
-        let StakeToken = getQueueStakeToken(chainId);
-        let receipt = await new oswap_openswap_contract_1.Contracts.ERC20(eth_wallet_5.Wallet.getClientInstance(), StakeToken.address).approve({ spender: pairAddress, amount });
-        return receipt;
-    };
-    exports.approvePairMax = approvePairMax;
-    const addLiquidityToGroupQueue = async (chainId, tokenA, tokenB, tokenIn, pairIndex, offerIndex, amountIn, allowAll, restrictedPrice, startDate, expire, deadline, whitelistAddress) => {
+    const addLiquidity = async (chainId, tokenA, tokenB, tokenIn, pairIndex, offerIndex, amountIn, allowAll, restrictedPrice, startDate, expire, deadline, whitelistAddress) => {
         let receipt;
         let trader = [];
         let allocation = [];
@@ -1519,7 +1401,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             return receipt
           }
         }*/
-        const liquidityContract = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedLiquidityProvider1(eth_wallet_5.Wallet.getClientInstance(), getLiquidityProviderAddress(chainId));
+        const liquidityContract = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedLiquidityProvider1(eth_wallet_4.Wallet.getClientInstance(), getLiquidityProviderAddress(chainId));
         const getReceipt = async (param, value) => {
             if (trader.length == 0) {
                 receipt = value !== undefined ? await liquidityContract.addLiquidityETH(param, value) : await liquidityContract.addLiquidityETH(param, 0);
@@ -1527,7 +1409,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             else {
                 const params = {
                     param: [
-                        new eth_wallet_5.BigNumber(param.tokenA.toLowerCase()),
+                        new eth_wallet_4.BigNumber(param.tokenA.toLowerCase()),
                         param.addingTokenA ? 1 : 0,
                         param.pairIndex,
                         param.offerIndex,
@@ -1613,8 +1495,8 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         }
         return receipt;
     };
-    exports.addLiquidityToGroupQueue = addLiquidityToGroupQueue;
-    const convertGroupQueueWhitelistedAddresses = (inputText) => {
+    exports.addLiquidity = addLiquidity;
+    const convertWhitelistedAddresses = (inputText) => {
         function splitByMultipleSeparator(input, separators) {
             for (let i = 1; i < separators.length; i++) {
                 input = input.replace(separators[i], separators[0]);
@@ -1633,7 +1515,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         }
         return data;
     };
-    exports.convertGroupQueueWhitelistedAddresses = convertGroupQueueWhitelistedAddresses;
+    exports.convertWhitelistedAddresses = convertWhitelistedAddresses;
     async function getTradersAllocation(pair, direction, offerIndex, allocationTokenDecimals, callbackPerRecord) {
         let traderLength = (await pair.getApprovedTraderLength({ direction, offerIndex })).toNumber();
         let tasks = [];
@@ -1643,7 +1525,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
                 try {
                     let approvedTrader = await pair.getApprovedTrader({ direction, offerIndex, start: i, length: 100 });
                     allo.push(...approvedTrader.trader.map((address, i) => {
-                        let allocation = new eth_wallet_5.BigNumber(approvedTrader.allocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
+                        let allocation = new eth_wallet_4.BigNumber(approvedTrader.allocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
                         if (callbackPerRecord)
                             callbackPerRecord(address, allocation);
                         return { address, allocation };
@@ -1664,10 +1546,10 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
     }
     exports.isPairRegistered = isPairRegistered;
 });
-define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/API.ts", "@scom/scom-liquidity-provider/store/index.ts", "@ijstech/components", "@scom/scom-token-list"], function (require, exports, eth_wallet_6, index_4, API_1, index_5, components_6, scom_token_list_3) {
+define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/API.ts", "@scom/scom-liquidity-provider/store/index.ts", "@ijstech/components", "@scom/scom-token-list"], function (require, exports, eth_wallet_5, index_4, API_1, index_5, components_6, scom_token_list_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.Model = exports.toLastSecond = exports.setOnApproved = exports.setOnApproving = exports.LockState = exports.OfferState = exports.Action = exports.Stage = void 0;
+    exports.Model = exports.toLastSecond = exports.setOnApproved = exports.setOnApproving = exports.LockState = exports.OfferState = exports.Stage = void 0;
     var Stage;
     (function (Stage) {
         Stage[Stage["NONE"] = 0] = "NONE";
@@ -1684,14 +1566,6 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
         Stage[Stage["WAITING_FOR_GOV_TOKEN_APPROVAL"] = 11] = "WAITING_FOR_GOV_TOKEN_APPROVAL";
         Stage[Stage["SUBMIT"] = 12] = "SUBMIT";
     })(Stage = exports.Stage || (exports.Stage = {}));
-    var Action;
-    (function (Action) {
-        Action["JOIN"] = "join";
-        Action["ADD"] = "add";
-        Action["REMOVE"] = "remove";
-        Action["MOVE"] = "move";
-        Action["COLLECT"] = "collect";
-    })(Action = exports.Action || (exports.Action = {}));
     var OfferState;
     (function (OfferState) {
         OfferState["Everyone"] = "Everyone";
@@ -1728,9 +1602,6 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
         get fromTokenSymbol() {
             return this.fromTokenObject ? this.fromTokenObject.symbol : '';
         }
-        get toTokenSymbol() {
-            return this.toTokenObject ? this.toTokenObject.symbol : '';
-        }
         get enableApproveAllowance() {
             return this.fromTokenInputValid;
         }
@@ -1738,25 +1609,24 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             return this.fromTokenInput.gt(0) && this.fromTokenInput.lte(this.fromTokenBalanceExact);
         }
         get offerPriceInputValid() {
-            return this.offerPriceText && new eth_wallet_6.BigNumber(this.offerPriceText).gt(0);
+            return this.offerPriceText && new eth_wallet_5.BigNumber(this.offerPriceText).gt(0);
         }
-        ;
         get fromTokenBalanceExact() {
             const tokenBalances = scom_token_list_3.tokenStore.tokenBalances || {};
             return tokenBalances[this.fromTokenAddress]
-                ? new eth_wallet_6.BigNumber(tokenBalances[this.fromTokenAddress])
-                : new eth_wallet_6.BigNumber(0);
+                ? new eth_wallet_5.BigNumber(tokenBalances[this.fromTokenAddress])
+                : new eth_wallet_5.BigNumber(0);
         }
         get govTokenBalanceExact() {
-            let StakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
-            if (!StakeToken)
-                return new eth_wallet_6.BigNumber(0);
+            let stakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
+            if (!stakeToken)
+                return new eth_wallet_5.BigNumber(0);
             const tokenBalances = scom_token_list_3.tokenStore.tokenBalances || {};
-            return tokenBalances[StakeToken.address]
-                ? new eth_wallet_6.BigNumber(tokenBalances[StakeToken.address])
-                : new eth_wallet_6.BigNumber(0);
+            return tokenBalances[stakeToken.address]
+                ? new eth_wallet_5.BigNumber(tokenBalances[stakeToken.address])
+                : new eth_wallet_5.BigNumber(0);
         }
-        get getJoinGroupQueueValidation() {
+        get getJoinValidation() {
             switch (this.currentStage) {
                 case Stage.SET_AMOUNT:
                     return this.fromTokenInputValid;
@@ -1772,8 +1642,11 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             }
         }
         get proceedButtonText() {
-            const StakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
-            if (!StakeToken)
+            if (!this.state.isRpcWalletConnected()) {
+                return 'Switch Network';
+            }
+            const stakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
+            if (!stakeToken)
                 return '';
             if (this.fromTokenInput.gt(this.fromTokenBalanceExact)) {
                 return `Insufficient ${this.fromTokenSymbol} balance`;
@@ -1784,8 +1657,8 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             if (this.offerPriceText && !this.offerPriceInputValid) {
                 return 'Offer Price must be greater than 0';
             }
-            if (new eth_wallet_6.BigNumber(this.fee).gt(this.govTokenBalanceExact)) {
-                return `Insufficient ${StakeToken.symbol} balance`;
+            if (new eth_wallet_5.BigNumber(this.fee).gt(this.govTokenBalanceExact)) {
+                return `Insufficient ${stakeToken.symbol} balance`;
             }
             if (this.currentStage === Stage.FIRST_TOKEN_APPROVAL) {
                 return `APPROVE ${this.fromTokenSymbol} (1/2)`;
@@ -1804,10 +1677,12 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             }
             return `Submit`;
         }
-        ;
         get nextButtonText() {
-            const StakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
-            if (!StakeToken)
+            if (!this.state.isRpcWalletConnected()) {
+                return 'Switch Network';
+            }
+            const stakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
+            if (!stakeToken)
                 return '';
             if (this.fromTokenInput.gt(this.fromTokenBalanceExact)) {
                 return `Insufficient ${this.fromTokenSymbol} balance`;
@@ -1830,28 +1705,23 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     return `End time must be same or before ${maxDate.format(index_4.DefaultDateFormat)}`;
                 }
             }
-            if (new eth_wallet_6.BigNumber(this.fee).gt(this.govTokenBalanceExact) && this.currentStage === Stage.SUBMIT) {
-                return `Insufficient ${StakeToken.symbol} balance`;
+            if (new eth_wallet_5.BigNumber(this.fee).gt(this.govTokenBalanceExact) && this.currentStage === Stage.SUBMIT) {
+                return `Insufficient ${stakeToken.symbol} balance`;
             }
             return `Next`;
         }
-        ;
         get isFirstTokenApproved() {
             return this.currentStage >= Stage.GOV_TOKEN_APPROVAL;
         }
-        ;
         get isGovTokenApproved() {
             return this.currentStage == Stage.SUBMIT;
         }
-        ;
         get isWaitingForApproval() {
             return [Stage.WAITING_FOR_FIRST_TOKEN_APPROVAL, Stage.WAITING_FOR_GOV_TOKEN_APPROVAL].includes(this.currentStage);
         }
-        ;
         get newAmount() {
             return this.fromTokenInput;
         }
-        ;
         get listAddress() {
             const newAddresses = this.addresses || [];
             const oldAddresses = this.summaryData.addresses || [];
@@ -1866,12 +1736,10 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
         get newTotalAddress() {
             return this.listAddress.length;
         }
-        ;
         get newTotalAllocation() {
             const totalAddress = this.listAddress.reduce((pv, cv) => pv + parseFloat(cv.allocation), 0);
             return totalAddress;
         }
-        ;
         setSummaryData(response, updateField) {
             if (updateField) {
                 this.summaryData.newAmount = this.newAmount;
@@ -1918,18 +1786,6 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                 this.summaryData.pairCustomParams = response.pairCustomParams;
                 this.summaryData.maxDur = response.maxDur;
             }
-        }
-        get validateEmptyInput() {
-            const fromTokenInputCheck = this.fromTokenInput && this.fromTokenInput.gt(0);
-            const offerPriceCheck = this.offerPriceInputValid;
-            const startDateCheck = !!this.startDate;
-            const endDateCheck = !!this.endDate;
-            const stateCheck = !!this.switchLock;
-            const addressesCheck = this.addresses && this.addresses.length;
-            if (!fromTokenInputCheck || !offerPriceCheck || !startDateCheck || !endDateCheck || !stateCheck || !addressesCheck) {
-                return false;
-            }
-            return true;
         }
         get fromTokenBalance() {
             return this.fromTokenBalanceExact.toNumber();
@@ -1990,16 +1846,13 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             }
             return arr;
         }
-        ;
         constructor(state, pairAddress, fromTokenAddress, offerIndex) {
             this.currentStage = Stage.NONE;
             this.fromTokenAddress = '';
             this.toTokenAddress = '';
             this.pairIndex = 0;
             this.isFirstLoad = true;
-            this.fromTokenInput = new eth_wallet_6.BigNumber(0);
-            this.estimatedAmountInUSD = new eth_wallet_6.BigNumber(0);
-            this.govTokenInput = new eth_wallet_6.BigNumber(0);
+            this.fromTokenInput = new eth_wallet_5.BigNumber(0);
             this.fromTokenInputText = '';
             this.offerPriceText = '';
             this.offerTo = OfferState.Everyone;
@@ -2020,7 +1873,9 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                 maxDur: 3600 * 24 * 180, // default 3 months
             };
             this.isProceedButtonDisabled = () => {
-                if (!this.getJoinGroupQueueValidation)
+                if (!this.state.isRpcWalletConnected())
+                    return false;
+                if (!this.getJoinValidation)
                     return true;
                 if ([Stage.NONE, Stage.WAITING_FOR_FIRST_TOKEN_APPROVAL, Stage.WAITING_FOR_GOV_TOKEN_APPROVAL].includes(this.currentStage)) {
                     return true;
@@ -2040,7 +1895,6 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     toTokenObject: () => this.toTokenObject,
                     fromTokenInput: () => this.fromTokenInput,
                     fromTokenInputText: () => this.fromTokenInputText,
-                    estimatedAmountInUSD: () => this.estimatedAmountInUSD,
                     isProceedButtonDisabled: this.isProceedButtonDisabled,
                     proceedButtonText: () => this.proceedButtonText,
                     nextButtonText: () => this.nextButtonText,
@@ -2078,7 +1932,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                 };
             };
             this.fetchData = async () => {
-                const response = await (0, API_1.getGroupQueuePairInfo)(this.state, this.pairAddress, this.fromTokenAddress);
+                const response = await (0, API_1.getPairInfo)(this.state, this.pairAddress, this.fromTokenAddress);
                 this.toTokenAddress = response.toTokenAddress || '';
                 if (this.isFirstLoad) {
                     this.isFirstLoad = false;
@@ -2088,8 +1942,8 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                 this.setSummaryData(response);
             };
             this.proceed = async () => {
-                const StakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
-                if (!StakeToken)
+                const stakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
+                if (!stakeToken)
                     return;
                 if (this.currentStage === Stage.SET_AMOUNT) {
                     this.currentStage = Stage.SET_OFFER_PRICE;
@@ -2119,7 +1973,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     await this.approveToken(this.fromTokenObject);
                 }
                 else if (this.currentStage === Stage.GOV_TOKEN_APPROVAL) {
-                    await this.approveToken(StakeToken);
+                    await this.approveToken(stakeToken);
                 }
                 else if (this.currentStage === Stage.SUBMIT) {
                     this.approvalModelAction.doPayAction();
@@ -2127,23 +1981,14 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             };
             this.fromTokenInputTextChange = async (value) => {
                 this.fromTokenInputText = (0, index_4.limitDecimals)(value, this.fromTokenDecimals);
-                this.fromTokenInput = new eth_wallet_6.BigNumber(this.fromTokenInputText);
+                this.fromTokenInput = new eth_wallet_5.BigNumber(this.fromTokenInputText);
                 if (this.fromTokenInput.isNaN()) {
-                    this.fromTokenInput = new eth_wallet_6.BigNumber(0);
-                    this.estimatedAmountInUSD = new eth_wallet_6.BigNumber(0);
-                }
-                else {
-                    this.fromTokenInputChange();
+                    this.fromTokenInput = new eth_wallet_5.BigNumber(0);
                 }
             };
             this.setMaxBalanceToFromToken = () => {
                 this.fromTokenInput = this.fromTokenBalanceExact;
                 this.fromTokenInputText = this.fromTokenInput.toString();
-                this.fromTokenInputChange();
-            };
-            this.fromTokenInputChange = async () => {
-                let amount = await (0, API_1.getEstimatedAmountInUSD)(this.state.getChainId(), this.fromTokenObject, this.fromTokenInput.toString());
-                this.estimatedAmountInUSD = new eth_wallet_6.BigNumber(amount);
             };
             this.offerPriceInputTextChange = (value) => {
                 this.offerPriceText = value;
@@ -2175,9 +2020,18 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             this.fromTokenAddress = fromTokenAddress;
             this.offerIndex = offerIndex;
             this.currentStage = Stage.SET_AMOUNT;
-            this.$eventBus = components_6.application.EventBus;
             scom_token_list_3.tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
             this.initApprovalModelAction();
+        }
+        showTxStatus(status, content) {
+            if (this.onShowTxStatus) {
+                this.onShowTxStatus(status, content);
+            }
+        }
+        setSubmitBtnStatus(isLoading, isApproval, resetForm) {
+            if (this.onSubmitBtnStatus) {
+                this.onSubmitBtnStatus(isLoading, isApproval, resetForm);
+            }
         }
         async initApprovalModelAction() {
             const address = (0, API_1.getLiquidityProviderAddress)(this.state.getChainId());
@@ -2194,60 +2048,47 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                 onApproving: async (token, receipt) => {
                     let waitingStage = this.currentStage === Stage.FIRST_TOKEN_APPROVAL ? Stage.WAITING_FOR_FIRST_TOKEN_APPROVAL : Stage.WAITING_FOR_GOV_TOKEN_APPROVAL;
                     this.currentStage = waitingStage;
-                    // this.$eventBus.dispatch(EventId.SetResultMessage, {
-                    //   status: 'success',
-                    //   txtHash: receipt,
-                    // });
-                    // this.$eventBus.dispatch(EventId.ShowResult);
+                    this.showTxStatus('success', receipt);
+                    this.setSubmitBtnStatus(true, true);
                     if (onApproving)
                         onApproving(token, receipt);
                 },
                 onApproved: async (token) => {
                     await this.getNextTokenApprovalStage();
+                    this.setSubmitBtnStatus(false, true);
                     if (onApproved)
                         onApproved(token);
                 },
                 onApprovingError: async (token, err) => {
-                    // this.$eventBus.dispatch(EventId.SetResultMessage, {
-                    //   status: 'error',
-                    //   content: err,
-                    // });
-                    // this.$eventBus.dispatch(EventId.ShowResult);
+                    this.showTxStatus('error', err);
+                    this.setSubmitBtnStatus(false, true);
                 },
                 onPaying: async (receipt) => {
-                    // setGroupQueueActionsStatus(this.actionKey, true, this.keyTab);
-                    // this.$eventBus.dispatch(EventId.SetResultMessage, {
-                    //   status: 'success',
-                    //   txtHash: receipt,
-                    //   customRedirect: { name: 'group-queue', params: { keyTab: this.keyTab } },
-                    // });
-                    // this.$eventBus.dispatch(EventId.ShowResult);
+                    this.showTxStatus('success', receipt);
+                    this.setSubmitBtnStatus(true);
                 },
                 onPaid: async (receipt) => {
                     scom_token_list_3.tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
-                    // setGroupQueueActionsStatus(this.actionKey, false, this.keyTab);
+                    this.setSubmitBtnStatus(false, false, true);
                 },
                 onPayingError: async (err) => {
-                    // this.$eventBus.dispatch(EventId.SetResultMessage, {
-                    //   status: 'error',
-                    //   content: err,
-                    // });
-                    // this.$eventBus.dispatch(EventId.ShowResult);
+                    this.showTxStatus('error', err);
+                    this.setSubmitBtnStatus(false);
                 }
             });
             this.state.approvalModel.spenderAddress = address;
         }
         async getNextTokenApprovalStage() {
             const chainId = this.state.getChainId();
-            const StakeToken = (0, API_1.getQueueStakeToken)(chainId);
-            if (!StakeToken)
+            const stakeToken = (0, API_1.getQueueStakeToken)(chainId);
+            if (!stakeToken)
                 return;
             const tokens = await (0, API_1.getToBeApprovedTokens)(chainId, this.fromTokenObject, this.fromTokenInput.toString(), this.fee.toString());
             if (tokens && tokens.length > 0) {
                 if (tokens.includes(this.fromTokenAddress)) {
                     this.currentStage = Stage.FIRST_TOKEN_APPROVAL;
                 }
-                else if (tokens.includes(StakeToken.address)) {
+                else if (tokens.includes(stakeToken.address)) {
                     this.currentStage = Stage.GOV_TOKEN_APPROVAL;
                 }
             }
@@ -2256,24 +2097,16 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             }
         }
         async approveToken(tokenObj) {
-            // this.$eventBus.dispatch(EventId.SetResultMessage, {
-            //   status: 'warning',
-            //   content: `Approving ${tokenObj.symbol} allowance`
-            // });
-            // this.$eventBus.dispatch(EventId.ShowResult);
+            this.showTxStatus('warning', `Approving ${tokenObj.symbol} allowance`);
             const amount = this.currentStage === Stage.FIRST_TOKEN_APPROVAL ? this.fromTokenInput.toString() : this.fee.toString();
             this.approvalModelAction.doApproveAction(tokenObj, amount);
         }
         async addLiquidityAction(endDate, deadline) {
-            // this.$eventBus.dispatch(EventId.SetResultMessage, {
-            //   status: 'warning',
-            //   content: '',
-            // });
+            this.showTxStatus('warning', '');
             const restrictedPrice = (0, index_4.toWeiInv)(this.offerPriceText).shiftedBy(-Number(18)).toFixed();
             const allowAll = this.offerTo === OfferState.Everyone;
             const arrWhitelist = (allowAll || this.switchLock === LockState.Locked) ? [] : this.addresses;
-            // this.$eventBus.dispatch(EventId.ShowResult);
-            (0, API_1.addLiquidityToGroupQueue)(this.state.getChainId(), this.fromTokenObject, this.toTokenObject, this.fromTokenObject, this.pairIndex, this.offerIndex ? Number(this.offerIndex) : 0, this.fromTokenInput.toNumber(), allowAll, restrictedPrice, this.startDate.unix(), endDate, deadline, arrWhitelist);
+            (0, API_1.addLiquidity)(this.state.getChainId(), this.fromTokenObject, this.toTokenObject, this.fromTokenObject, this.pairIndex, this.offerIndex ? Number(this.offerIndex) : 0, this.fromTokenInput.toNumber(), allowAll, restrictedPrice, this.startDate.unix(), endDate, deadline, arrWhitelist);
         }
     }
     exports.Model = Model;
@@ -2285,7 +2118,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/index.ts", ["require", "ex
     __exportStar(API_2, exports);
     __exportStar(model_1, exports);
 });
-define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_7) {
+define("@scom/scom-liquidity-provider/detail/whitelist.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_7) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.whiteListStyle = void 0;
@@ -2293,7 +2126,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
     exports.whiteListStyle = components_7.Styles.style({
         $nest: {
             '.modal': {
-                background: Theme.background.modal,
+                background: `${Theme.background.main} !important`,
                 width: 700,
                 maxWidth: '100%',
                 padding: '0.75rem 1rem',
@@ -2303,7 +2136,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
             '.i-modal_header': {
                 marginBottom: '0.75rem',
                 paddingBottom: '0.5rem',
-                borderBottom: `2px soid ${Theme.background.main}`,
+                borderBottom: `2px soid ${Theme.input.background}`,
                 color: Theme.colors.primary.main,
                 fontSize: '1.25rem',
                 fontWeight: 700,
@@ -2324,20 +2157,18 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                     }
                 }
             },
-            '.text-yellow *': {
-                color: Theme.colors.secondary.main,
-            },
             '.text-err': {
                 marginBottom: '0.25rem',
                 lineHeight: '1rem',
                 $nest: {
                     '*': {
-                        color: Theme.colors.primary.main,
+                        color: '#f15e61',
                     }
                 }
             },
-            '.text-note *': {
-                color: '#b5b8e3',
+            '.text-note': {
+                color: Theme.text.primary,
+                opacity: 0.8,
                 fontSize: '0.8rem',
                 lineHeight: '1rem',
                 display: 'block',
@@ -2347,7 +2178,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                background: 'hsla(0, 0%, 100%, 0.1)',
+                background: Theme.input.background,
                 borderRadius: '8px',
                 marginBottom: '8px',
                 marginLeft: '2px',
@@ -2368,10 +2199,10 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                             },
                             '&:focus::placeholder': {
                                 opacity: 0,
-                            },
-                        },
-                    },
-                },
+                            }
+                        }
+                    }
+                }
             },
             '.input-address': {
                 opacity: 1,
@@ -2382,8 +2213,8 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                         background: Theme.input.background,
                         borderRadius: '10px',
                         border: '1px solid transparent'
-                    },
-                },
+                    }
+                }
             },
             '.input-allocation': {
                 opacity: 1,
@@ -2413,19 +2244,20 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                         color: Theme.input.fontColor,
                         borderRadius: 0,
                     }
-                },
+                }
             },
             '.input-batch': {
                 maxWidth: '500px',
+                color: Theme.input.fontColor,
+                borderRadius: '0.5rem',
+                border: 'none',
                 $nest: {
                     'textarea': {
-                        background: Theme.input.background,
-                        color: Theme.input.fontColor,
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '0.5rem',
                         border: 'none',
                         height: '150px !important',
+                        padding: '0.5rem 0.75rem',
                         resize: 'none',
+                        outline: 'none'
                     },
                     '::-webkit-scrollbar': {
                         width: '3px',
@@ -2433,7 +2265,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                     '::-webkit-scrollbar-thumb': {
                         background: Theme.background.gradient,
                         borderRadius: '5px',
-                    },
+                    }
                 }
             },
             '#groupBtnElm': {
@@ -2443,8 +2275,8 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                         width: '16px !important',
                         height: '16px !important',
                         marginRight: '0.25rem',
-                    },
-                },
+                    }
+                }
             },
             'i-button': {
                 display: 'flex',
@@ -2457,8 +2289,8 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                 margin: '0.5rem',
             },
             '.btn-cancel': {
-                background: '#eaecef !important',
-                color: `${Theme.background.default} !important`,
+                background: `${Theme.text.primary} !important`,
+                color: `${Theme.background.main} !important`,
             },
             '.btn-submit': {
                 textAlign: 'center',
@@ -2470,19 +2302,23 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                 marginBottom: '1.5rem',
                 $nest: {
                     '.paginate_button': {
-                        backgroundColor: 'rgb(12, 18, 52)',
-                        border: `1px solid #f15e61`,
-                        color: '#f7d064',
+                        backgroundColor: Theme.input.background,
+                        border: `1px solid ${Theme.colors.primary.main}`,
+                        color: Theme.input.fontColor,
                         padding: '4px 16px',
                         $nest: {
                             '&.active': {
-                                backgroundColor: '#d05271',
-                                border: '1px solid #d05271',
-                                color: '#fff',
-                            },
-                        },
+                                backgroundColor: Theme.colors.primary.main,
+                                border: `1px solid ${Theme.colors.primary.main}`,
+                                color: Theme.text.primary,
+                            }
+                        }
                     },
-                },
+                    '.pagination a.disabled': {
+                        color: Theme.input.fontColor,
+                        opacity: 0.6
+                    }
+                }
             },
             '@media screen and (max-width: 525px)': {
                 $nest: {
@@ -2511,20 +2347,21 @@ define("@scom/scom-liquidity-provider/whitelist/index.css.ts", ["require", "expo
                                 $nest: {
                                     '.paginate_button': {
                                         minWidth: '50px',
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     });
 });
-define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/whitelist/index.css.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-token-list"], function (require, exports, components_8, index_css_1, eth_wallet_7, index_6, scom_token_list_4) {
+define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/detail/whitelist.css.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-token-list"], function (require, exports, components_8, whitelist_css_1, eth_wallet_6, index_6, scom_token_list_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ManageWhitelist = void 0;
+    const Theme = components_8.Styles.Theme.ThemeVars;
     ;
     const dummyAddressList = [
         "0xFa8e00000001234567899876543210000000Fa8e",
@@ -2567,7 +2404,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports
         }
         ;
         get totalAllocation() {
-            let total = new eth_wallet_7.BigNumber(0);
+            let total = new eth_wallet_6.BigNumber(0);
             this.listAddress.forEach((item) => {
                 if (item.address) {
                     const value = this.isReadOnly ? item.allocationVal : item.allocation;
@@ -2579,7 +2416,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports
         ;
         get fee() {
             if (!this.pairCustomParams || !this.totalAddress)
-                return new eth_wallet_7.BigNumber(0);
+                return new eth_wallet_6.BigNumber(0);
             let total = 0;
             this.listAddress.forEach((item) => {
                 if (item.address) {
@@ -2591,7 +2428,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports
                     }
                 }
             });
-            return new eth_wallet_7.BigNumber(this.pairCustomParams.feePerTrader).times(total);
+            return new eth_wallet_6.BigNumber(this.pairCustomParams.feePerTrader).times(total);
         }
         ;
         get idxFiltering() {
@@ -2618,7 +2455,6 @@ define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports
             this.addresses = [];
             this.pairCustomParams = {};
             this.listAddress = [];
-            this.totalAddressLabel = [];
             this.isAddByBatch = false;
             this.totalPage = 0;
             this.pageNumber = 1;
@@ -2687,12 +2523,12 @@ define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports
                         this.$render("i-hstack", { verticalAlignment: "center", width: "50%", padding: { left: 10 } },
                             this.$render("i-input", { caption: this.tokenSymbol, class: `input-allocation ${!this.isReadOnly ? 'w-input' : ''}`, inputType: this.isReadOnly ? undefined : 'number', value: item.allocation + '', enabled: !this.isReadOnly, onChanged: (e) => this.onInputAllocation(e, indexVal), width: "100%", height: 43 }),
                             !this.isReadOnly && !item.isOld ?
-                                this.$render("i-icon", { name: "times", fill: "#f7d063", class: "pointer", margin: { left: 4 }, height: 18, width: 18, onClick: () => this.removeAddress(idx, indexVal) }) :
+                                this.$render("i-icon", { name: "trash", fill: "#f15e61", class: "pointer", margin: { left: 4 }, height: 18, width: 18, onClick: () => this.removeAddress(idx, indexVal) }) :
                                 [])));
                 });
             };
             this.getBatchValues = () => {
-                let items = this.convertGroupQueueWhitelistedAddresses(this.inputBatch.value);
+                let items = this.convertWhitelistedAddresses(this.inputBatch.value);
                 let list = [];
                 for (const item of items) {
                     const { address, allocation } = item;
@@ -2853,40 +2689,40 @@ define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports
             super.init();
         }
         render() {
-            return (this.$render("i-modal", { id: "manageWhitelistModal", closeIcon: { name: 'times' }, class: index_css_1.whiteListStyle },
+            return (this.$render("i-modal", { id: "manageWhitelistModal", closeIcon: { name: 'times' }, class: whitelist_css_1.whiteListStyle },
                 this.$render("i-panel", { class: "i-modal_content text-center" },
                     this.$render("i-panel", { id: "addPanel" },
                         this.$render("i-panel", { class: "search-box" },
-                            this.$render("i-icon", { name: "search", fill: "#fff", width: 16, height: 16, margin: { right: 4 } }),
+                            this.$render("i-icon", { name: "search", fill: Theme.input.fontColor, width: 16, height: 16, margin: { right: 4 } }),
                             this.$render("i-input", { id: "searchInput", class: "input-search", placeholder: "Search", width: "100%", height: 40, onChanged: () => this.searchAddress() })),
                         this.$render("i-hstack", { horizontalAlignment: "space-between" },
                             this.$render("i-hstack", { class: "total-info", horizontalAlignment: "space-between", width: "50%", padding: { left: 8, right: 10 } },
                                 this.$render("i-label", { caption: "Address" }),
-                                this.$render("i-hstack", null,
-                                    this.$render("i-label", { caption: "Total:", margin: { right: 4 } }),
-                                    this.$render("i-label", { id: "totalAddressLabel", class: "text-yellow", caption: "0 Addresses" }))),
+                                this.$render("i-hstack", { gap: 4 },
+                                    this.$render("i-label", { caption: "Total:" }),
+                                    this.$render("i-label", { id: "totalAddressLabel", font: { color: Theme.colors.primary.main }, caption: "0 Addresses" }))),
                             this.$render("i-hstack", { class: "total-info", horizontalAlignment: "space-between", width: "50%", padding: { left: 10, right: 8 } },
                                 this.$render("i-label", { caption: "Allocation" }),
-                                this.$render("i-hstack", null,
-                                    this.$render("i-label", { caption: "Total:", margin: { right: 4 } }),
-                                    this.$render("i-label", { id: "totalAllocationLabel", class: "text-yellow", caption: "-" })))),
+                                this.$render("i-hstack", { gap: 4 },
+                                    this.$render("i-label", { caption: "Total:" }),
+                                    this.$render("i-label", { id: "totalAllocationLabel", font: { color: Theme.colors.primary.main }, caption: "-" })))),
                         this.$render("i-vstack", { id: "listAddressContainer" }),
                         this.$render("i-hstack", { horizontalAlignment: "end", wrap: 'wrap', margin: { top: 10 } },
                             this.$render("i-hstack", { id: "groupBtnElm", horizontalAlignment: "center", verticalAlignment: "center", gap: "10px" },
                                 this.$render("i-button", { class: "btn-os", icon: { name: "plus-square" }, caption: "Add", onClick: this.onAdd }),
                                 this.$render("i-button", { class: "btn-os", icon: { name: "plus-square" }, caption: "Add By Batch", onClick: this.onAddBatch })),
-                            this.$render("i-pagination", { id: "paginationElm", margin: { top: 16, bottom: 16, left: 12, right: 12 }, width: "auto", currentPage: this.pageNumber, totalPages: this.totalPage, onPageChanged: this.onSelectIndex.bind(this) })),
-                        this.$render("i-vstack", { id: "balanceFeeContainer", verticalAlignment: "start", margin: { bottom: 10 }, padding: { bottom: 16 }, border: { top: { color: '#0c1234', width: '2px', style: 'solid' } } },
+                            this.$render("i-pagination", { id: "paginationElm", margin: { top: 16, bottom: 16, left: 12, right: 12 }, width: "auto", currentPage: this.pageNumber, totalPages: this.totalPage, onPageChanged: this.onSelectIndex })),
+                        this.$render("i-vstack", { id: "balanceFeeContainer", verticalAlignment: "start", margin: { bottom: 10 }, padding: { bottom: 16 }, border: { top: { color: Theme.input.background, width: '2px', style: 'solid' } } },
                             this.$render("i-vstack", { verticalAlignment: "start", margin: { top: 16 } },
                                 this.$render("i-hstack", { width: "100%", verticalAlignment: "start", horizontalAlignment: "space-between" },
                                     this.$render("i-label", { caption: "OSWAP Fee" }),
-                                    this.$render("i-label", { id: "totalFee", class: "text-yellow text-right", caption: "-" })),
+                                    this.$render("i-label", { id: "totalFee", font: { color: Theme.colors.primary.main }, class: "text-right", caption: "-" })),
                                 this.$render("i-vstack", { width: "100%", verticalAlignment: "end", horizontalAlignment: "end" },
                                     this.$render("i-label", { id: "balanceLabel", caption: "-" }))))),
                     this.$render("i-panel", { id: "batchPanel", visible: false, padding: { left: 16, right: 16 } },
                         this.$render("i-hstack", { horizontalAlignment: "space-between" },
                             this.$render("i-label", { caption: "Add by Batch" }),
-                            this.$render("i-label", { class: "text-yellow pointer", caption: "Clear", onClick: this.onClear })),
+                            this.$render("i-label", { class: "pointer", font: { color: Theme.colors.primary.main }, caption: "Clear", onClick: this.onClear })),
                         this.$render("i-vstack", { verticalAlignment: "center", horizontalAlignment: "center", margin: { top: 10 } },
                             this.$render("i-label", { class: "text-note", caption: "Please enter one address and amount on each line" }),
                             this.$render("i-label", { class: "text-note", caption: `${dummyAddressList[0]},250` }),
@@ -2906,7 +2742,7 @@ define("@scom/scom-liquidity-provider/whitelist/index.tsx", ["require", "exports
     ], ManageWhitelist);
     exports.ManageWhitelist = ManageWhitelist;
 });
-define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-token-list"], function (require, exports, components_9, eth_wallet_8, index_7, liquidity_utils_1, index_8, assets_3, scom_token_list_5) {
+define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-token-list"], function (require, exports, components_9, eth_wallet_7, index_7, liquidity_utils_1, index_8, assets_3, scom_token_list_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.LiquidityForm = void 0;
@@ -2928,7 +2764,24 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             this.onUpdateSummary = async () => {
                 if (this.updateSummary)
                     await this.updateSummary();
-                // this.$eventBus.dispatch(EventId.EmitFieldChange, { source: 'GroupQueueFrom', stage: this.currentStage });
+                if (this.onFieldChanged)
+                    this.onFieldChanged(this.currentStage);
+            };
+            this.onSubmitBtnStatus = (isLoading, isApproval) => {
+                this.submitBtn.rightIcon.visible = isLoading;
+                this.secondTokenPanel.enabled = !isLoading;
+                this.secondInput.enabled = !isLoading;
+                this.startDateContainer.enabled = !isLoading;
+                this.endDateContainer.enabled = !isLoading;
+                this.inputStartDate.enabled = !isLoading;
+                this.inputEndDate.enabled = !isLoading;
+                this.statusPanel.enabled = !isLoading;
+                this.offerToDropdown.enabled = !isLoading;
+                this.addressPanel.enabled = !isLoading;
+                this.btnAddress.enabled = !isLoading;
+                if (!isApproval) {
+                    this.submitBtn.caption = isLoading ? 'Submitting' : 'Submit';
+                }
             };
             this.onSetMaxBalance = () => {
                 this.model.setCurrentStage(liquidity_utils_1.Stage.SET_AMOUNT);
@@ -2940,7 +2793,8 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             };
             this.updateSummaryField = () => {
                 this.onUpdateHelpContent();
-                // this.$eventBus.dispatch(EventId.EmitFocusField, { source: 'GroupQueueFrom', stage: this.currentStage });
+                if (this.onFocusChanged)
+                    this.onFocusChanged(this.currentStage);
             };
             this.showConfirmation = (value) => {
                 this.confirmationModal.visible = value;
@@ -2954,6 +2808,11 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 this.onProceed(source);
             };
             this.onProceed = async (source) => {
+                if (!this.state.isRpcWalletConnected()) {
+                    const clientWallet = eth_wallet_7.Wallet.getClientInstance();
+                    await clientWallet.switchNetwork(this.state.getChainId());
+                    return;
+                }
                 if (this.currentStage === liquidity_utils_1.Stage.SUBMIT) {
                     this.showConfirmation(true);
                 }
@@ -3126,7 +2985,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                         balance: this.model.govTokenBalance(),
                         pairCustomParams: this.pairCustomParams,
                     };
-                    this.manageWhitelist.convertGroupQueueWhitelistedAddresses = liquidity_utils_1.convertGroupQueueWhitelistedAddresses;
+                    this.manageWhitelist.convertWhitelistedAddresses = liquidity_utils_1.convertWhitelistedAddresses;
                     if (!this.manageWhitelist.updateAddress) {
                         this.manageWhitelist.updateAddress = (data) => this.getAddress(data);
                     }
@@ -3150,13 +3009,13 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 const elm = (this.$render("i-hstack", { verticalAlignment: "center" },
                     this.$render("i-image", { width: "20px", class: "icon-left inline-block", url: scom_token_list_5.assets.tokenPath(this.model.fromTokenObject(), this.chainId), fallbackUrl: index_7.fallbackUrl }),
                     this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: scom_token_list_5.assets.tokenPath(this.model.toTokenObject(), this.chainId), fallbackUrl: index_7.fallbackUrl }),
-                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), class: "small-label mr-0-5" }),
-                    this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: "#fff", class: "mr-0-5" }),
+                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), class: "small-label", margin: { right: 8 } }),
+                    this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: Theme.text.primary, margin: { right: 8 } }),
                     this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress), class: "small-label" })));
                 this.headerSection.appendChild(elm);
             };
             this.renderUI = async () => {
-                this.queueForm.clearInnerHTML();
+                this.pnlForm.clearInnerHTML();
                 this.currentFocus = undefined;
                 const tokenMap = scom_token_list_5.tokenStore.getTokenMapByChainId(this.chainId);
                 this.inputStartDate = await components_9.Datepicker.create({ type: 'dateTime', enabled: !this.isStartDateDisabled, width: '100%', height: '60px' });
@@ -3174,29 +3033,29 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                         this.$render("i-vstack", { class: "input--token-container" },
                             this.$render("i-hstack", { horizontalAlignment: "space-between", verticalAlignment: "end", width: "100%" },
                                 this.$render("i-vstack", { width: "50%" },
-                                    this.$render("i-label", { class: "custom-label", caption: "You Are Selling" })),
+                                    this.$render("i-label", { caption: "You Are Selling", font: { bold: true } })),
                                 this.$render("i-vstack", { width: "50%", horizontalAlignment: "end" },
-                                    this.$render("i-label", { id: "balanceLb", class: "text--grey ml-auto text-right", caption: (0, index_8.renderBalanceTooltip)({ title: 'Balance', value: this.model.fromTokenBalance() }, tokenMap) }))),
+                                    this.$render("i-label", { class: "text-right", opacity: 0.8, margin: { left: 'auto' }, caption: (0, index_8.renderBalanceTooltip)({ title: 'Balance', value: this.model.fromTokenBalance() }, tokenMap) }))),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
-                                    this.$render("i-vstack", { width: "calc(100% - 160px)" },
-                                        this.$render("i-input", { id: "firstInput", value: this.fromTokenInputText, inputType: "number", placeholder: "0.0", class: "token-input w-100 mr-0-3", width: "100%", onChanged: this.fromTokenInputTextChange.bind(this), onFocus: (source) => this.handleFocusInput(source, liquidity_utils_1.Stage.SET_AMOUNT) })),
+                                    this.$render("i-vstack", { width: "calc(100% - 160px)", height: 48 },
+                                        this.$render("i-input", { id: "firstInput", value: this.fromTokenInputText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", onChanged: this.fromTokenInputTextChange.bind(this), onFocus: (source) => this.handleFocusInput(source, liquidity_utils_1.Stage.SET_AMOUNT) })),
                                     this.$render("i-vstack", { width: "155px" },
                                         this.$render("i-scom-token-input", { id: "firstTokenInput", class: "float-right", width: "100%", background: { color: Theme.input.background }, tokenReadOnly: true, isInputShown: false, isBalanceShown: false }))))),
                         this.$render("i-button", { id: "nextBtn1", class: "btn-os btn-next", visible: this.isSetOrderAmountStage, caption: this.nextButtonText, onClick: () => this.onProceed(this.secondInput), enabled: !this.isProceedButtonDisabled })),
                     this.$render("i-panel", { id: "secondTokenPanel", class: "token-box", enabled: !this.isOfferPriceDisabled },
                         this.$render("i-vstack", { class: "input--token-container" },
                             this.$render("i-hstack", { class: "balance-info", horizontalAlignment: "space-between", verticalAlignment: "center", width: "100%" },
-                                this.$render("i-hstack", { gap: 2, verticalAlignment: "center" },
-                                    this.$render("i-label", { class: "bold", caption: "Offer Price" }),
-                                    this.$render("i-label", { id: "lbOfferPrice1", class: "bold", caption: `(${(0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress)}` }),
-                                    this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: "#fff", margin: { left: 2, right: 2 } }),
-                                    this.$render("i-label", { id: "lbOfferPrice2", class: "bold", caption: `${(0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress)})` })),
-                                this.$render("i-icon", { tooltip: { content: 'Switch Price' }, width: 32, height: 32, class: "toggle-icon", name: "arrows-alt-v", onClick: this.onSwitchPrice })),
+                                this.$render("i-hstack", { gap: 4, verticalAlignment: "center" },
+                                    this.$render("i-label", { font: { bold: true }, caption: "Offer Price" }),
+                                    this.$render("i-label", { id: "lbOfferPrice1", font: { bold: true }, caption: `(${(0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress)}` }),
+                                    this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: Theme.text.primary }),
+                                    this.$render("i-label", { id: "lbOfferPrice2", font: { bold: true }, caption: `${(0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress)})` })),
+                                this.$render("i-icon", { tooltip: { content: 'Switch Price' }, width: 32, height: 32, class: "toggle-icon", name: "arrows-alt-v", fill: Theme.input.fontColor, background: { color: Theme.input.background }, onClick: this.onSwitchPrice })),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: `input--token-box ${this.isOfferPriceStage && 'bordered'}`, verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
-                                    this.$render("i-vstack", { width: "calc(100% - 160px)" },
-                                        this.$render("i-input", { id: "secondInput", value: this.offerPriceText, inputType: "number", placeholder: "0.0", class: "token-input w-100 mr-0-3", width: "100%", enabled: !this.isOfferPriceDisabled, onChanged: this.changeOfferPrice.bind(this), onFocus: (source) => this.handleFocusInput(source, liquidity_utils_1.Stage.SET_OFFER_PRICE) })),
+                                    this.$render("i-vstack", { width: "calc(100% - 160px)", height: 48 },
+                                        this.$render("i-input", { id: "secondInput", value: this.offerPriceText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", enabled: !this.isOfferPriceDisabled, onChanged: this.changeOfferPrice.bind(this), onFocus: (source) => this.handleFocusInput(source, liquidity_utils_1.Stage.SET_OFFER_PRICE) })),
                                     this.$render("i-vstack", { width: "155px" },
                                         this.$render("i-scom-token-input", { class: "float-right", width: "100%", id: "secondTokenInput", background: { color: 'transparent' }, tokenReadOnly: true, isInputShown: false, isBtnMaxShown: false, isBalanceShown: false }))))),
                         this.$render("i-button", { id: "nextBtn2", class: "btn-os btn-next", visible: this.isOfferPriceStage, caption: this.nextButtonText, onClick: () => this.onProceed(this.inputStartDate), enabled: !this.isProceedButtonDisabled })),
@@ -3204,22 +3063,22 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                         this.$render("i-hstack", { gap: "10px" },
                             this.$render("i-vstack", { id: "startDateContainer", enabled: !this.isStartDateDisabled, class: "input--token-container" },
                                 this.$render("i-hstack", { horizontalAlignment: "space-between", verticalAlignment: "center", width: "100%" },
-                                    this.$render("i-label", { class: "bold", caption: "Start Date" })),
+                                    this.$render("i-label", { font: { bold: true }, caption: "Start Date" })),
                                 this.$render("i-panel", { class: "bg-box", width: "100%" },
                                     this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", width: "100%" },
                                         this.$render("i-vstack", { width: "100%" }, this.inputStartDate)))),
                             this.$render("i-vstack", { id: "endDateContainer", enabled: !this.isEndDateDisabled, class: "input--token-container" },
                                 this.$render("i-hstack", { horizontalAlignment: "space-between", verticalAlignment: "center", width: "100%" },
-                                    this.$render("i-label", { class: "bold", caption: "End Date" })),
+                                    this.$render("i-label", { font: { bold: true }, caption: "End Date" })),
                                 this.$render("i-panel", { class: "bg-box", width: "100%" },
                                     this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", width: "100%" },
                                         this.$render("i-vstack", { width: "100%" }, this.inputEndDate))))),
                         this.$render("i-button", { id: "nextBtn3", class: "btn-os btn-next", visible: this.isStartDateStage || this.isEndDateStage, caption: this.nextButtonText, onClick: () => this.preProceed(this.offerToDropdown, liquidity_utils_1.Stage.SET_END_DATE), enabled: !this.isProceedButtonDisabled })),
                     this.$render("i-panel", { id: "statusPanel", class: "token-box", enabled: !this.isOfferToDisabled },
                         this.$render("i-vstack", { class: "input--token-container" },
-                            this.$render("i-label", { class: "custom-label", caption: "Offer To" }),
+                            this.$render("i-label", { caption: "Offer To", font: { bold: true } }),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
-                                this.$render("i-hstack", { class: "input--token-box px-0", verticalAlignment: "center", width: "100%" },
+                                this.$render("i-hstack", { class: "input--token-box", height: 60, padding: { left: 0, right: 0 }, verticalAlignment: "center", width: "100%" },
                                     this.$render("i-panel", { class: "btn-dropdown" },
                                         this.$render("i-button", { id: "offerToDropdown", width: "calc(100% - 1px)", enabled: !this.isOfferToDisabled, caption: this.offerTo, onClick: (source) => this.onOfferTo(source) }),
                                         this.$render("i-modal", { id: "offerToModal", showBackdrop: false, height: 'auto', popupPlacement: 'bottom' },
@@ -3228,12 +3087,12 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                     this.$render("i-panel", { id: "addressPanel", class: "token-box", visible: this.isAddressShown, enabled: !this.isAddressDisabled },
                         this.$render("i-vstack", { class: "input--token-container" },
                             this.$render("i-hstack", { verticalAlignment: "center" },
-                                this.$render("i-label", { class: "custom-label", caption: "Whitelist Address", margin: { right: 4 } }),
+                                this.$render("i-label", { caption: "Whitelist Address", margin: { right: 4 }, font: { bold: true } }),
                                 this.$render("i-icon", { name: "question-circle", width: 15, height: 15, tooltip: {
                                         content: 'Only whitelisted address(es) are allowed to buy the tokens at your offer price.'
-                                    }, fill: "#ffffff8c", class: "custom-question-icon" })),
+                                    }, class: "custom-question-icon" })),
                             this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center" },
-                                this.$render("i-label", { id: "lbAddress", class: "bold", caption: this.addressText }),
+                                this.$render("i-label", { id: "lbAddress", font: { bold: true }, caption: this.addressText }),
                                 this.$render("i-button", { id: "btnAddress", class: "btn-os btn-address", enabled: !this.isAddressDisabled, caption: this.btnAddressText, onClick: this.showWhitelistModal }))),
                         this.$render("i-button", { id: "nextBtn5", class: "btn-os btn-next", visible: this.isAddressStage, caption: this.nextButtonText, onClick: this.onProceed, enabled: !this.isProceedButtonDisabled })),
                     this.$render("i-panel", { class: "token-box" },
@@ -3244,22 +3103,22 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                                     this.$render("i-label", { caption: "OSWAP Fee", margin: { right: 4 } }),
                                     this.$render("i-icon", { name: "question-circle", width: 15, height: 15, tooltip: {
                                             content: 'The OSWAP fee is calculated by a fixed offer fee + whitelist address fee * no. of whitelisted addresses'
-                                        }, fill: "#ffffff8c" }))),
+                                        } }))),
                             this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between" },
-                                this.$render("i-label", { id: "lbWillGet", class: "bold" }),
-                                this.$render("i-label", { id: "lbFee", class: "bold" })),
+                                this.$render("i-label", { id: "lbWillGet", font: { bold: true } }),
+                                this.$render("i-label", { id: "lbFee", font: { bold: true } })),
                             this.$render("i-hstack", { horizontalAlignment: "end" },
-                                this.$render("i-label", { id: "lbGovBalance", class: "text--grey ml-auto", caption: (0, index_8.renderBalanceTooltip)({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap) })))),
+                                this.$render("i-label", { id: "lbGovBalance", opacity: 0.8, margin: { left: 'auto' }, caption: (0, index_8.renderBalanceTooltip)({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap) })))),
                     this.$render("i-panel", { id: "approveAllowancePanel", class: "token-box" },
                         this.$render("i-vstack", { class: "input--token-container" },
-                            this.$render("i-label", { class: "custom-label", caption: "Approve Allowance" }),
+                            this.$render("i-label", { caption: "Approve Allowance", font: { bold: true } }),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
-                                this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "center", width: "100%", gap: "15px" },
-                                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress) }),
+                                this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "center", width: "100%", gap: "15px", height: 60 },
+                                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), font: { bold: true } }),
                                     this.$render("i-image", { url: scom_token_list_5.assets.tokenPath(this.model.fromTokenObject(), this.chainId), fallbackUrl: index_7.fallbackUrl, width: "30", class: "inline-block" }),
-                                    this.$render("i-label", { caption: "-", class: "inline-block mx-0-5" }),
+                                    this.$render("i-label", { caption: "-", class: "inline-block", margin: { right: 8, left: 8 }, font: { bold: true } }),
                                     this.$render("i-image", { url: this.oswapIcon, width: "30", class: "inline-block" }),
-                                    this.$render("i-label", { caption: this.oswapSymbol }))))),
+                                    this.$render("i-label", { caption: this.oswapSymbol, font: { bold: true } }))))),
                     this.renderProgress(),
                     this.$render("i-button", { id: "submitBtn", class: "btn-os btn-next", caption: this.proceedButtonText, enabled: !this.isSubmitButtonDisabled, rightIcon: { spin: true, visible: false }, onClick: this.onProceed }),
                     this.$render("manage-whitelist", { id: "manageWhitelist" })));
@@ -3275,7 +3134,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 if (this.secondTokenInput) {
                     this.secondTokenInput.token = this.model.toTokenObject();
                 }
-                this.queueForm.appendChild(newElm);
+                this.pnlForm.appendChild(newElm);
                 if (this.isSetOrderAmountStage) {
                     this.setBorder(this.firstInput);
                 }
@@ -3286,7 +3145,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             this.renderProgress = () => {
                 return (this.$render("i-hstack", { verticalAlignment: "center", horizontalAlignment: "center", width: "100%" },
                     this.$render("i-label", { id: "progress1", caption: "1", class: "progress-number" }),
-                    this.$render("i-hstack", { height: 2, width: "100px", background: { color: "#fff" } }),
+                    this.$render("i-hstack", { height: 2, width: "100px", background: { color: Theme.text.primary } }),
                     this.$render("i-label", { id: "progress2", caption: "2", class: "progress-number" })));
             };
             this.updateProgress = () => {
@@ -3322,7 +3181,6 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 this.submitBtn.caption = this.proceedButtonText;
                 this.updateProgress();
             };
-            this.$eventBus = components_9.application.EventBus;
         }
         set state(value) {
             this._state = value;
@@ -3407,9 +3265,11 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             return this.model.isProceedButtonDisabled();
         }
         get isSubmitButtonDisabled() {
+            if (!this.state.isRpcWalletConnected())
+                return false;
             return this.isProceedButtonDisabled ||
                 !(this.currentStage === liquidity_utils_1.Stage.SUBMIT || this.currentStage === liquidity_utils_1.Stage.FIRST_TOKEN_APPROVAL || this.currentStage === liquidity_utils_1.Stage.GOV_TOKEN_APPROVAL) ||
-                (new eth_wallet_8.BigNumber(this.model.fee()).gt(this.model.govTokenBalance()));
+                (new eth_wallet_7.BigNumber(this.model.fee()).gt(this.model.govTokenBalance()));
         }
         get proceedButtonText() {
             return this.model.proceedButtonText();
@@ -3458,7 +3318,8 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             if (focusItem) {
                 focusItem.classList.add("bordered");
                 this.currentFocus = focusItem;
-                // this.$eventBus.dispatch(EventId.EmitFocusField, { source: 'GroupQueueFrom', stage: this.currentStage });
+                if (this.onFocusChanged)
+                    this.onFocusChanged(this.currentStage);
             }
         }
         removeBorder() {
@@ -3476,7 +3337,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
         changeOfferPrice() {
             const decimals = this.isReverse ? this.fromTokenDecimals : this.offerTokenDecimals;
             (0, index_8.limitInputNumber)(this.secondInput, decimals || 18);
-            const val = this.isReverse && Number(this.secondInput.value) > 0 ? new eth_wallet_8.BigNumber(1).dividedBy(this.secondInput.value) : new eth_wallet_8.BigNumber(this.secondInput.value || 0);
+            const val = this.isReverse && Number(this.secondInput.value) > 0 ? new eth_wallet_7.BigNumber(1).dividedBy(this.secondInput.value) : new eth_wallet_7.BigNumber(this.secondInput.value || 0);
             const offerPrice = (0, index_8.limitDecimals)(val.toFixed(), decimals || 18);
             this.model.offerPriceInputTextChange(offerPrice || '0');
             this.updateTextValues();
@@ -3495,9 +3356,9 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             (0, liquidity_utils_1.setOnApproved)(this.onApproved);
         }
         render() {
-            return (this.$render("i-panel", { class: "queue-form detail-col" },
+            return (this.$render("i-panel", { class: "detail-col" },
                 this.$render("i-panel", { class: "detail-col_header", id: "headerSection" }),
-                this.$render("i-panel", { id: "queueForm" }),
+                this.$render("i-panel", { id: "pnlForm" }),
                 this.$render("i-modal", { id: "confirmationModal", class: "bg-modal", closeIcon: { name: 'times' } },
                     this.$render("i-panel", { class: "header" },
                         this.$render("i-icon", { width: 24, height: 24, name: "times", class: "pointer", onClick: () => this.showConfirmation(false) })),
@@ -3547,7 +3408,7 @@ define("@scom/scom-liquidity-provider/detail/progress.tsx", ["require", "exports
                         this.runProgress();
                     }, 1000);
                 }
-            }, 100);
+            }, 300);
         }
         reStartProgress() {
             if (this.enabled && this._onProgressDone) {
@@ -3572,7 +3433,7 @@ define("@scom/scom-liquidity-provider/detail/progress.tsx", ["require", "exports
     ], LiquidityProgress);
     exports.LiquidityProgress = LiquidityProgress;
 });
-define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-token-list"], function (require, exports, components_11, index_9, index_10, eth_wallet_9, index_11, scom_token_list_6) {
+define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-token-list"], function (require, exports, components_11, index_9, index_10, eth_wallet_8, index_11, scom_token_list_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.LiquiditySummary = void 0;
@@ -3580,22 +3441,11 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
     let LiquiditySummary = class LiquiditySummary extends components_11.Module {
         constructor(parent, options) {
             super(parent, options);
-            this.onWalletConnect = async (connected) => {
-                this.renderSetting(connected);
-            };
             this.formatDate = (date) => {
                 if (!date)
                     return 'dd/mm/yyyy hh:mm:ss';
                 return (0, index_10.formatDate)(date, index_10.DefaultDateTimeFormat, true);
             };
-            this.$eventBus = components_11.application.EventBus;
-            this.registerEvent();
-        }
-        registerEvent() {
-            // this.$eventBus.register(this, EventId.IsWalletConnected, this.onWalletConnect)
-            // this.$eventBus.register(this, EventId.IsWalletDisconnected, this.onWalletConnect)
-            // this.$eventBus.register(this, EventId.EmitFocusField, this.onHighlightQueue)
-            // this.$eventBus.register(this, EventId.EmitFieldChange, this.onFormFieldChange)
         }
         set state(value) {
             this._state = value;
@@ -3632,9 +3482,6 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
         set fetchData(callback) {
             this._fetchData = callback;
         }
-        showSetting() {
-            // this.$eventBus.dispatch(EventId.ShowTransactionModal);
-        }
         showAddresses(addresses) {
             this.manageWhitelist.props = {
                 isReadOnly: true,
@@ -3656,7 +3503,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
             const fromSymbol = (0, index_9.tokenSymbol)(this.chainId, this.fromTokenAddress);
             const toSymbol = (0, index_9.tokenSymbol)(this.chainId, toTokenAddress);
             const tokenMap = scom_token_list_6.tokenStore.getTokenMapByChainId(this.chainId);
-            const isOfferPriceValid = newOfferPrice ? new eth_wallet_9.BigNumber(newOfferPrice).gt(0) : false;
+            const isOfferPriceValid = newOfferPrice ? new eth_wallet_8.BigNumber(newOfferPrice).gt(0) : false;
             amountRow = [
                 {
                     id: 'amountRow',
@@ -3884,15 +3731,6 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                 }
             });
         }
-        renderSetting(value) {
-            if (!this.settingLb)
-                return;
-            this.settingLb.innerHTML = '';
-            const elm = (value ?
-                this.$render("i-icon", { name: "cog", width: "24", height: "24", class: "inline-block ml-0-3 pointer", fill: "#fff", onClick: this.showSetting.bind(this) }) :
-                this.$render("i-label", null));
-            this.settingLb.appendChild(elm);
-        }
         init() {
             super.init();
         }
@@ -3913,11 +3751,8 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
             (_h = this.receiveRow) === null || _h === void 0 ? void 0 : _h.classList.remove("highlight-row");
             (_j = this.feeRow) === null || _j === void 0 ? void 0 : _j.classList.remove("highlight-row");
         }
-        onHighlightQueue(params) {
+        onHighlight(stage) {
             var _a, _b, _c, _d, _e, _f, _g, _h;
-            const { source, stage } = params;
-            if (source !== 'GroupQueueFrom')
-                return;
             this.resetHighlight();
             switch (stage) {
                 case index_11.Stage.SET_AMOUNT:
@@ -3941,19 +3776,12 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                     break;
             }
         }
-        onFormFieldChange(params) {
-            const { source, stage } = params;
-            if (source !== 'GroupQueueFrom')
-                return;
-            this.updateSummaryUI(stage);
-        }
         render() {
             return (this.$render("i-panel", { class: 'detail-col detail-col--summary' },
                 this.$render("i-hstack", { class: "detail-col_header", horizontalAlignment: "space-between" },
                     this.$render("i-label", { caption: "Order Summary" }),
                     this.$render("i-hstack", { verticalAlignment: "center", class: "custom-group--icon" },
-                        this.$render("liquidity-progress", { onProgressDone: this.onFetchData.bind(this) }),
-                        this.$render("i-label", { id: "settingLb" }))),
+                        this.$render("liquidity-progress", { onProgressDone: this.onFetchData }))),
                 this.$render("i-panel", { id: "summarySection", class: "summary" }),
                 this.$render("manage-whitelist", { id: "manageWhitelist" })));
         }
@@ -3963,20 +3791,61 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
     ], LiquiditySummary);
     exports.LiquiditySummary = LiquiditySummary;
 });
-define("@scom/scom-liquidity-provider/detail/index.tsx", ["require", "exports", "@scom/scom-liquidity-provider/detail/form.tsx", "@scom/scom-liquidity-provider/detail/summary.tsx", "@scom/scom-liquidity-provider/detail/progress.tsx"], function (require, exports, form_1, summary_1, progress_1) {
+define("@scom/scom-liquidity-provider/detail/help.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/assets.ts"], function (require, exports, components_12, assets_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.LiquidityProgress = exports.LiquiditySummary = exports.LiquidityForm = void 0;
+    exports.LiquidityHelp = void 0;
+    ;
+    let LiquidityHelp = class LiquidityHelp extends components_12.Module {
+        constructor() {
+            super(...arguments);
+            this._adviceTexts = [];
+        }
+        get adviceTexts() {
+            return this._adviceTexts;
+        }
+        set adviceTexts(value) {
+            this._adviceTexts = value;
+            this.updateAdviceText();
+        }
+        updateAdviceText() {
+            this.rightContainer.innerHTML = '';
+            this._adviceTexts.forEach((text, index) => {
+                const prefix = this._adviceTexts.length > 1 ? `${index + 1}. ` : '';
+                const adviceLabel = this.$render("i-label", { class: "inline-block", caption: prefix + text });
+                this.rightContainer.appendChild(adviceLabel);
+            });
+        }
+        render() {
+            return (this.$render("i-panel", { class: "detail-col" },
+                this.$render("i-panel", { class: "detail-col_header" },
+                    this.$render("i-label", { caption: "Help" })),
+                this.$render("i-hstack", { verticalAlignment: "center", margin: { top: 16 } },
+                    this.$render("i-panel", null,
+                        this.$render("i-image", { width: "50", height: "50", class: "inline-block", margin: { right: 8 }, url: assets_4.default.fullPath('img/Help-Troll-Icon-Full-Body.svg') })),
+                    this.$render("i-panel", { id: "rightContainer" }))));
+        }
+    };
+    LiquidityHelp = __decorate([
+        (0, components_12.customElements)('liquidity-help')
+    ], LiquidityHelp);
+    exports.LiquidityHelp = LiquidityHelp;
+});
+define("@scom/scom-liquidity-provider/detail/index.tsx", ["require", "exports", "@scom/scom-liquidity-provider/detail/form.tsx", "@scom/scom-liquidity-provider/detail/summary.tsx", "@scom/scom-liquidity-provider/detail/help.tsx", "@scom/scom-liquidity-provider/detail/progress.tsx"], function (require, exports, form_1, summary_1, help_1, progress_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.LiquidityProgress = exports.LiquidityHelp = exports.LiquiditySummary = exports.LiquidityForm = void 0;
     Object.defineProperty(exports, "LiquidityForm", { enumerable: true, get: function () { return form_1.LiquidityForm; } });
     Object.defineProperty(exports, "LiquiditySummary", { enumerable: true, get: function () { return summary_1.LiquiditySummary; } });
+    Object.defineProperty(exports, "LiquidityHelp", { enumerable: true, get: function () { return help_1.LiquidityHelp; } });
     Object.defineProperty(exports, "LiquidityProgress", { enumerable: true, get: function () { return progress_1.LiquidityProgress; } });
 });
-define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-token-list", "@scom/scom-liquidity-provider/data.json.ts", "@scom/scom-liquidity-provider/index.css.ts", "@scom/scom-liquidity-provider/formSchema.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts"], function (require, exports, components_12, eth_wallet_10, assets_4, index_12, scom_token_list_7, data_json_1, index_css_2, formSchema_1, index_13) {
+define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-token-list", "@scom/scom-liquidity-provider/data.json.ts", "@scom/scom-liquidity-provider/index.css.ts", "@scom/scom-liquidity-provider/formSchema.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts"], function (require, exports, components_13, eth_wallet_9, assets_5, index_12, scom_token_list_7, data_json_1, index_css_1, formSchema_1, index_13) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const Theme = components_12.Styles.Theme.ThemeVars;
-    let ScomLiquidityProvider = class ScomLiquidityProvider extends components_12.Module {
+    let ScomLiquidityProvider = class ScomLiquidityProvider extends components_13.Module {
         _getActions(category) {
+            var _a;
             const actions = [];
             if (category && category !== 'offers') {
                 actions.push({
@@ -4036,40 +3905,13 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     },
                     userInputDataSchema: formSchema_1.default.dataSchema,
                     userInputUISchema: formSchema_1.default.uiSchema,
-                    // customControls: formSchema.customControls
+                    customControls: formSchema_1.default.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId)
                 });
             }
             return actions;
         }
-        getProjectOwnerActions() {
-            const formSchema = (0, formSchema_1.getProjectOwnerSchema)();
-            const actions = [
-                {
-                    name: 'Settings',
-                    userInputDataSchema: formSchema.dataSchema,
-                    userInputUISchema: formSchema.uiSchema
-                }
-            ];
-            return actions;
-        }
         getConfigurators() {
             return [
-                {
-                    name: 'Project Owner Configurator',
-                    target: 'Project Owners',
-                    getProxySelectors: async (chainId) => {
-                        return [];
-                    },
-                    getActions: () => {
-                        return this.getProjectOwnerActions();
-                    },
-                    getData: this.getData.bind(this),
-                    setData: async (data) => {
-                        await this.setData(data);
-                    },
-                    getTag: this.getTag.bind(this),
-                    setTag: this.setTag.bind(this)
-                },
                 {
                     name: 'Builder Configurator',
                     target: 'Builders',
@@ -4094,10 +3936,10 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.removeRpcWalletEvents();
             const rpcWalletId = await this.state.initRpcWallet(this.chainId);
             const rpcWallet = this.rpcWallet;
-            const chainChangedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_10.Constants.RpcWalletEvent.ChainChanged, async (chainId) => {
+            const chainChangedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_9.Constants.RpcWalletEvent.ChainChanged, async (chainId) => {
                 this.onChainChanged();
             });
-            const connectedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_10.Constants.RpcWalletEvent.Connected, async (connected) => {
+            const connectedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_9.Constants.RpcWalletEvent.Connected, async (connected) => {
                 this.initializeWidgetConfig();
             });
             this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
@@ -4147,15 +3989,14 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.style.removeProperty(name);
         }
         updateTheme() {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
+            var _a, _b, _c, _d, _e, _f, _g;
             const themeVar = ((_a = this.dappContainer) === null || _a === void 0 ? void 0 : _a.theme) || 'light';
             this.updateStyle('--text-primary', (_b = this.tag[themeVar]) === null || _b === void 0 ? void 0 : _b.fontColor);
             this.updateStyle('--background-main', (_c = this.tag[themeVar]) === null || _c === void 0 ? void 0 : _c.backgroundColor);
-            this.updateStyle('--text-secondary', (_d = this.tag[themeVar]) === null || _d === void 0 ? void 0 : _d.textSecondary);
-            this.updateStyle('--colors-secondary-main', (_e = this.tag[themeVar]) === null || _e === void 0 ? void 0 : _e.secondaryColor);
-            this.updateStyle('--colors-secondary-contrast_text', (_f = this.tag[themeVar]) === null || _f === void 0 ? void 0 : _f.secondaryFontColor);
-            this.updateStyle('--input-font_color', (_g = this.tag[themeVar]) === null || _g === void 0 ? void 0 : _g.inputFontColor);
-            this.updateStyle('--input-background', (_h = this.tag[themeVar]) === null || _h === void 0 ? void 0 : _h.inputBackgroundColor);
+            this.updateStyle('--colors-secondary-main', (_d = this.tag[themeVar]) === null || _d === void 0 ? void 0 : _d.secondaryColor);
+            this.updateStyle('--colors-secondary-contrast_text', (_e = this.tag[themeVar]) === null || _e === void 0 ? void 0 : _e.secondaryFontColor);
+            this.updateStyle('--input-font_color', (_f = this.tag[themeVar]) === null || _f === void 0 ? void 0 : _f.inputFontColor);
+            this.updateStyle('--input-background', (_g = this.tag[themeVar]) === null || _g === void 0 ? void 0 : _g.inputBackgroundColor);
         }
         get wallets() {
             var _a;
@@ -4234,6 +4075,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             };
             this.fetchData = async () => {
                 try {
+                    this.model.getState();
                     await this.modelState.fetchData();
                     this.detailSummary.fromTokenAddress = this.fromTokenAddress;
                     this.detailSummary.summaryData = this.modelState.summaryData();
@@ -4247,34 +4089,53 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 const tokenMap = scom_token_list_7.tokenStore.getTokenMapByChainId(chainId);
                 const tokenA = tokenMap[this.fromTokenAddress];
                 const tokenB = tokenMap[this.toTokenAddress];
-                const pairAddress = await (0, index_13.getPair)(this.state.getChainId(), tokenA, tokenB);
+                const pairAddress = await (0, index_13.getPair)(this.state, tokenA, tokenB);
                 this.model = new index_13.Model(this.state, pairAddress, this.fromTokenAddress, 0);
+                this.model.onShowTxStatus = (status, content) => {
+                    this.showMessage(status, content);
+                };
+                this.model.onSubmitBtnStatus = (isLoading, isApproval, isResetForm) => {
+                    this.detailForm.onSubmitBtnStatus(isLoading, isApproval);
+                    if (isResetForm) {
+                        this.initializeWidgetConfig();
+                    }
+                };
                 this.modelState = this.model.getState();
                 this.detailForm.state = this.state;
                 this.detailSummary.state = this.state;
                 this.detailSummary.fetchData = this.fetchData.bind(this);
+                this.detailForm.updateHelpContent = () => {
+                    this.detailHelp.adviceTexts = this.modelState.adviceTexts();
+                };
                 this.detailForm.updateSummary = async () => {
                     await this.modelState.setSummaryData(true);
                     this.detailSummary.summaryData = this.modelState.summaryData();
                 };
+                this.detailForm.onFieldChanged = (stage) => {
+                    this.detailSummary.updateSummaryUI(stage);
+                };
+                this.detailForm.onFocusChanged = (stage) => {
+                    this.detailSummary.onHighlight(stage);
+                };
+                this.detailHelp.adviceTexts = this.modelState.adviceTexts();
                 try {
                     await this.modelState.fetchData();
                     this.detailSummary.fromTokenAddress = this.fromTokenAddress;
                     this.detailSummary.summaryData = this.modelState.summaryData();
-                    this.lbConnectNetwork.visible = false;
+                    this.panelMsg.visible = false;
+                    this.lbMsg.caption = '';
                     this.panelLiquidity.visible = true;
                 }
                 catch (err) {
-                    this.lbConnectNetwork.caption = 'Cannot fetch data!';
-                    this.lbConnectNetwork.visible = true;
+                    this.lbMsg.caption = 'Cannot fetch data!';
+                    this.panelMsg.visible = true;
                     this.panelLiquidity.visible = false;
-                    console.log(err);
                 }
                 this.detailForm.model = this.modelState;
             };
             this.renderEmpty = async (msg) => {
-                this.lbConnectNetwork.caption = msg !== null && msg !== void 0 ? msg : (!(0, index_12.isClientWalletConnected)() ? 'Please connect with your wallet' : 'Invalid configurator data');
-                this.lbConnectNetwork.visible = true;
+                this.lbMsg.caption = msg !== null && msg !== void 0 ? msg : (!(0, index_12.isClientWalletConnected)() ? 'Please connect with your wallet' : 'Invalid configurator data');
+                this.panelMsg.visible = true;
                 this.panelLiquidity.visible = false;
                 if (this.loadingElm) {
                     this.loadingElm.visible = false;
@@ -4282,7 +4143,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             };
             this.initWallet = async () => {
                 try {
-                    await eth_wallet_10.Wallet.getClientInstance().init();
+                    await eth_wallet_9.Wallet.getClientInstance().init();
                     const rpcWallet = this.rpcWallet;
                     await rpcWallet.init();
                 }
@@ -4302,21 +4163,6 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 }
                 this.txStatusModal.message = Object.assign({}, params);
                 this.txStatusModal.showModal();
-            };
-            this.connectWallet = async () => {
-                if (!(0, index_12.isClientWalletConnected)()) {
-                    if (this.mdWallet) {
-                        await components_12.application.loadPackage('@scom/scom-wallet-modal', '*');
-                        this.mdWallet.networks = this.networks;
-                        this.mdWallet.wallets = this.wallets;
-                        this.mdWallet.showModal();
-                    }
-                    return;
-                }
-                if (!this.state.isRpcWalletConnected()) {
-                    const clientWallet = eth_wallet_10.Wallet.getClientInstance();
-                    await clientWallet.switchNetwork(this.chainId);
-                }
             };
             this.checkValidation = () => {
                 if (!this._data)
@@ -4356,30 +4202,34 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.executeReadyCallback();
         }
         render() {
-            return (this.$render("i-scom-dapp-container", { id: "dappContainer", class: index_css_2.liquidityProviderContainer },
-                this.$render("i-panel", { class: index_css_2.liquidityProviderComponent, minHeight: 200 },
-                    this.$render("i-panel", { class: index_css_2.liquidityProviderForm },
+            return (this.$render("i-scom-dapp-container", { id: "dappContainer", class: index_css_1.liquidityProviderContainer },
+                this.$render("i-panel", { class: index_css_1.liquidityProviderComponent, minHeight: 200 },
+                    this.$render("i-panel", { class: index_css_1.liquidityProviderForm },
                         this.$render("i-panel", { id: "queue-container" },
                             this.$render("i-panel", null,
                                 this.$render("i-vstack", { id: "loadingElm", class: "i-loading-overlay" },
                                     this.$render("i-vstack", { class: "i-loading-spinner", horizontalAlignment: "center", verticalAlignment: "center" },
-                                        this.$render("i-icon", { class: "i-loading-spinner_icon", image: { url: assets_4.default.fullPath('img/loading.svg'), width: 36, height: 36 } }),
+                                        this.$render("i-icon", { class: "i-loading-spinner_icon", image: { url: assets_5.default.fullPath('img/loading.svg'), width: 36, height: 36 } }),
                                         this.$render("i-label", { caption: "Loading...", font: { color: '#FD4A4C', size: '1.5em' }, class: "i-loading-spinner_text" }))),
-                                this.$render("i-label", { id: "lbConnectNetwork", visible: false, caption: "Please connect with your wallet" }),
+                                this.$render("i-panel", { id: "panelMsg", visible: false },
+                                    this.$render("i-vstack", { gap: 10, verticalAlignment: "center", alignItems: "center" },
+                                        this.$render("i-image", { url: assets_5.default.fullPath('img/TrollTrooper.svg') }),
+                                        this.$render("i-label", { id: "lbMsg" }))),
                                 this.$render("i-panel", { id: "panelLiquidity" },
                                     this.$render("i-hstack", { gap: "20px", margin: { bottom: 16 }, wrap: "wrap" },
                                         this.$render("i-panel", { class: "custom-container" },
                                             this.$render("liquidity-form", { id: "detailForm" })),
                                         this.$render("i-panel", { class: "custom-container" },
                                             this.$render("i-panel", { id: "summarySection" },
-                                                this.$render("liquidity-summary", { id: "detailSummary" })))))))),
+                                                this.$render("liquidity-summary", { id: "detailSummary" })),
+                                            this.$render("liquidity-help", { id: "detailHelp" }))))))),
                     this.$render("i-scom-wallet-modal", { id: "mdWallet", wallets: [] }),
                     this.$render("i-scom-tx-status-modal", { id: "txStatusModal" }))));
         }
     };
     ScomLiquidityProvider = __decorate([
-        components_12.customModule,
-        (0, components_12.customElements)('i-scom-liquidity-provider')
+        components_13.customModule,
+        (0, components_13.customElements)('i-scom-liquidity-provider')
     ], ScomLiquidityProvider);
     exports.default = ScomLiquidityProvider;
 });

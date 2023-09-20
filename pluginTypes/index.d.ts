@@ -2,7 +2,6 @@
 /// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-token-input/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-token-input/@scom/scom-token-modal/@ijstech/eth-wallet/index.d.ts" />
-/// <reference path="@ijstech/eth-contract/index.d.ts" />
 /// <amd-module name="@scom/scom-liquidity-provider/assets.ts" />
 declare module "@scom/scom-liquidity-provider/assets.ts" {
     function fullPath(path: string): string;
@@ -89,6 +88,8 @@ declare module "@scom/scom-liquidity-provider/index.css.ts" {
 }
 /// <amd-module name="@scom/scom-liquidity-provider/formSchema.ts" />
 declare module "@scom/scom-liquidity-provider/formSchema.ts" {
+    import ScomNetworkPicker from "@scom/scom-network-picker";
+    import ScomTokenInput from "@scom/scom-token-input";
     const _default_2: {
         dataSchema: {
             type: string;
@@ -116,11 +117,6 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                             type: string;
                             format: string;
                         };
-                        textSecondary: {
-                            type: string;
-                            title: string;
-                            format: string;
-                        };
                         inputBackgroundColor: {
                             type: string;
                             format: string;
@@ -140,11 +136,6 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                         };
                         fontColor: {
                             type: string;
-                            format: string;
-                        };
-                        textSecondary: {
-                            type: string;
-                            title: string;
                             format: string;
                         };
                         inputBackgroundColor: {
@@ -184,34 +175,25 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 }[];
             })[];
         };
-    };
-    export default _default_2;
-    export function getProjectOwnerSchema(): {
-        dataSchema: {
-            type: string;
-            properties: {
-                chainId: {
-                    type: string;
-                    required: boolean;
-                };
-                tokenIn: {
-                    type: string;
-                    required: boolean;
-                };
-                tokenOut: {
-                    type: string;
-                    required: boolean;
-                };
+        customControls(rpcWalletId: string): {
+            "#/properties/chainId": {
+                render: () => ScomNetworkPicker;
+                getData: (control: ScomNetworkPicker) => number;
+                setData: (control: ScomNetworkPicker, value: number) => void;
+            };
+            "#/properties/tokenIn": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/tokenOut": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
             };
         };
-        uiSchema: {
-            type: string;
-            elements: {
-                type: string;
-                scope: string;
-            }[];
-        };
     };
+    export default _default_2;
 }
 /// <amd-module name="@scom/scom-liquidity-provider/global/utils/helper.ts" />
 declare module "@scom/scom-liquidity-provider/global/utils/helper.ts" {
@@ -233,18 +215,12 @@ declare module "@scom/scom-liquidity-provider/global/utils/helper.ts" {
     export const DefaultDateFormat = "DD/MM/YYYY";
     export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
     export const formatNumber: (value: any, decimals?: number) => string;
-    export const formatNumberWithSeparators: (value: number, precision?: number) => string;
     export const renderBalanceTooltip: (params: IBalanceTooltip, tokenMap: TokenMapType, isBold?: boolean) => any;
     export const formatNumberValue: (data: IBalanceTooltip, tokenMap: TokenMapType) => any;
     export const isInvalidInput: (val: any) => boolean;
     export const limitInputNumber: (input: any, decimals?: number) => void;
     export const limitDecimals: (value: any, decimals: number) => any;
     export const toWeiInv: (n: string, unit?: number) => BigNumber;
-}
-/// <amd-module name="@scom/scom-liquidity-provider/global/utils/common.ts" />
-declare module "@scom/scom-liquidity-provider/global/utils/common.ts" {
-    import { ISendTxEventsOptions } from "@ijstech/eth-wallet";
-    export const registerSendTxEvents: (sendTxEventHandlers: ISendTxEventsOptions) => void;
 }
 /// <amd-module name="@scom/scom-liquidity-provider/global/utils/interfaces.ts" />
 declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
@@ -263,11 +239,19 @@ declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
         networks: INetworkConfig[];
         showHeader?: boolean;
     }
+    export interface IAllocation {
+        address: string;
+        allocation: string | number;
+        oldAllocation?: string | number;
+        allocationVal?: string | number;
+        isOld?: boolean;
+        isDuplicated?: boolean;
+        invalid?: boolean;
+    }
 }
 /// <amd-module name="@scom/scom-liquidity-provider/global/utils/index.ts" />
 declare module "@scom/scom-liquidity-provider/global/utils/index.ts" {
     export * from "@scom/scom-liquidity-provider/global/utils/helper.ts";
-    export { registerSendTxEvents } from "@scom/scom-liquidity-provider/global/utils/common.ts";
     export * from "@scom/scom-liquidity-provider/global/utils/interfaces.ts";
 }
 /// <amd-module name="@scom/scom-liquidity-provider/global/index.ts" />
@@ -277,18 +261,15 @@ declare module "@scom/scom-liquidity-provider/global/index.ts" {
 }
 /// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/API.ts" />
 declare module "@scom/scom-liquidity-provider/liquidity-utils/API.ts" {
+    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
     import { BigNumber } from '@ijstech/eth-wallet';
     import { State } from "@scom/scom-liquidity-provider/store/index.ts";
     import { ITokenObject } from '@scom/scom-token-list';
-    export interface AllocationMap {
-        address: string;
-        allocation: string;
-    }
     export function getAddresses(chainId: number): {};
     const getQueueStakeToken: (chainId: number) => ITokenObject | null;
     const getLiquidityProviderAddress: (chainId: number) => any;
-    const getPair: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject) => Promise<string>;
-    const getGroupQueuePairInfo: (state: State, pairAddress: string, tokenAddress: string, provider?: string, offerIndex?: number) => Promise<{
+    const getPair: (state: State, tokenA: ITokenObject, tokenB: ITokenObject) => Promise<string>;
+    const getPairInfo: (state: State, pairAddress: string, tokenAddress: string, provider?: string, offerIndex?: number) => Promise<{
         feePerOrder: string;
         feePerTrader: string;
         maxDur: string;
@@ -298,30 +279,15 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/API.ts" {
         pairIndex: BigNumber;
     }>;
     const getToBeApprovedTokens: (chainId: number, tokenObj: ITokenObject, amount: string, stake: string) => Promise<string[]>;
-    const approveLPMax: (chainId: number, tokenObj: ITokenObject, callback: any, confirmationCallback: any) => Promise<import("@ijstech/eth-contract").TransactionReceipt>;
-    const getEstimatedAmountInUSD: (chainId: number, tokenObj: ITokenObject, amount: string) => Promise<string>;
-    const approvePairMax: (chainId: number, pairAddress: string, callback: any, confirmationCallback: any) => Promise<import("@ijstech/eth-contract").TransactionReceipt>;
-    const addLiquidityToGroupQueue: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenIn: ITokenObject, pairIndex: number, offerIndex: number, amountIn: number, allowAll: boolean, restrictedPrice: string, startDate: number, expire: number, deadline: number, whitelistAddress: any[]) => Promise<any>;
-    export interface QueueBasicInfo {
-        firstToken: string;
-        secondToken: string;
-        queueSize: BigNumber;
-        topStake: BigNumber | undefined;
-        totalOrder: BigNumber;
-        totalStake: BigNumber | undefined;
-        pairAddress: string;
-        isOdd: boolean;
-    }
-    const convertGroupQueueWhitelistedAddresses: (inputText: string) => {
-        address: string;
-        allocation: number;
-    }[];
+    const addLiquidity: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenIn: ITokenObject, pairIndex: number, offerIndex: number, amountIn: number, allowAll: boolean, restrictedPrice: string, startDate: number, expire: number, deadline: number, whitelistAddress: IAllocation[]) => Promise<any>;
+    const convertWhitelistedAddresses: (inputText: string) => IAllocation[];
     function isPairRegistered(state: State, tokenA: string, tokenB: string): Promise<boolean>;
-    export { getPair, isPairRegistered, getGroupQueuePairInfo, getToBeApprovedTokens, approveLPMax, getLiquidityProviderAddress, getEstimatedAmountInUSD, approvePairMax, addLiquidityToGroupQueue, getQueueStakeToken, convertGroupQueueWhitelistedAddresses };
+    export { getPair, isPairRegistered, getPairInfo, getToBeApprovedTokens, getLiquidityProviderAddress, addLiquidity, getQueueStakeToken, convertWhitelistedAddresses };
 }
 /// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/model.ts" />
 declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
     import { BigNumber } from "@ijstech/eth-wallet";
+    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
     import { State } from "@scom/scom-liquidity-provider/store/index.ts";
     import { ITokenObject } from "@scom/scom-token-list";
     export enum Stage {
@@ -339,13 +305,6 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
         WAITING_FOR_GOV_TOKEN_APPROVAL = 11,
         SUBMIT = 12
     }
-    export enum Action {
-        JOIN = "join",
-        ADD = "add",
-        REMOVE = "remove",
-        MOVE = "move",
-        COLLECT = "collect"
-    }
     export enum OfferState {
         Everyone = "Everyone",
         Whitelist = "Whitelist Addresses"
@@ -353,14 +312,6 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
     export enum LockState {
         Locked = "Locked",
         Unlocked = "Unlocked"
-    }
-    export interface InputData {
-        fromTokenInputText: string;
-        offerPriceText: string;
-        startDateStr: string;
-        endDateStr: string;
-        switchLock: LockState;
-        addresses: any[];
     }
     export const setOnApproving: (callback: any) => void;
     export const setOnApproved: (callback: any) => void;
@@ -376,8 +327,6 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
         private isFirstLoad;
         private pairCustomParams;
         private fromTokenInput;
-        private estimatedAmountInUSD;
-        private govTokenInput;
         private fromTokenInputText;
         private offerPriceText;
         private offerTo;
@@ -389,18 +338,18 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
         private switchLock;
         private addresses;
         private approvalModelAction;
-        private $eventBus;
+        onShowTxStatus: (status: 'success' | 'warning' | 'error', content: string | Error) => void;
+        onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean, resetForm?: boolean) => void;
         private get fromTokenObject();
         private get toTokenObject();
         private get fromTokenSymbol();
-        private get toTokenSymbol();
         private summaryData;
         private get enableApproveAllowance();
         private get fromTokenInputValid();
         private get offerPriceInputValid();
         private get fromTokenBalanceExact();
         private get govTokenBalanceExact();
-        private get getJoinGroupQueueValidation();
+        private get getJoinValidation();
         private isProceedButtonDisabled;
         private get proceedButtonText();
         private get nextButtonText();
@@ -421,7 +370,6 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
             toTokenObject: () => ITokenObject;
             fromTokenInput: () => BigNumber;
             fromTokenInputText: () => string;
-            estimatedAmountInUSD: () => BigNumber;
             isProceedButtonDisabled: () => boolean;
             proceedButtonText: () => string;
             nextButtonText: () => string;
@@ -446,30 +394,30 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
             startDateChange: (value: string | number) => void;
             endDateChange: (value: string | number) => void;
             switchLock: () => LockState;
-            addresses: () => any[];
-            addressChange: (value: any) => void;
+            addresses: () => IAllocation[];
+            addressChange: (value: IAllocation[]) => void;
             pairCustomParams: () => any;
             fee: () => string;
             feeChange: (value: string) => void;
             setMaxBalanceToFromToken: () => void;
             newAmount: () => BigNumber;
-            newTotalAddress: () => any;
-            newTotalAllocation: () => any;
+            newTotalAddress: () => number;
+            newTotalAllocation: () => number;
             setSummaryData: (value: boolean) => void;
         };
         private fetchData;
         private setSummaryData;
         private proceed;
-        private get validateEmptyInput();
         private get fromTokenBalance();
         private get govTokenBalance();
         private get fromTokenDecimals();
         private get adviceTexts();
         constructor(state: State, pairAddress: string, fromTokenAddress: string, offerIndex: number);
+        private showTxStatus;
+        private setSubmitBtnStatus;
         initApprovalModelAction(): Promise<void>;
         private fromTokenInputTextChange;
         private setMaxBalanceToFromToken;
-        private fromTokenInputChange;
         private offerPriceInputTextChange;
         private startDateChange;
         private endDateChange;
@@ -486,14 +434,15 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/index.ts" {
     export * from "@scom/scom-liquidity-provider/liquidity-utils/API.ts";
     export * from "@scom/scom-liquidity-provider/liquidity-utils/model.ts";
 }
-/// <amd-module name="@scom/scom-liquidity-provider/whitelist/index.css.ts" />
-declare module "@scom/scom-liquidity-provider/whitelist/index.css.ts" {
+/// <amd-module name="@scom/scom-liquidity-provider/detail/whitelist.css.ts" />
+declare module "@scom/scom-liquidity-provider/detail/whitelist.css.ts" {
     export const whiteListStyle: string;
 }
-/// <amd-module name="@scom/scom-liquidity-provider/whitelist/index.tsx" />
-declare module "@scom/scom-liquidity-provider/whitelist/index.tsx" {
-    import { Module, ControlElement, Container } from '@ijstech/components';
+/// <amd-module name="@scom/scom-liquidity-provider/detail/whitelist.tsx" />
+declare module "@scom/scom-liquidity-provider/detail/whitelist.tsx" {
+    import { Module, ControlElement, Input, Container } from '@ijstech/components';
     import { BigNumber } from '@ijstech/eth-wallet';
+    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
     global {
         namespace JSX {
             interface IntrinsicElements {
@@ -506,7 +455,7 @@ declare module "@scom/scom-liquidity-provider/whitelist/index.tsx" {
         balance?: string | number;
         tokenSymbol: string;
         decimals?: number;
-        addresses: any[];
+        addresses: IAllocation[];
         pairCustomParams?: any;
     }
     export class ManageWhitelist extends Module {
@@ -533,7 +482,7 @@ declare module "@scom/scom-liquidity-provider/whitelist/index.tsx" {
         private saveBtn;
         private isAddByBatch;
         private searchInput;
-        convertGroupQueueWhitelistedAddresses: any;
+        convertWhitelistedAddresses: any;
         updateAddress: any;
         private totalPage;
         private pageNumber;
@@ -545,20 +494,20 @@ declare module "@scom/scom-liquidity-provider/whitelist/index.tsx" {
         get totalAddress(): number;
         get totalAllocation(): string;
         get fee(): BigNumber;
-        get idxFiltering(): any;
-        get listAddressFiltered(): any;
-        get listAddressPagination(): any;
+        get idxFiltering(): number;
+        get listAddressFiltered(): IAllocation[];
+        get listAddressPagination(): IAllocation[];
         constructor(parent?: Container, options?: any);
         renderUI: () => void;
         setDefaultAddresses: () => void;
         updateTotalValues: () => void;
         renderAddresses: () => void;
-        get isDisabled(): any;
+        get isDisabled(): boolean;
         getBatchValues: () => any[];
         onSave: () => void;
         onCancel: () => void;
-        onInputAddress: (e: any, idx: number) => void;
-        onInputAllocation: (e: any, idx: number) => void;
+        onInputAddress: (e: Input, idx: number) => void;
+        onInputAllocation: (e: Input, idx: number) => void;
         onInputBatch: () => void;
         validateForm: () => Promise<void>;
         onAddBatch: () => void;
@@ -589,10 +538,9 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
     }
     export class LiquidityForm extends Module {
         private _state;
-        private balanceLb;
         private offerToDropdown;
         private offerToModal;
-        private queueForm;
+        private pnlForm;
         private firstInput;
         private secondInput;
         private firstTokenInput;
@@ -630,9 +578,10 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         private offerTo;
         private _model;
         private currentFocus?;
-        private $eventBus;
-        updateHelpContent: any;
-        updateSummary: any;
+        updateHelpContent: () => void;
+        updateSummary: () => void;
+        onFieldChanged: (state: Stage) => void;
+        onFocusChanged: (state: Stage) => void;
         constructor(parent?: Container, options?: any);
         set state(value: State);
         get state(): State;
@@ -673,6 +622,7 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         get oswapSymbol(): string;
         onUpdateHelpContent: () => void;
         onUpdateSummary: () => Promise<void>;
+        onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean) => void;
         onSetMaxBalance: () => void;
         updateSummaryField: () => void;
         showConfirmation: (value: boolean) => void;
@@ -736,6 +686,7 @@ declare module "@scom/scom-liquidity-provider/detail/progress.tsx" {
 declare module "@scom/scom-liquidity-provider/detail/summary.tsx" {
     import { Module, ControlElement, Container } from '@ijstech/components';
     import { State } from "@scom/scom-liquidity-provider/store/index.ts";
+    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
     import { Stage } from "@scom/scom-liquidity-provider/liquidity-utils/index.ts";
     global {
         namespace JSX {
@@ -764,7 +715,6 @@ declare module "@scom/scom-liquidity-provider/detail/summary.tsx" {
     export class LiquiditySummary extends Module {
         private _state;
         private summarySection;
-        private settingLb;
         private amountRow;
         private offerPriceRow;
         private startDateRow;
@@ -775,14 +725,11 @@ declare module "@scom/scom-liquidity-provider/detail/summary.tsx" {
         private receiveRow;
         private feeRow;
         private _summaryData;
-        private $eventBus;
         private _fromTokenAddress;
         private isSummaryLoaded;
         private _fetchData;
         private manageWhitelist;
         constructor(parent?: Container, options?: any);
-        registerEvent(): void;
-        onWalletConnect: (connected: boolean) => Promise<void>;
         set state(value: State);
         get state(): State;
         get chainId(): number;
@@ -794,23 +741,33 @@ declare module "@scom/scom-liquidity-provider/detail/summary.tsx" {
         get fetchData(): any;
         set fetchData(callback: any);
         formatDate: (date: any) => string;
-        showSetting(): void;
-        showAddresses(addresses: any): void;
+        showAddresses(addresses: IAllocation[]): void;
         getSummaryData(stage?: Stage): ISummaryData[];
         renderSummary(): void;
         updateSummaryUI(stage?: Stage): void;
-        renderSetting(value: boolean): void;
         init(): void;
         onFetchData(): void;
         resetHighlight(): void;
-        onHighlightQueue(params: {
-            source: string;
-            stage: Stage;
-        }): void;
-        onFormFieldChange(params: {
-            source: string;
-            stage: Stage;
-        }): void;
+        onHighlight(stage: Stage): void;
+        render(): any;
+    }
+}
+/// <amd-module name="@scom/scom-liquidity-provider/detail/help.tsx" />
+declare module "@scom/scom-liquidity-provider/detail/help.tsx" {
+    import { Module, ControlElement } from '@ijstech/components';
+    global {
+        namespace JSX {
+            interface IntrinsicElements {
+                ['liquidity-help']: ControlElement;
+            }
+        }
+    }
+    export class LiquidityHelp extends Module {
+        private rightContainer;
+        private _adviceTexts;
+        get adviceTexts(): string[];
+        set adviceTexts(value: string[]);
+        updateAdviceText(): void;
         render(): any;
     }
 }
@@ -818,6 +775,7 @@ declare module "@scom/scom-liquidity-provider/detail/summary.tsx" {
 declare module "@scom/scom-liquidity-provider/detail/index.tsx" {
     export { LiquidityForm } from "@scom/scom-liquidity-provider/detail/form.tsx";
     export { LiquiditySummary } from "@scom/scom-liquidity-provider/detail/summary.tsx";
+    export { LiquidityHelp } from "@scom/scom-liquidity-provider/detail/help.tsx";
     export { LiquidityProgress } from "@scom/scom-liquidity-provider/detail/progress.tsx";
 }
 /// <amd-module name="@scom/scom-liquidity-provider" />
@@ -847,24 +805,15 @@ declare module "@scom/scom-liquidity-provider" {
         private mdWallet;
         private detailForm;
         private detailSummary;
+        private detailHelp;
         private model;
         private modelState;
-        private $eventBus;
         private panelLiquidity;
-        private lbConnectNetwork;
+        private panelMsg;
+        private lbMsg;
         private rpcWalletEvents;
         private _getActions;
-        private getProjectOwnerActions;
-        getConfigurators(): ({
-            name: string;
-            target: string;
-            getProxySelectors: (chainId: number) => Promise<any[]>;
-            getActions: () => any[];
-            getData: any;
-            setData: (data: any) => Promise<void>;
-            getTag: any;
-            setTag: any;
-        } | {
+        getConfigurators(): {
             name: string;
             target: string;
             getActions: (category?: string) => any[];
@@ -872,8 +821,7 @@ declare module "@scom/scom-liquidity-provider" {
             setData: (data: any) => Promise<void>;
             getTag: any;
             setTag: any;
-            getProxySelectors?: undefined;
-        })[];
+        }[];
         private getData;
         private resetRpcWallet;
         private setData;
@@ -903,7 +851,6 @@ declare module "@scom/scom-liquidity-provider" {
         private renderEmpty;
         private initWallet;
         private showMessage;
-        private connectWallet;
         private checkValidation;
         init(): Promise<void>;
         render(): any;

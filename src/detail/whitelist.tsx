@@ -1,8 +1,9 @@
-import { Module, customElements, ControlElement, Modal, Label, Pagination, observable, Panel, Button, HStack, Input, Container } from '@ijstech/components';
-import { whiteListStyle } from './index.css';
+import { Module, customElements, ControlElement, Modal, Label, Pagination, observable, Panel, Button, HStack, Input, Container, Styles, Control } from '@ijstech/components';
+import { whiteListStyle } from './whitelist.css';
 import { BigNumber } from '@ijstech/eth-wallet';
-import { formatNumber, isAddressValid, limitInputNumber, renderBalanceTooltip } from '../global/index';
+import { IAllocation, formatNumber, isAddressValid, limitInputNumber, renderBalanceTooltip } from '../global/index';
 import { tokenStore } from '@scom/scom-token-list';
+const Theme = Styles.Theme.ThemeVars;
 
 declare global {
   namespace JSX {
@@ -31,18 +32,8 @@ export interface IData {
   balance?: string | number,
   tokenSymbol: string,
   decimals?: number,
-  addresses: any[],
+  addresses: IAllocation[],
   pairCustomParams?: any,
-}
-
-interface IAddress {
-  address: string,
-  allocation: string | number,
-  oldAllocation?: string | number,
-  allocationVal?: number,
-  isOld?: boolean,
-  isDuplicated?: boolean,
-  invalid?: boolean,
 }
 
 @customElements('manage-whitelist')
@@ -51,11 +42,11 @@ export class ManageWhitelist extends Module {
   private balance: string | number | undefined = 0;
   private tokenSymbol: string = '';
   private decimals: number;
-  private addresses: any[] = [];
+  private addresses: IAllocation[] = [];
   private pairCustomParams: any = {};
   private isReadOnly: boolean | undefined;
-  private listAddress: any = [];
-  private totalAddressLabel: any = [];
+  private listAddress: IAllocation[] = [];
+  private totalAddressLabel: Label;
   private totalAllocationLabel: Label;
   private manageWhitelistModal: Modal;
   private listAddressContainer: Panel;
@@ -70,7 +61,7 @@ export class ManageWhitelist extends Module {
   private saveBtn: Button;
   private isAddByBatch = false;
   private searchInput: Input;
-  public convertGroupQueueWhitelistedAddresses: any
+  public convertWhitelistedAddresses: any;
   public updateAddress: any;
 
   @observable()
@@ -100,7 +91,7 @@ export class ManageWhitelist extends Module {
 
   get totalAddress() {
     let total = 0;
-    this.listAddress.forEach((item: IAddress) => {
+    this.listAddress.forEach((item: IAllocation) => {
       if (item.address) {
         ++total;
       }
@@ -110,7 +101,7 @@ export class ManageWhitelist extends Module {
 
   get totalAllocation() {
     let total = new BigNumber(0);
-    this.listAddress.forEach((item: IAddress) => {
+    this.listAddress.forEach((item: IAllocation) => {
       if (item.address) {
         const value = this.isReadOnly ? item.allocationVal : item.allocation;
         total = total.plus(value || 0);
@@ -122,7 +113,7 @@ export class ManageWhitelist extends Module {
   get fee() {
     if (!this.pairCustomParams || !this.totalAddress) return new BigNumber(0);
     let total = 0;
-    this.listAddress.forEach((item: IAddress) => {
+    this.listAddress.forEach((item: IAllocation) => {
       if (item.address) {
         if (item.isOld) {
           total += (item.oldAllocation !== item.allocation) ? 1 : 0;
@@ -136,14 +127,14 @@ export class ManageWhitelist extends Module {
 
   get idxFiltering() {
     if (this.searchInput.value) {
-      return this.listAddress.findIndex((item: IAddress) => item.address.toLowerCase().includes(this.searchInput.value.toLowerCase()));
+      return this.listAddress.findIndex((item: IAllocation) => item.address.toLowerCase().includes(this.searchInput.value.toLowerCase()));
     }
     return 0;
   }
 
   get listAddressFiltered() {
     if (this.searchInput.value) {
-      return this.listAddress.filter((item: IAddress) => item.address.toLowerCase().includes(this.searchInput.value.toLowerCase()));
+      return this.listAddress.filter((item: IAllocation) => item.address.toLowerCase().includes(this.searchInput.value.toLowerCase()));
     }
     return this.listAddress;
   };
@@ -174,7 +165,7 @@ export class ManageWhitelist extends Module {
 
   setDefaultAddresses = () => {
     if (this.isReadOnly) {
-      this.listAddress = this.addresses.map((address: IAddress) => {
+      this.listAddress = this.addresses.map((address: IAllocation) => {
         return {
           ...address,
           allocation: formatNumber(address.allocation),
@@ -189,8 +180,8 @@ export class ManageWhitelist extends Module {
         this.pageNumber = 1;
         this.handlePagination(this.pageNumber);
       };
-      const list: IAddress[] = [];
-      this.addresses.forEach((item: IAddress) => {
+      const list: IAllocation[] = [];
+      this.addresses.forEach((item: IAllocation) => {
         list.push({ ...item });
       });
       this.listAddress = list;
@@ -213,7 +204,7 @@ export class ManageWhitelist extends Module {
     if (this.searchInput.value && !this.listAddressPagination.length) {
       this.listAddressContainer.appendChild(<i-label margin={{ top: 10 }} caption={`There is no address: <b>${this.searchInput.value}</b>`} />);
     }
-    this.listAddressPagination.forEach((item: IAddress, idx: number) => {
+    this.listAddressPagination.forEach((item: IAllocation, idx: number) => {
       const indexVal = (pageSize * (this.pageNumber - 1)) + idx + this.idxFiltering;
       this.listAddressContainer.appendChild(
         <i-hstack verticalAlignment="start" margin={{ top: 4, bottom: 4 }}>
@@ -221,7 +212,7 @@ export class ManageWhitelist extends Module {
             <i-input
               value={item.address}
               enabled={!(this.isReadOnly || item.isOld)}
-              onChanged={(e: any) => this.onInputAddress(e, indexVal)}
+              onChanged={(e: Input) => this.onInputAddress(e, indexVal)}
               class="input-address"
               width="100%"
               height={45}
@@ -235,13 +226,13 @@ export class ManageWhitelist extends Module {
               inputType={this.isReadOnly ? undefined : 'number'}
               value={item.allocation + ''}
               enabled={!this.isReadOnly}
-              onChanged={(e: any) => this.onInputAllocation(e, indexVal)}
+              onChanged={(e: Input) => this.onInputAllocation(e, indexVal)}
               width="100%"
               height={43}
             />
             {
               !this.isReadOnly && !item.isOld ?
-                <i-icon name="times" fill="#f7d063" class="pointer" margin={{ left: 4 }} height={18} width={18} onClick={() => this.removeAddress(idx, indexVal)} /> :
+                <i-icon name="trash" fill="#f15e61" class="pointer" margin={{ left: 4 }} height={18} width={18} onClick={() => this.removeAddress(idx, indexVal)} /> :
                 []
             }
           </i-hstack>
@@ -254,11 +245,11 @@ export class ManageWhitelist extends Module {
     if (this.isAddByBatch) {
       return !this.inputBatch.value;
     }
-    return this.listAddress.some((item: IAddress) => (item.address !== '' && (item.allocation == '' || Number(item.allocation) < 0)) || item.isDuplicated || item.invalid);
+    return this.listAddress.some((item: IAllocation) => (item.address !== '' && (item.allocation == '' || Number(item.allocation) < 0)) || item.isDuplicated || item.invalid);
   };
 
   getBatchValues = () => {
-    let items = this.convertGroupQueueWhitelistedAddresses(this.inputBatch.value)
+    let items = this.convertWhitelistedAddresses(this.inputBatch.value)
     let list = [];
     for (const item of items) {
       const { address, allocation } = item;
@@ -272,7 +263,7 @@ export class ManageWhitelist extends Module {
 
   onSave = () => {
     if (this.isAddByBatch) {
-      const oldAddresses = this.listAddress.filter((item: IAddress) => item.isOld);
+      const oldAddresses = this.listAddress.filter((item: IAllocation) => item.isOld);
       this.listAddress = oldAddresses.concat(this.getBatchValues());
       this.validateForm();
       this.renderAddresses();
@@ -281,8 +272,8 @@ export class ManageWhitelist extends Module {
       this.batchPanel.visible = false;
       this.addPanel.visible = true;
     } else {
-      const finalList = [] as any;
-      this.listAddress.forEach((item: IAddress) => {
+      const finalList: IAllocation[] = [];
+      this.listAddress.forEach((item: IAllocation) => {
         const { address, allocation } = item;
         if (address && (allocation || allocation == 0)) {
           finalList.push({ ...item });
@@ -306,7 +297,7 @@ export class ManageWhitelist extends Module {
     }
   }
 
-  onInputAddress = (e: any, idx: number) => {
+  onInputAddress = (e: Input, idx: number) => {
     const item = this.listAddress[idx];
     if (item.isOld || this.isReadOnly) {
       e.value = item.address;
@@ -319,7 +310,7 @@ export class ManageWhitelist extends Module {
     this.validateForm();
   }
 
-  onInputAllocation = (e: any, idx: number) => {
+  onInputAllocation = (e: Input, idx: number) => {
     const item = this.listAddress[idx];
     limitInputNumber(e, this.decimals);
     this.listAddress[idx] = {
@@ -335,7 +326,7 @@ export class ManageWhitelist extends Module {
 
   validateForm = async () => {
     const array = this.listAddress;
-    const valueArr = array.map((item: IAddress) => { return item.address });
+    const valueArr = array.map((item: IAllocation) => { return item.address });
     for (let i = 0; i < valueArr.length; i++) {
       if (valueArr[i]) {
         const isDuplicated = valueArr.some((item: string, index: number) =>
@@ -442,22 +433,22 @@ export class ManageWhitelist extends Module {
         <i-panel class="i-modal_content text-center">
           <i-panel id="addPanel">
             <i-panel class="search-box">
-              <i-icon name="search" fill="#fff" width={16} height={16} margin={{ right: 4 }} />
+              <i-icon name="search" fill={Theme.input.fontColor} width={16} height={16} margin={{ right: 4 }} />
               <i-input id="searchInput" class="input-search" placeholder="Search" width="100%" height={40} onChanged={() => this.searchAddress()} />
             </i-panel>
             <i-hstack horizontalAlignment="space-between">
               <i-hstack class="total-info" horizontalAlignment="space-between" width="50%" padding={{ left: 8, right: 10 }}>
                 <i-label caption="Address" />
-                <i-hstack>
-                  <i-label caption="Total:" margin={{ right: 4 }} />
-                  <i-label id="totalAddressLabel" class="text-yellow" caption="0 Addresses" />
+                <i-hstack gap={4}>
+                  <i-label caption="Total:" />
+                  <i-label id="totalAddressLabel" font={{ color: Theme.colors.primary.main }} caption="0 Addresses" />
                 </i-hstack>
               </i-hstack>
               <i-hstack class="total-info" horizontalAlignment="space-between" width="50%" padding={{ left: 10, right: 8 }}>
                 <i-label caption="Allocation" />
-                <i-hstack>
-                  <i-label caption="Total:" margin={{ right: 4 }} />
-                  <i-label id="totalAllocationLabel" class="text-yellow" caption="-" />
+                <i-hstack gap={4}>
+                  <i-label caption="Total:" />
+                  <i-label id="totalAllocationLabel" font={{ color: Theme.colors.primary.main }} caption="-" />
                 </i-hstack>
               </i-hstack>
             </i-hstack>
@@ -473,18 +464,18 @@ export class ManageWhitelist extends Module {
                 width="auto"
                 currentPage={this.pageNumber}
                 totalPages={this.totalPage}
-                onPageChanged={this.onSelectIndex.bind(this)}
+                onPageChanged={this.onSelectIndex}
               />
             </i-hstack>
             <i-vstack
               id="balanceFeeContainer" verticalAlignment="start"
               margin={{ bottom: 10 }} padding={{ bottom: 16 }}
-              border={{ top: { color: '#0c1234', width: '2px', style: 'solid' } }}
+              border={{ top: { color: Theme.input.background, width: '2px', style: 'solid' } }}
             >
               <i-vstack verticalAlignment="start" margin={{ top: 16 }}>
                 <i-hstack width="100%" verticalAlignment="start" horizontalAlignment="space-between">
                   <i-label caption="OSWAP Fee" />
-                  <i-label id="totalFee" class="text-yellow text-right" caption="-" />
+                  <i-label id="totalFee" font={{ color: Theme.colors.primary.main }} class="text-right" caption="-" />
                 </i-hstack>
                 <i-vstack width="100%" verticalAlignment="end" horizontalAlignment="end">
                   <i-label id="balanceLabel" caption="-" />
@@ -495,7 +486,7 @@ export class ManageWhitelist extends Module {
           <i-panel id="batchPanel" visible={false} padding={{ left: 16, right: 16 }}>
             <i-hstack horizontalAlignment="space-between">
               <i-label caption="Add by Batch" />
-              <i-label class="text-yellow pointer" caption="Clear" onClick={this.onClear} />
+              <i-label class="pointer" font={{ color: Theme.colors.primary.main }} caption="Clear" onClick={this.onClear} />
             </i-hstack>
             <i-vstack verticalAlignment="center" horizontalAlignment="center" margin={{ top: 10 }}>
               <i-label class="text-note" caption="Please enter one address and amount on each line" />

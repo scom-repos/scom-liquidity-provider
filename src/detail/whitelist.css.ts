@@ -4,7 +4,7 @@ const Theme = Styles.Theme.ThemeVars;
 export const whiteListStyle = Styles.style({
   $nest: {
     '.modal': {
-      background: Theme.background.modal,
+      background: `${Theme.background.main} !important`,
       width: 700,
       maxWidth: '100%',
       padding: '0.75rem 1rem',
@@ -14,7 +14,7 @@ export const whiteListStyle = Styles.style({
     '.i-modal_header': {
       marginBottom: '0.75rem',
       paddingBottom: '0.5rem',
-      borderBottom: `2px soid ${Theme.background.main}`,
+      borderBottom: `2px soid ${Theme.input.background}`,
       color: Theme.colors.primary.main,
       fontSize: '1.25rem',
       fontWeight: 700,
@@ -35,20 +35,18 @@ export const whiteListStyle = Styles.style({
         }
       }
     },
-    '.text-yellow *': {
-      color: Theme.colors.secondary.main,
-    },
     '.text-err': {
       marginBottom: '0.25rem',
       lineHeight: '1rem',
       $nest: {
         '*': {
-          color: Theme.colors.primary.main,
+          color: '#f15e61',
         }
       }
     },
-    '.text-note *': {
-      color: '#b5b8e3',
+    '.text-note': {
+      color: Theme.text.primary,
+      opacity: 0.8,
       fontSize: '0.8rem',
       lineHeight: '1rem',
       display: 'block',
@@ -58,7 +56,7 @@ export const whiteListStyle = Styles.style({
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      background: 'hsla(0, 0%, 100%, 0.1)',
+      background: Theme.input.background,
       borderRadius: '8px',
       marginBottom: '8px',
       marginLeft: '2px',
@@ -79,10 +77,10 @@ export const whiteListStyle = Styles.style({
             },
             '&:focus::placeholder': {
               opacity: 0,
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     },
     '.input-address': {
       opacity: 1,
@@ -93,8 +91,8 @@ export const whiteListStyle = Styles.style({
           background: Theme.input.background,
           borderRadius: '10px',
           border: '1px solid transparent'
-        },
-      },
+        }
+      }
     },
     '.input-allocation': {
       opacity: 1,
@@ -124,19 +122,20 @@ export const whiteListStyle = Styles.style({
           color: Theme.input.fontColor,
           borderRadius: 0,
         }
-      },
+      }
     },
     '.input-batch': {
       maxWidth: '500px',
+      color: Theme.input.fontColor,
+      borderRadius: '0.5rem',
+      border: 'none',
       $nest: {
         'textarea': {
-          background: Theme.input.background,
-          color: Theme.input.fontColor,
-          padding: '0.5rem 0.75rem',
-          borderRadius: '0.5rem',
           border: 'none',
           height: '150px !important',
+          padding: '0.5rem 0.75rem',
           resize: 'none',
+          outline: 'none'
         },
         '::-webkit-scrollbar': {
           width: '3px',
@@ -144,7 +143,7 @@ export const whiteListStyle = Styles.style({
         '::-webkit-scrollbar-thumb': {
           background: Theme.background.gradient,
           borderRadius: '5px',
-        },
+        }
       }
     },
     '#groupBtnElm': {
@@ -154,8 +153,8 @@ export const whiteListStyle = Styles.style({
           width: '16px !important',
           height: '16px !important',
           marginRight: '0.25rem',
-        },
-      },
+        }
+      }
     },
     'i-button': {
       display: 'flex',
@@ -168,8 +167,8 @@ export const whiteListStyle = Styles.style({
       margin: '0.5rem',
     },
     '.btn-cancel': {
-      background: '#eaecef !important',
-      color: `${Theme.background.default} !important`,
+      background: `${Theme.text.primary} !important`,
+      color: `${Theme.background.main} !important`,
     },
     '.btn-submit': {
       textAlign: 'center',
@@ -181,19 +180,23 @@ export const whiteListStyle = Styles.style({
       marginBottom: '1.5rem',
       $nest: {
         '.paginate_button': {
-          backgroundColor: 'rgb(12, 18, 52)',
-          border: `1px solid #f15e61`,
-          color: '#f7d064',
+          backgroundColor: Theme.input.background,
+          border: `1px solid ${Theme.colors.primary.main}`,
+          color: Theme.input.fontColor,
           padding: '4px 16px',
           $nest: {
             '&.active': {
-              backgroundColor: '#d05271',
-              border: '1px solid #d05271',
-              color: '#fff',
-            },
-          },
+              backgroundColor: Theme.colors.primary.main,
+              border: `1px solid ${Theme.colors.primary.main}`,
+              color: Theme.text.primary,
+            }
+          }
         },
-      },
+        '.pagination a.disabled': {
+          color: Theme.input.fontColor,
+          opacity: 0.6
+        }
+      }
     },
     '@media screen and (max-width: 525px)': {
       $nest: {
@@ -222,12 +225,12 @@ export const whiteListStyle = Styles.style({
               $nest: {
                 '.paginate_button': {
                   minWidth: '50px',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 })

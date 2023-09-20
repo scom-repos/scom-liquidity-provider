@@ -1,5 +1,5 @@
 import { BigNumber } from "@ijstech/eth-wallet";
-import { moment } from '@ijstech/components';
+import { FormatUtils, moment } from '@ijstech/components';
 import { ITokenObject } from "@scom/scom-token-list";
 
 export type TokenMapType = { [token: string]: ITokenObject };
@@ -36,26 +36,7 @@ export const formatNumber = (value: any, decimals?: number) => {
   if (val != 0 && new BigNumber(val).lt(minValue)) {
     return `<${minValue}`;
   }
-  return formatNumberWithSeparators(val, decimals || 4);
-};
-
-export const formatNumberWithSeparators = (value: number, precision?: number) => {
-  if (!value) value = 0;
-  if (precision) {
-    let outputStr = '';
-    if (value >= 1) {
-      const unit = Math.pow(10, precision);
-      const rounded = Math.floor(value * unit) / unit;
-      outputStr = rounded.toLocaleString('en-US', { maximumFractionDigits: precision });
-    } else {
-      outputStr = value.toLocaleString('en-US', { maximumSignificantDigits: precision });
-    }
-    if (outputStr.length > 18) {
-      outputStr = outputStr.substring(0, 18) + '...';
-    }
-    return outputStr;
-  }
-  return value.toLocaleString('en-US');
+  return FormatUtils.formatNumberWithSeparators(val, decimals || 4);
 }
 
 export const renderBalanceTooltip = (params: IBalanceTooltip, tokenMap: TokenMapType, isBold?: boolean) => {
@@ -82,7 +63,7 @@ export const formatNumberValue = (data: IBalanceTooltip, tokenMap: TokenMapType)
       if (symbol === 'USD') {
         limitDecimals = 2;
       } else {
-        const tokenObj = Object.values(tokenMap).find((token: any) => token.symbol === symb) as any;
+        const tokenObj = Object.values(tokenMap).find((token: ITokenObject) => token.symbol === symb);
         if (tokenObj) {
           limitDecimals = tokenObj.decimals || 18;
         }

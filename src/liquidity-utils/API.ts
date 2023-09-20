@@ -1,4 +1,4 @@
-import { toWeiInv } from '../global/index';
+import { IAllocation, toWeiInv } from '../global/index';
 import { BigNumber, Wallet, Utils } from '@ijstech/eth-wallet';
 import {
   State,
@@ -6,14 +6,10 @@ import {
   getChainNativeToken,
 } from '../store/index';
 import { Contracts } from "@scom/oswap-openswap-contract";
-import { Contracts as SolidityContracts } from "@scom/oswap-chainlink-contract"
-import { DefaultERC20Tokens, ITokenObject, ToUSDPriceFeedAddressesMap, WETHByChainId, tokenPriceAMMReference, tokenStore } from '@scom/scom-token-list';
+import { DefaultERC20Tokens, ITokenObject, WETHByChainId, tokenStore } from '@scom/scom-token-list';
 import { nullAddress } from '@ijstech/eth-contract';
 
 const ConfigStore = 'OSWAP_ConfigStore';
-const INFINITE = new BigNumber("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-
-export interface AllocationMap { address: string, allocation: string }
 
 const getAddressFromCore = (chainId: number, key: string) => {
   let Address = getAddresses(chainId);
@@ -28,69 +24,12 @@ const getAddressByKey = (chainId: number, key: string) => {
   return getAddressFromCore(chainId, key);
 }
 
-function toTokenAmount(token: any, amount: any) {
+function toTokenAmount(token: ITokenObject, amount: string | number) {
   return (BigNumber.isBigNumber(amount) ? amount : new BigNumber(amount.toString())).shiftedBy(Number(token.decimals)).decimalPlaces(0, BigNumber.ROUND_FLOOR);
 }
 
-function toWei(amount: any) {
+function toWei(amount: string | number) {
   return (BigNumber.isBigNumber(amount) ? amount : new BigNumber(amount.toString())).shiftedBy(18).decimalPlaces(0);
-}
-
-const getTokenPrice = async (chainId: number, token: string) => { // in USD value
-  const wallet = Wallet.getClientInstance();
-  let tokenPrice: number | string;
-
-  // get price from price feed 
-  let tokenPriceFeedAddress = ToUSDPriceFeedAddressesMap[chainId][token.toLowerCase()];
-  if (tokenPriceFeedAddress) {
-    const aggregatorProxy = new SolidityContracts.AggregatorProxy(wallet, tokenPriceFeedAddress);
-    let tokenLatestRoundData = await aggregatorProxy.latestRoundData();
-    let tokenPriceFeedDecimals = await aggregatorProxy.decimals();
-    return new BigNumber(tokenLatestRoundData.answer).shiftedBy(-tokenPriceFeedDecimals).toFixed();
-  }
-
-  // get price from AMM
-  let referencePair = tokenPriceAMMReference[chainId] && tokenPriceAMMReference[chainId][token.toLowerCase()]
-  if (!referencePair) return null
-  const pairContract = new Contracts.OSWAP_Pair(wallet, referencePair);
-  let token0 = await pairContract.token0();
-  let token1 = await pairContract.token1();
-  let reserves = await pairContract.getReserves();
-  let token0PriceFeedAddress = ToUSDPriceFeedAddressesMap[chainId] && ToUSDPriceFeedAddressesMap[chainId][token0.toLowerCase()];
-  let token1PriceFeedAddress = ToUSDPriceFeedAddressesMap[chainId] && ToUSDPriceFeedAddressesMap[chainId][token1.toLowerCase()];
-
-  if (token0PriceFeedAddress || token1PriceFeedAddress) {
-    if (token0PriceFeedAddress) {
-      const aggregatorProxy = new SolidityContracts.AggregatorProxy(wallet, token0PriceFeedAddress);
-      let token0LatestRoundData = await aggregatorProxy.latestRoundData();
-      let token0PriceFeedDecimals = await aggregatorProxy.decimals();
-      let token0USDPrice = new BigNumber(token0LatestRoundData.answer).shiftedBy(-token0PriceFeedDecimals).toFixed();
-      if (new BigNumber(token.toLowerCase()).lt(token0.toLowerCase())) {
-        tokenPrice = new BigNumber(reserves.reserve1).div(reserves.reserve0).times(token0USDPrice).toFixed()
-      } else {
-        tokenPrice = new BigNumber(reserves.reserve0).div(reserves.reserve1).times(token0USDPrice).toFixed()
-      }
-    } else {
-      const aggregatorProxy = new SolidityContracts.AggregatorProxy(wallet, token1PriceFeedAddress);
-      let token1LatestRoundData = await aggregatorProxy.latestRoundData();
-      let token1PriceFeedDecimals = await aggregatorProxy.decimals();
-      let token1USDPrice = new BigNumber(token1LatestRoundData.answer).shiftedBy(-token1PriceFeedDecimals).toFixed();
-      if (new BigNumber(token.toLowerCase()).lt(token1.toLowerCase())) {
-        tokenPrice = new BigNumber(reserves.reserve1).div(reserves.reserve0).times(token1USDPrice).toFixed();
-      } else {
-        tokenPrice = new BigNumber(reserves.reserve0).div(reserves.reserve1).times(token1USDPrice).toFixed();
-      }
-    }
-  } else {
-    if (token0.toLowerCase() == token.toLowerCase()) {//for other reference pair
-      let token1Price: string = await getTokenPrice(chainId, token1) || '';
-      tokenPrice = new BigNumber(token1Price).times(reserves.reserve1).div(reserves.reserve0).toFixed();
-    } else {
-      let token0Price: string = await getTokenPrice(chainId, token0) || '';
-      tokenPrice = new BigNumber(token0Price).times(reserves.reserve0).div(reserves.reserve1).toFixed();
-    }
-  }
-  return tokenPrice
 }
 
 const getQueueStakeToken = (chainId: number): ITokenObject | null => {
@@ -120,7 +59,7 @@ const getTokenObjectByAddress = (chainId: number, address: string) => {
 const getWETH = (chainId: number): ITokenObject => {
   let wrappedToken = WETHByChainId[chainId];
   return wrappedToken;
-};
+}
 
 const getFactoryAddress = (chainId: number) => {
   try {
@@ -135,8 +74,9 @@ const getLiquidityProviderAddress = (chainId: number) => {
   return getAddressByKey(chainId, "OSWAP_RestrictedLiquidityProvider");
 }
 
-const getPair = async (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject) => {
-  const wallet = Wallet.getClientInstance();
+const getPair = async (state: State, tokenA: ITokenObject, tokenB: ITokenObject) => {
+  const wallet = state.getRpcWallet();
+  const chainId = state.getChainId();
   let tokens = mapTokenObjectSet(chainId, { tokenA, tokenB });
   let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
   let factoryAddress = getFactoryAddress(chainId);
@@ -174,12 +114,12 @@ function breakDownGroupQOffers(offer: GroupQOffers) {
   }
 }
 
-const getRestrictedPairCustomParams = async (chainId: number) => {
+const getRestrictedPairCustomParams = async (state: State) => {
   const FEE_PER_ORDER = "RestrictedPair.feePerOrder";
   const FEE_PER_TRADER = "RestrictedPair.feePerTrader";
   const MAX_DUR = "RestrictedPair.maxDur";
-  let wallet = Wallet.getClientInstance();
-  const address = getAddressByKey(chainId, ConfigStore);
+  let wallet = state.getRpcWallet();
+  const address = getAddressByKey(state.getChainId(), ConfigStore);
   const configStoreContract = new Contracts.OSWAP_ConfigStore(wallet, address);
   let feePerOrderRaw = await configStoreContract.customParam(Utils.stringToBytes32(FEE_PER_ORDER).toString());
   let feePerOrder = Utils.fromDecimals(feePerOrderRaw).toString();
@@ -194,7 +134,7 @@ const getRestrictedPairCustomParams = async (chainId: number) => {
   }
 }
 
-const getGroupQueuePairInfo = async (state: State, pairAddress: string, tokenAddress: string, provider?: string, offerIndex?: number) => {
+const getPairInfo = async (state: State, pairAddress: string, tokenAddress: string, provider?: string, offerIndex?: number) => {
   const wallet = state.getRpcWallet();
   const chainId = state.getChainId();
   const nativeToken = getChainNativeToken(chainId);
@@ -230,7 +170,7 @@ const getGroupQueuePairInfo = async (state: State, pairAddress: string, tokenAdd
     totalAmount = totalAmount.plus(amounts[i]);
   }
 
-  let customParams = await getRestrictedPairCustomParams(chainId);
+  let customParams = await getRestrictedPairCustomParams(state);
 
   let returnObj = {
     pairAddress: pairAddress.toLowerCase(),
@@ -301,26 +241,7 @@ const getTokenAllowance = async (tokenAddress: string, tokenDecimals: number, co
   return allowance.shiftedBy(-tokenDecimals);
 }
 
-const approveLPMax = async (chainId: number, tokenObj: ITokenObject, callback: any, confirmationCallback: any) => {
-  let amount = INFINITE;
-  let receipt = await new Contracts.ERC20(Wallet.getClientInstance(), tokenObj.address).approve({ spender: getLiquidityProviderAddress(chainId), amount });
-  return receipt;
-}
-
-const getEstimatedAmountInUSD = async (chainId: number, tokenObj: ITokenObject, amount: string) => {
-  let tokens = mapTokenObjectSet(chainId, { tokenObj });
-  let tokenPrice = await getTokenPrice(chainId, tokens.tokenObj.address.toLowerCase())
-  return tokenPrice != null ? new BigNumber(amount).times(tokenPrice).toFixed() : new BigNumber(amount).toFixed();
-}
-
-const approvePairMax = async (chainId: number, pairAddress: string, callback: any, confirmationCallback: any) => {
-  let amount = INFINITE;
-  let StakeToken = getQueueStakeToken(chainId);
-  let receipt = await new Contracts.ERC20(Wallet.getClientInstance(), StakeToken!.address).approve({ spender: pairAddress, amount });
-  return receipt;
-}
-
-const addLiquidityToGroupQueue = async (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenIn: ITokenObject, pairIndex: number, offerIndex: number, amountIn: number, allowAll: boolean, restrictedPrice: string, startDate: number, expire: number, deadline: number, whitelistAddress: any[]) => {
+const addLiquidity = async (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenIn: ITokenObject, pairIndex: number, offerIndex: number, amountIn: number, allowAll: boolean, restrictedPrice: string, startDate: number, expire: number, deadline: number, whitelistAddress: IAllocation[]) => {
   let receipt;
   let trader: string[] = []
   let allocation: BigNumber[] = []
@@ -469,18 +390,7 @@ const addLiquidityToGroupQueue = async (chainId: number, tokenA: ITokenObject, t
   return receipt;
 }
 
-export interface QueueBasicInfo {
-  firstToken: string,
-  secondToken: string,
-  queueSize: BigNumber,
-  topStake: BigNumber | undefined,
-  totalOrder: BigNumber,
-  totalStake: BigNumber | undefined,
-  pairAddress: string,
-  isOdd: boolean,
-}
-
-const convertGroupQueueWhitelistedAddresses = (inputText: string): { address: string, allocation: number }[] => {
+const convertWhitelistedAddresses = (inputText: string): IAllocation[] => {
 
   function splitByMultipleSeparator(input: string, separators: any[]): string[] {
     for (let i = 1; i < separators.length; i++) {
@@ -489,7 +399,7 @@ const convertGroupQueueWhitelistedAddresses = (inputText: string): { address: st
     return input.split(separators[0]).filter(text => text != "").map(v => v.trim())
   }
 
-  let data: { address: string, allocation: number }[] = []
+  let data: IAllocation[] = []
   let textArray = splitByMultipleSeparator(inputText, [",", /\s/g, ":", "="])
 
   if (textArray.length % 2 != 0) return []
@@ -506,7 +416,7 @@ const convertGroupQueueWhitelistedAddresses = (inputText: string): { address: st
 async function getTradersAllocation(pair: Contracts.OSWAP_RestrictedPair, direction: boolean, offerIndex: number | BigNumber, allocationTokenDecimals: number, callbackPerRecord?: (address: string, allocation: string) => void) {
   let traderLength = (await pair.getApprovedTraderLength({ direction, offerIndex })).toNumber();
   let tasks: Promise<void>[] = [];
-  let allo: AllocationMap[] = [];
+  let allo: IAllocation[] = [];
 
   for (let i = 0; i < traderLength; i += 100) {//get trader allocation
     tasks.push(
@@ -536,13 +446,10 @@ async function isPairRegistered(state: State, tokenA: string, tokenB: string) {
 export {
   getPair,
   isPairRegistered,
-  getGroupQueuePairInfo,
+  getPairInfo,
   getToBeApprovedTokens,
-  approveLPMax,
   getLiquidityProviderAddress,
-  getEstimatedAmountInUSD,
-  approvePairMax,
-  addLiquidityToGroupQueue,
+  addLiquidity,
   getQueueStakeToken,
-  convertGroupQueueWhitelistedAddresses
+  convertWhitelistedAddresses
 }

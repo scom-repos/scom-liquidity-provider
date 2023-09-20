@@ -32,6 +32,7 @@ export const liquidityProviderContainer = Styles.style({
 })
 
 export const liquidityProviderComponent = Styles.style({
+  padding: '1rem',
   $nest: {
     'span': {
       letterSpacing: '0.15px',
@@ -82,7 +83,6 @@ export const liquidityProviderComponent = Styles.style({
 })
 
 export const liquidityProviderForm = Styles.style({
-  width: '90%',
   maxWidth: 920,
   margin: '0 auto',
   $nest: {
@@ -93,40 +93,16 @@ export const liquidityProviderForm = Styles.style({
       width: '100%'
     },
     '.red-color i-label *': {
-      color: '#BD4F5A'
+      color: '#f15e61'
     },
     '.green-color *': {
       color: '#77D394'
-    },
-    '.queue-header': {
-      display: 'flex',
-      alignItems: 'center',
-      width: '100%'
-    },
-    '.ml-0-5': {
-      marginLeft: '.5rem',
-    },
-    '.mr-0-5': {
-      marginRight: '.5rem',
-    },
-    '.ml-0-3': {
-      marginLeft: '.3rem',
-    },
-    '.mr-0-3': {
-      marginRight: '.3rem',
-    },
-    '.mx-0-5': {
-      marginLeft: '.5rem',
-      marginRight: '.5rem'
     },
     'i-icon': {
       display: 'inline-block'
     },
     'i-button i-icon.loading-icon': {
       display: 'inline-flex'
-    },
-    '.text--grey *': {
-      color: Theme.text.secondary
     },
     '.text--primary *': {
       color: Theme.colors.primary.main
@@ -137,6 +113,7 @@ export const liquidityProviderForm = Styles.style({
     },
     '.custom-container': {
       width: 'calc(50% - 10px)',
+      marginInline: 'auto'
     },
     '.detail-col': {
       font: `normal normal 700 1.5rem/1.5rem ${Theme.typography.fontFamily}`,
@@ -147,16 +124,10 @@ export const liquidityProviderForm = Styles.style({
       marginBottom: '1.5rem',
       fontWeight: 'normal',
       $nest: {
-        '.custom-label *': {
-          fontWeight: 700
-        },
         '.icon-right': {
           display: 'inline-block',
           marginRight: '1rem'
         },
-        // 'i-icon svg': {
-        //   verticalAlign: 'middle'
-        // },
         '.detail-col_header': {
           borderBottom: `2px solid ${Theme.divider}`,
           padding: '1rem 1rem 1rem 0'
@@ -171,9 +142,6 @@ export const liquidityProviderForm = Styles.style({
         '.input--token-container': {
           padding: '0.5rem 0',
         },
-        'i-label.text--grey *': {
-          color: 'hsla(0,0%,100%,0.55)'
-        },
         '.btn-max': {
           borderRadius: '0.5rem',
           marginLeft: '0.5rem',
@@ -185,13 +153,13 @@ export const liquidityProviderForm = Styles.style({
           margin: '0.5rem 0'
         },
         '.input--token-box': {
-          padding: '0.75rem 1rem',
-          background: '#0c1234',
-          border: '2px solid #0c1234',
+          padding: '0.25rem 0.5rem',
+          background: Theme.input.background,
+          border: `2px solid ${Theme.input.background}`,
           borderRadius: '0.75rem',
           $nest: {
             '&.bordered': {
-              border: '2px solid #f15e61'
+              border: `2px solid ${Theme.colors.primary.main}`
             },
             'i-button': {
               padding: '0.3rem 0.5rem',
@@ -213,18 +181,19 @@ export const liquidityProviderForm = Styles.style({
               }
             },
             'i-input': {
-              width: '100%'
+              width: '100%',
+              height: '100% !important'
             },
             'i-input > input': {
               width: '100%',
-              height: 'auto !important',
+              height: '100% !important',
               padding: '.375rem .75rem',
               paddingRight: '0.25rem',
               paddingLeft: 0,
               borderRadius: '0.25rem',
               border: 'none',
               background: 'transparent',
-              color: '#fff',
+              color: Theme.input.fontColor,
               fontSize: '1.25rem'
             },
             'i-icon svg': {
@@ -255,7 +224,6 @@ export const liquidityProviderForm = Styles.style({
           display: 'inline-block',
           padding: '3px',
           marginLeft: 'auto',
-          background: '#252a48',
           border: '2px solid transparent',
           borderRadius: '50%',
           transform: 'rotate(90deg)',
@@ -270,10 +238,11 @@ export const liquidityProviderForm = Styles.style({
               border: 'none',
               padding: '1rem 0.75rem',
               fontSize: '1.25rem',
-              color: '#fff',
+              color: Theme.input.fontColor,
               $nest: {
                 '&::placeholder': {
-                  color: '#8d8fa3',
+                  color: Theme.input.fontColor,
+                  opacity: 0.8
                 },
               }
             },
@@ -326,9 +295,6 @@ export const liquidityProviderForm = Styles.style({
           height: 20,
           borderRadius: '50%'
         },
-        '.px-0': {
-          paddingInline: 0,
-        },
         '.item-status': {
           alignItems: 'center',
           fontSize: '1rem',
@@ -341,7 +307,7 @@ export const liquidityProviderForm = Styles.style({
           },
         },
         '.btn-dropdown': {
-          paddingInline: '1rem',
+          paddingInline: '0.25rem',
           width: '100%',
           $nest: {
             '.caption': {
@@ -360,15 +326,16 @@ export const liquidityProviderForm = Styles.style({
               padding: '0.25rem 0',
               marginTop: 0,
               border: `2px solid ${Theme.colors.primary.main}`,
-              background: '#1f1e4f',
+              background: Theme.background.modal,
               borderRadius: 4,
               minWidth: 0,
               width: '100%',
+              maxWidth: 410,
               $nest: {
                 'i-button': {
                   display: 'block',
                   padding: '0.5rem 1rem',
-                  background: '#1f1e4f',
+                  background: 'transparent',
                   borderRadius: '0',
                   border: 'none',
                   boxShadow: 'none',
@@ -377,7 +344,7 @@ export const liquidityProviderForm = Styles.style({
                   textAlign: 'left',
                   $nest: {
                     '&:hover': {
-                      background: '#252a48',
+                      opacity: 0.8,
                     },
                     'i-image': {
                       display: 'flex',
@@ -437,10 +404,11 @@ export const liquidityProviderForm = Styles.style({
               font: `normal normal bold 1rem/1rem ${Theme.typography.fontFamily}`,
               fontSize: '.9rem',
               lineHeight: '1.5rem',
-              color: '#d2d2d2'
+              opacity: 0.8
             },
             '.summary-row_body i-label *': {
-              color: Theme.text.primary
+              color: Theme.text.primary,
+              opacity: 1
             },
             '&.highlight-row .summary-row_body i-label.highlight-value *': {
               color: Theme.colors.primary.main
@@ -457,7 +425,7 @@ export const liquidityProviderForm = Styles.style({
                   justifyContent: 'space-between'
                 },
                 '.second-data *': {
-                  color: '#d2d2d2',
+                  opacity: 0.8,
                   fontSize: '.9rem'
                 }
               }
@@ -489,22 +457,22 @@ export const liquidityProviderForm = Styles.style({
     '.custom-group--icon': {
       $nest: {
         'i-icon': {
-          display: 'flex',
+          display: 'flex'
         },
         '#settingLb > i-icon': {
           marginLeft: '1rem !important',
-        },
-      },
+        }
+      }
     },
     '#confirmationModal': {
       $nest: {
         '.modal': {
-          background: '#192046',
+          background: Theme.background.modal,
           width: 600,
           maxWidth: '95%',
           padding: '0.75rem 1rem',
           borderRadius: '1rem',
-          color: '#fff'
+          color: Theme.text.primary
         },
         '.i-modal_header': {
           display: 'none',
@@ -519,8 +487,8 @@ export const liquidityProviderForm = Styles.style({
           $nest: {
             'i-icon': {
               fill: Theme.colors.primary.main,
-            },
-          },
+            }
+          }
         },
         '.text-warning *': {
           color: Theme.colors.primary.main,
@@ -539,17 +507,16 @@ export const liquidityProviderForm = Styles.style({
           margin: '0.5rem',
         },
         '.btn-cancel': {
-          background: '#eaecef !important',
-          color: `${Theme.background.default} !important`,
-        },
-      },
+          background: `${Theme.text.primary} !important`,
+          color: `${Theme.background.main} !important`,
+        }
+      }
     },
     '@media screen and (max-width: 768px)': {
       $nest: {
         '.custom-container': {
           width: '480px',
-          maxWidth: '100%',
-          marginInline: 'auto',
+          maxWidth: '100%'
         }
       },
     },

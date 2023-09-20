@@ -1,9 +1,9 @@
-import { moment, Control, Module, Label, Input, ControlElement, customElements, Panel, Button, application, IEventBus, Datepicker, VStack, Modal, Container, Styles } from '@ijstech/components';
-import { BigNumber } from '@ijstech/eth-wallet';
+import { moment, Control, Module, Label, Input, ControlElement, customElements, Panel, Button, Datepicker, VStack, Modal, Container, Styles } from '@ijstech/components';
+import { BigNumber, Wallet } from '@ijstech/eth-wallet';
 import { State, fallbackUrl, getTokenDecimals, tokenSymbol } from '../store/index';
-import { getQueueStakeToken, convertGroupQueueWhitelistedAddresses, Stage, OfferState, setOnApproving, setOnApproved } from '../liquidity-utils';
-import { limitInputNumber, renderBalanceTooltip, limitDecimals } from '../global/index';
-import { ManageWhitelist } from '../whitelist/index';
+import { getQueueStakeToken, convertWhitelistedAddresses, Stage, OfferState, setOnApproving, setOnApproved } from '../liquidity-utils';
+import { limitInputNumber, renderBalanceTooltip, limitDecimals, IAllocation } from '../global/index';
+import { ManageWhitelist } from './whitelist';
 import Assets from '../assets';
 import ScomTokenInput from '@scom/scom-token-input';
 import { ITokenObject, assets as tokenAssets, tokenStore } from '@scom/scom-token-list';
@@ -25,10 +25,9 @@ let statusList = [
 @customElements('liquidity-form')
 export class LiquidityForm extends Module {
   private _state: State;
-  private balanceLb: Label;
   private offerToDropdown: Button;
   private offerToModal: Modal;
-  private queueForm: Panel;
+  private pnlForm: Panel;
   private firstInput: Input;
   private secondInput: Input;
   private firstTokenInput: ScomTokenInput;
@@ -57,7 +56,7 @@ export class LiquidityForm extends Module {
   private progress1: Label;
   private progress2: Label;
   private manageWhitelist: ManageWhitelist;
-  private addresses: any[] = [];
+  private addresses: IAllocation[] = [];
   private confirmationModal: Modal;
   private lbOfferPrice1: Label;
   private lbOfferPrice2: Label;
@@ -67,13 +66,13 @@ export class LiquidityForm extends Module {
   private offerTo: OfferState;
   private _model: any;
   private currentFocus?: Element;
-  private $eventBus: IEventBus;
-  updateHelpContent: any;
-  updateSummary: any;
+  updateHelpContent: () => void;
+  updateSummary: () => void;
+  onFieldChanged: (state: Stage) => void;
+  onFocusChanged: (state: Stage) => void;
 
   constructor(parent?: Container, options?: any) {
     super(parent, options);
-    this.$eventBus = application.EventBus;
   }
 
   set state(value: State) {
@@ -175,6 +174,7 @@ export class LiquidityForm extends Module {
   }
 
   get isSubmitButtonDisabled() {
+    if (!this.state.isRpcWalletConnected()) return false;
     return this.isProceedButtonDisabled ||
       !(this.currentStage === Stage.SUBMIT || this.currentStage === Stage.FIRST_TOKEN_APPROVAL || this.currentStage === Stage.GOV_TOKEN_APPROVAL) ||
       (new BigNumber(this.model.fee()).gt(this.model.govTokenBalance()));
@@ -235,7 +235,24 @@ export class LiquidityForm extends Module {
 
   onUpdateSummary = async () => {
     if (this.updateSummary) await this.updateSummary();
-    // this.$eventBus.dispatch(EventId.EmitFieldChange, { source: 'GroupQueueFrom', stage: this.currentStage });
+    if (this.onFieldChanged) this.onFieldChanged(this.currentStage);
+  }
+
+  onSubmitBtnStatus = (isLoading: boolean, isApproval?: boolean) => {
+    this.submitBtn.rightIcon.visible = isLoading;
+    this.secondTokenPanel.enabled = !isLoading;
+    this.secondInput.enabled = !isLoading
+    this.startDateContainer.enabled = !isLoading;
+    this.endDateContainer.enabled = !isLoading;
+    this.inputStartDate.enabled = !isLoading;
+    this.inputEndDate.enabled = !isLoading;
+    this.statusPanel.enabled = !isLoading;
+    this.offerToDropdown.enabled = !isLoading;
+    this.addressPanel.enabled = !isLoading;
+    this.btnAddress.enabled = !isLoading;
+    if (!isApproval) {
+      this.submitBtn.caption = isLoading ? 'Submitting' : 'Submit';
+    }
   }
 
   onSetMaxBalance = () => {
@@ -249,7 +266,7 @@ export class LiquidityForm extends Module {
 
   updateSummaryField = () => {
     this.onUpdateHelpContent();
-    // this.$eventBus.dispatch(EventId.EmitFocusField, { source: 'GroupQueueFrom', stage: this.currentStage });
+    if (this.onFocusChanged) this.onFocusChanged(this.currentStage);
   }
 
   showConfirmation = (value: boolean) => {
@@ -267,6 +284,11 @@ export class LiquidityForm extends Module {
   }
 
   onProceed = async (source: Control) => {
+    if (!this.state.isRpcWalletConnected()) {
+      const clientWallet = Wallet.getClientInstance();
+      await clientWallet.switchNetwork(this.state.getChainId());
+      return;
+    }
     if (this.currentStage === Stage.SUBMIT) {
       this.showConfirmation(true);
     } else {
@@ -351,7 +373,7 @@ export class LiquidityForm extends Module {
     if (focusItem) {
       focusItem.classList.add("bordered");
       this.currentFocus = focusItem;
-      // this.$eventBus.dispatch(EventId.EmitFocusField, { source: 'GroupQueueFrom', stage: this.currentStage });
+      if (this.onFocusChanged) this.onFocusChanged(this.currentStage);
     }
   }
 
@@ -454,7 +476,7 @@ export class LiquidityForm extends Module {
     this.oswapToken = getQueueStakeToken(this.chainId) || null;
     this.offerTo = this.model.offerTo();
     if (this.model.addresses()) {
-      this.addresses = this.model.addresses().map((v: any) => {
+      this.addresses = this.model.addresses().map((v: IAllocation) => {
         return {
           ...v,
           isOld: true,
@@ -486,7 +508,7 @@ export class LiquidityForm extends Module {
         balance: this.model.govTokenBalance(),
         pairCustomParams: this.pairCustomParams,
       }
-      this.manageWhitelist.convertGroupQueueWhitelistedAddresses = convertGroupQueueWhitelistedAddresses
+      this.manageWhitelist.convertWhitelistedAddresses = convertWhitelistedAddresses
       if (!this.manageWhitelist.updateAddress) {
         this.manageWhitelist.updateAddress = (data: any) => this.getAddress(data);
       }
@@ -519,8 +541,8 @@ export class LiquidityForm extends Module {
       <i-hstack verticalAlignment="center">
         <i-image width="20px" class="icon-left inline-block" url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} />
         <i-image width="20px" class="icon-right inline-block" url={tokenAssets.tokenPath(this.model.toTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} />
-        <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label mr-0-5" />
-        <i-icon name="arrow-right" width="16" height="16" fill="#fff" class="mr-0-5" />
+        <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label" margin={{ right: 8 }} />
+        <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} margin={{ right: 8 }} />
         <i-label caption={tokenSymbol(this.chainId, this.toTokenAddress)} class="small-label" />
       </i-hstack>
     )
@@ -528,7 +550,7 @@ export class LiquidityForm extends Module {
   }
 
   renderUI = async () => {
-    this.queueForm.clearInnerHTML();
+    this.pnlForm.clearInnerHTML();
     this.currentFocus = undefined;
     const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
     this.inputStartDate = await Datepicker.create({ type: 'dateTime', enabled: !this.isStartDateDisabled, width: '100%', height: '60px' });
@@ -547,21 +569,22 @@ export class LiquidityForm extends Module {
           <i-vstack class="input--token-container">
             <i-hstack horizontalAlignment="space-between" verticalAlignment="end" width="100%">
               <i-vstack width="50%">
-                <i-label class="custom-label" caption="You Are Selling" />
+                <i-label caption="You Are Selling" font={{ bold: true }} />
               </i-vstack>
               <i-vstack width="50%" horizontalAlignment="end">
-                <i-label id="balanceLb" class="text--grey ml-auto text-right" caption={renderBalanceTooltip({ title: 'Balance', value: this.model.fromTokenBalance() }, tokenMap)} />
+                <i-label class="text-right" opacity={0.8} margin={{ left: 'auto' }} caption={renderBalanceTooltip({ title: 'Balance', value: this.model.fromTokenBalance() }, tokenMap)} />
               </i-vstack>
             </i-hstack>
             <i-panel class="bg-box" width="100%">
               <i-hstack class="input--token-box" verticalAlignment="center" horizontalAlignment="space-between" width="100%">
-                <i-vstack width="calc(100% - 160px)">
+                <i-vstack width="calc(100% - 160px)" height={48}>
                   <i-input
                     id="firstInput"
                     value={this.fromTokenInputText}
                     inputType="number"
                     placeholder="0.0"
-                    class="token-input w-100 mr-0-3"
+                    margin={{ right: 4 }}
+                    class="token-input w-100"
                     width="100%"
                     onChanged={this.fromTokenInputTextChange.bind(this)}
                     onFocus={(source: Control) => this.handleFocusInput(source, Stage.SET_AMOUNT)}
@@ -593,23 +616,24 @@ export class LiquidityForm extends Module {
         <i-panel id="secondTokenPanel" class="token-box" enabled={!this.isOfferPriceDisabled}>
           <i-vstack class="input--token-container" >
             <i-hstack class="balance-info" horizontalAlignment="space-between" verticalAlignment="center" width="100%">
-              <i-hstack gap={2} verticalAlignment="center">
-                <i-label class="bold" caption="Offer Price" />
-                <i-label id="lbOfferPrice1" class="bold" caption={`(${tokenSymbol(this.chainId, this.toTokenAddress)}`} />
-                <i-icon name="arrow-right" width="16" height="16" fill="#fff" margin={{ left: 2, right: 2 }} />
-                <i-label id="lbOfferPrice2" class="bold" caption={`${tokenSymbol(this.chainId, this.fromTokenAddress)})`} />
+              <i-hstack gap={4} verticalAlignment="center">
+                <i-label font={{ bold: true }} caption="Offer Price" />
+                <i-label id="lbOfferPrice1" font={{ bold: true }} caption={`(${tokenSymbol(this.chainId, this.toTokenAddress)}`} />
+                <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} />
+                <i-label id="lbOfferPrice2" font={{ bold: true }} caption={`${tokenSymbol(this.chainId, this.fromTokenAddress)})`} />
               </i-hstack>
-              <i-icon tooltip={{ content: 'Switch Price' }} width={32} height={32} class="toggle-icon" name="arrows-alt-v" onClick={this.onSwitchPrice} />
+              <i-icon tooltip={{ content: 'Switch Price' }} width={32} height={32} class="toggle-icon" name="arrows-alt-v" fill={Theme.input.fontColor} background={{ color: Theme.input.background }} onClick={this.onSwitchPrice} />
             </i-hstack>
             <i-panel class="bg-box" width="100%">
               <i-hstack class={`input--token-box ${this.isOfferPriceStage && 'bordered'}`} verticalAlignment="center" horizontalAlignment="space-between" width="100%">
-                <i-vstack width="calc(100% - 160px)">
+                <i-vstack width="calc(100% - 160px)" height={48}>
                   <i-input
                     id="secondInput"
                     value={this.offerPriceText}
                     inputType="number"
                     placeholder="0.0"
-                    class="token-input w-100 mr-0-3"
+                    margin={{ right: 4 }}
+                    class="token-input w-100"
                     width="100%"
                     enabled={!this.isOfferPriceDisabled}
                     onChanged={this.changeOfferPrice.bind(this)}
@@ -644,7 +668,7 @@ export class LiquidityForm extends Module {
           <i-hstack gap="10px">
             <i-vstack id="startDateContainer" enabled={!this.isStartDateDisabled} class="input--token-container" >
               <i-hstack horizontalAlignment="space-between" verticalAlignment="center" width="100%">
-                <i-label class="bold" caption="Start Date" />
+                <i-label font={{ bold: true }} caption="Start Date" />
               </i-hstack>
               <i-panel class="bg-box" width="100%">
                 <i-hstack class="input--token-box" verticalAlignment="center" width="100%">
@@ -656,7 +680,7 @@ export class LiquidityForm extends Module {
             </i-vstack>
             <i-vstack id="endDateContainer" enabled={!this.isEndDateDisabled} class="input--token-container">
               <i-hstack horizontalAlignment="space-between" verticalAlignment="center" width="100%">
-                <i-label class="bold" caption="End Date" />
+                <i-label font={{ bold: true }} caption="End Date" />
               </i-hstack>
               <i-panel class="bg-box" width="100%">
                 <i-hstack class="input--token-box" verticalAlignment="center" width="100%">
@@ -678,9 +702,9 @@ export class LiquidityForm extends Module {
         </i-panel>
         <i-panel id="statusPanel" class="token-box" enabled={!this.isOfferToDisabled}>
           <i-vstack class="input--token-container">
-            <i-label class="custom-label" caption="Offer To" />
+            <i-label caption="Offer To" font={{ bold: true }} />
             <i-panel class="bg-box" width="100%">
-              <i-hstack class="input--token-box px-0" verticalAlignment="center" width="100%">
+              <i-hstack class="input--token-box" height={60} padding={{ left: 0, right: 0 }} verticalAlignment="center" width="100%">
                 <i-panel class="btn-dropdown">
                   <i-button
                     id="offerToDropdown"
@@ -722,17 +746,16 @@ export class LiquidityForm extends Module {
         <i-panel id="addressPanel" class="token-box" visible={this.isAddressShown} enabled={!this.isAddressDisabled}>
           <i-vstack class="input--token-container">
             <i-hstack verticalAlignment="center">
-              <i-label class="custom-label" caption="Whitelist Address" margin={{ right: 4 }} />
+              <i-label caption="Whitelist Address" margin={{ right: 4 }} font={{ bold: true }} />
               <i-icon name="question-circle" width={15} height={15}
                 tooltip={{
                   content: 'Only whitelisted address(es) are allowed to buy the tokens at your offer price.'
                 }}
-                fill="#ffffff8c"
                 class="custom-question-icon"
               />
             </i-hstack>
             <i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center">
-              <i-label id="lbAddress" class="bold" caption={this.addressText} />
+              <i-label id="lbAddress" font={{ bold: true }} caption={this.addressText} />
               <i-button id="btnAddress" class="btn-os btn-address" enabled={!this.isAddressDisabled} caption={this.btnAddressText} onClick={this.showWhitelistModal} />
             </i-hstack>
           </i-vstack>
@@ -755,29 +778,28 @@ export class LiquidityForm extends Module {
                   tooltip={{
                     content: 'The OSWAP fee is calculated by a fixed offer fee + whitelist address fee * no. of whitelisted addresses'
                   }}
-                  fill="#ffffff8c"
                 />
               </i-hstack>
             </i-hstack>
             <i-hstack width="100%" horizontalAlignment="space-between">
-              <i-label id="lbWillGet" class="bold" />
-              <i-label id="lbFee" class="bold" />
+              <i-label id="lbWillGet" font={{ bold: true }} />
+              <i-label id="lbFee" font={{ bold: true }} />
             </i-hstack>
             <i-hstack horizontalAlignment="end">
-              <i-label id="lbGovBalance" class="text--grey ml-auto" caption={renderBalanceTooltip({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap)} />
+              <i-label id="lbGovBalance" opacity={0.8} margin={{ left: 'auto' }} caption={renderBalanceTooltip({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap)} />
             </i-hstack>
           </i-vstack>
         </i-panel>
         <i-panel id="approveAllowancePanel" class="token-box">
           <i-vstack class="input--token-container">
-            <i-label class="custom-label" caption="Approve Allowance" />
+            <i-label caption="Approve Allowance" font={{ bold: true }} />
             <i-panel class="bg-box" width="100%">
-              <i-hstack class="input--token-box" verticalAlignment="center" horizontalAlignment="center" width="100%" gap="15px">
-                <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} />
+              <i-hstack class="input--token-box" verticalAlignment="center" horizontalAlignment="center" width="100%" gap="15px" height={60}>
+                <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} font={{ bold: true }} />
                 <i-image url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} width="30" class="inline-block" />
-                <i-label caption="-" class="inline-block mx-0-5" />
+                <i-label caption="-" class="inline-block" margin={{ right: 8, left: 8 }} font={{ bold: true }} />
                 <i-image url={this.oswapIcon} width="30" class="inline-block" />
-                <i-label caption={this.oswapSymbol} />
+                <i-label caption={this.oswapSymbol} font={{ bold: true }} />
               </i-hstack>
             </i-panel>
           </i-vstack>
@@ -804,7 +826,7 @@ export class LiquidityForm extends Module {
     if (this.secondTokenInput) {
       this.secondTokenInput.token = this.model.toTokenObject();
     }
-    this.queueForm.appendChild(newElm);
+    this.pnlForm.appendChild(newElm);
     if (this.isSetOrderAmountStage) {
       this.setBorder(this.firstInput);
     }
@@ -817,7 +839,7 @@ export class LiquidityForm extends Module {
     return (
       <i-hstack verticalAlignment="center" horizontalAlignment="center" width="100%">
         <i-label id="progress1" caption="1" class="progress-number" />
-        <i-hstack height={2} width="100px" background={{ color: "#fff" }}></i-hstack>
+        <i-hstack height={2} width="100px" background={{ color: Theme.text.primary }}></i-hstack>
         <i-label id="progress2" caption="2" class="progress-number" />
       </i-hstack>
     )
@@ -865,9 +887,9 @@ export class LiquidityForm extends Module {
 
   render() {
     return (
-      <i-panel class="queue-form detail-col">
+      <i-panel class="detail-col">
         <i-panel class="detail-col_header" id="headerSection" />
-        <i-panel id="queueForm" />
+        <i-panel id="pnlForm" />
 
         <i-modal
           id="confirmationModal"

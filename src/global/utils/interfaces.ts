@@ -14,4 +14,14 @@ export interface ILiquidityProvider {
   wallets: IWalletPlugin[];
   networks: INetworkConfig[];
   showHeader?: boolean;
-} 
+}
+
+export interface IAllocation {
+  address: string;
+  allocation: string | number;
+  oldAllocation?: string | number;
+  allocationVal?: string | number;
+  isOld?: boolean;
+  isDuplicated?: boolean;
+  invalid?: boolean;
+}

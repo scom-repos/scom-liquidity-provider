@@ -11,14 +11,13 @@
     "@ijstech/eth-contract": "*",
     "@ijstech/eth-wallet": "*",
     "@scom/scom-network-picker": "*",
+    "@scom/scom-token-input": "*",
     "@scom/scom-dapp-container": "*",
     "@scom/scom-wallet-modal": "*",
     "@scom/scom-token-list": "*"
   },
   "packages": [
-    "@scom/oswap-openswap-contract",
-    "@scom/oswap-chainlink-contract",
-    "@scom/oswap-oracle-adaptor-contract"
+    "@scom/oswap-openswap-contract"
   ],
   "menus": [
     {
