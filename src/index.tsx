@@ -1,11 +1,13 @@
-import { Module, Panel, Label, Container, ControlElement, customModule, customElements } from '@ijstech/components';
+import { Module, Panel, Label, Container, ControlElement, customModule, customElements, HStack, application, moment, Button, Styles, Modal, Checkbox, Control } from '@ijstech/components';
 import { Constants, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
 import Assets from './assets';
 import {
 	State,
-	isClientWalletConnected
+	fallbackUrl,
+	isClientWalletConnected,
+	tokenSymbol
 } from './store/index';
-import { tokenStore, WETHByChainId } from '@scom/scom-token-list';
+import { tokenStore, WETHByChainId, assets as tokenAssets } from '@scom/scom-token-list';
 import configData from './data.json';
 import { liquidityProviderComponent, liquidityProviderContainer, liquidityProviderForm } from './index.css';
 import ScomDappContainer from '@scom/scom-dapp-container';
@@ -14,8 +16,9 @@ import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 import { INetworkConfig } from '@scom/scom-network-picker';
 import formSchema from './formSchema';
 import { LiquidityForm, LiquidityHelp, LiquiditySummary } from './detail/index';
-import { Model, Stage, getPair, isPairRegistered } from './liquidity-utils/index';
-import { ILiquidityProvider } from './global/index';
+import { Action, Model, Stage, getOfferIndexes, getPair, getPairInfo, isPairRegistered, lockGroupQueueOffer } from './liquidity-utils/index';
+import { ILiquidityProvider, ProviderGroupQueue, registerSendTxEvents } from './global/index';
+const Theme = Styles.Theme.ThemeVars;
 
 interface ScomLiquidityProviderElement extends ControlElement, ILiquidityProvider {
 	lazyLoad?: boolean;
@@ -49,8 +52,23 @@ export default class ScomLiquidityProvider extends Module {
 	private model: Model;
 	private modelState: any;
 	private panelLiquidity: Panel;
-	private panelMsg: Panel;
+	private panelHome: Panel;
 	private lbMsg: Label;
+	private hStackActions: HStack;
+	private btnAdd: Button;
+	private btnRemove: Button;
+	private btnLock: Button;
+	private btnWallet: Button;
+	private hStackBack: HStack;
+	private lockModal: Modal;
+	private lockModalTitle: HStack;
+	private firstCheckbox: Checkbox;
+	private secondCheckbox: Checkbox;
+	private lockOrderBtn: Button;
+	private actionType: Action = 0;
+	private newOfferIndex: number = 0;
+	private pairAddress: string = '';
+	private liquidities: ProviderGroupQueue[] = [];
 
 	private rpcWalletEvents: IEventBusRegistry[] = [];
 
@@ -77,17 +95,20 @@ export default class ScomLiquidityProvider extends Module {
 									chainId,
 									tokenIn,
 									tokenOut,
+									offerIndex,
 									...themeSettings
 								} = userInputData;
 
 								const generalSettings = {
 									chainId,
 									tokenIn,
-									tokenOut
+									tokenOut,
+									offerIndex
 								};
 								if (generalSettings.chainId !== undefined) this._data.chainId = generalSettings.chainId;
 								if (generalSettings.tokenIn !== undefined) this._data.tokenIn = generalSettings.tokenIn;
 								if (generalSettings.tokenOut !== undefined) this._data.tokenOut = generalSettings.tokenOut;
+								if (generalSettings.offerIndex !== undefined) this._data.offerIndex = generalSettings.offerIndex || 0;
 								await this.resetRpcWallet();
 								this.refreshUI();
 								if (builder?.setData) builder.setData(this._data);
@@ -112,7 +133,7 @@ export default class ScomLiquidityProvider extends Module {
 					},
 					userInputDataSchema: formSchema.dataSchema,
 					userInputUISchema: formSchema.uiSchema,
-					customControls: formSchema.customControls(this.rpcWallet?.instanceId)
+					customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.state)
 				}
 			);
 		}
@@ -147,9 +168,11 @@ export default class ScomLiquidityProvider extends Module {
 		const rpcWalletId = await this.state.initRpcWallet(this.chainId);
 		const rpcWallet = this.rpcWallet;
 		const chainChangedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.ChainChanged, async (chainId: number) => {
+			this.newOfferIndex = 0;
 			this.onChainChanged();
 		});
 		const connectedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.Connected, async (connected: boolean) => {
+			this.newOfferIndex = 0;
 			this.initializeWidgetConfig();
 		});
 		this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
@@ -167,6 +190,7 @@ export default class ScomLiquidityProvider extends Module {
 	private async setData(value: any) {
 		this._data = value;
 		await this.resetRpcWallet();
+		this.newOfferIndex = 0;
 		this.initializeWidgetConfig();
 	}
 
@@ -255,6 +279,18 @@ export default class ScomLiquidityProvider extends Module {
 		return address.startsWith('0x') ? address.toLowerCase() : address;
 	}
 
+	private get offerIndex() {
+		return this._data.offerIndex || this.newOfferIndex || 0;
+	}
+
+	private get fromTokenObject() {
+		return tokenStore.getTokenMapByChainId(this.state.getChainId())[this.fromTokenAddress];
+	}
+
+	private get toTokenObject() {
+		return tokenStore.getTokenMapByChainId(this.state.getChainId())[this.toTokenAddress];
+	}
+
 	constructor(parent?: Container, options?: ControlElement) {
 		super(parent, options);
 		this.state = new State(configData);
@@ -278,6 +314,7 @@ export default class ScomLiquidityProvider extends Module {
 	}
 
 	private refreshUI = () => {
+		this.newOfferIndex = 0;
 		this.initializeWidgetConfig();
 	}
 
@@ -287,7 +324,7 @@ export default class ScomLiquidityProvider extends Module {
 				this.loadingElm.visible = true;
 			}
 			if (!isClientWalletConnected() || !this._data || !this.checkValidation()) {
-				await this.renderEmpty();
+				await this.renderHome();
 				return;
 			}
 			await this.initWallet();
@@ -296,15 +333,25 @@ export default class ScomLiquidityProvider extends Module {
 			const tokenB = this.toTokenAddress.startsWith('0x') ? this.toTokenAddress : WETHByChainId[chainId].address || this.toTokenAddress;
 			const isRegistered = await isPairRegistered(this.state, tokenA, tokenB);
 			if (!isRegistered) {
-				await this.renderEmpty('Pair is not registered, please register the pair first!');
+				await this.renderHome(undefined, 'Pair is not registered, please register the pair first!');
 				return;
 			}
-			tokenStore.updateTokenMapData(this.chainId);
+			tokenStore.updateTokenMapData(chainId);
 			const rpcWallet = this.rpcWallet;
 			if (rpcWallet.address) {
 				await tokenStore.updateAllTokenBalances(rpcWallet);
 			}
-			await this.renderForm();
+			this.pairAddress = await getPair(this.state, this.fromTokenObject, this.toTokenObject);
+			if (this.offerIndex) {
+				const offerIndexes = await getOfferIndexes(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
+				if (offerIndexes.some(v => v.eq(this.offerIndex))) {
+					await this.renderHome(this.pairAddress);
+				} else {
+					await this.renderForm();
+				}
+			} else {
+				await this.renderForm();
+			}
 			if (!hideLoading && this.loadingElm) {
 				this.loadingElm.visible = false;
 			}
@@ -313,9 +360,9 @@ export default class ScomLiquidityProvider extends Module {
 
 	private fetchData = async () => {
 		try {
-			this.model.getState()
 			await this.modelState.fetchData();
 			this.detailSummary.fromTokenAddress = this.fromTokenAddress;
+			this.detailSummary.actionType = this.actionType;
 			this.detailSummary.summaryData = this.modelState.summaryData();
 		} catch (err) {
 			console.log(err)
@@ -323,19 +370,18 @@ export default class ScomLiquidityProvider extends Module {
 	}
 
 	private renderForm = async () => {
-		const chainId = this.state.getChainId();
-		const tokenMap = tokenStore.getTokenMapByChainId(chainId);
-		const tokenA = tokenMap[this.fromTokenAddress];
-		const tokenB = tokenMap[this.toTokenAddress];
-		const pairAddress = await getPair(this.state, tokenA, tokenB);
-		this.model = new Model(this.state, pairAddress, this.fromTokenAddress, 0);
+		this.model = new Model(this.state, this.pairAddress, this.fromTokenAddress, this.offerIndex, this.actionType);
+		this.model.onBack = () => this.onBack();
 		this.model.onShowTxStatus = (status, content) => {
 			this.showMessage(status, content);
 		}
-		this.model.onSubmitBtnStatus = (isLoading, isApproval, isResetForm) => {
+		this.model.onSubmitBtnStatus = (isLoading, isApproval, offerIndex) => {
 			this.detailForm.onSubmitBtnStatus(isLoading, isApproval);
-			if (isResetForm) {
-				this.initializeWidgetConfig();
+			this.hStackActions.enabled = !isLoading;
+			if (offerIndex) {
+				this.loadingElm.visible = true;
+				this.newOfferIndex = offerIndex;
+				this.renderHome(this.pairAddress);
 			}
 		}
 		this.modelState = this.model.getState();
@@ -360,25 +406,142 @@ export default class ScomLiquidityProvider extends Module {
 		try {
 			await this.modelState.fetchData();
 			this.detailSummary.fromTokenAddress = this.fromTokenAddress;
+			this.detailSummary.actionType = this.actionType;
 			this.detailSummary.summaryData = this.modelState.summaryData();
-			this.panelMsg.visible = false;
-			this.lbMsg.caption = '';
+			this.panelHome.visible = false;
 			this.panelLiquidity.visible = true;
+			this.hStackBack.visible = this.actionType === Action.ADD || this.actionType === Action.REMOVE;
 		} catch (err) {
 			this.lbMsg.caption = 'Cannot fetch data!';
-			this.panelMsg.visible = true;
+			this.lbMsg.visible = true;
+			this.panelHome.visible = true;
 			this.panelLiquidity.visible = false;
 		}
+		this.detailForm.actionType = this.actionType;
 		this.detailForm.model = this.modelState;
 	}
 
-	private renderEmpty = async (msg?: string) => {
-		this.lbMsg.caption = msg ?? (!isClientWalletConnected() ? 'Please connect with your wallet' : 'Invalid configurator data');
-		this.panelMsg.visible = true;
+	private connectWallet = async () => {
+		if (!isClientWalletConnected()) {
+			if (this.mdWallet) {
+				await application.loadPackage('@scom/scom-wallet-modal', '*');
+				this.mdWallet.networks = this.networks;
+				this.mdWallet.wallets = this.wallets;
+				this.mdWallet.showModal();
+			}
+			return;
+		}
+		if (!this.state.isRpcWalletConnected()) {
+			const clientWallet = Wallet.getClientInstance();
+			await clientWallet.switchNetwork(this.chainId);
+		}
+	}
+
+	private renderHome = async (pairAddress?: string, msg?: string) => {
+		const walletConnected = isClientWalletConnected();
+		const isRpcWalletConnected = this.state.isRpcWalletConnected();
+		if (pairAddress) {
+			this.lbMsg.visible = false;
+			this.hStackActions.visible = true;
+			const info: any = await getPairInfo(this.state, pairAddress, this.fromTokenAddress, this.offerIndex);
+			const { startDate, expire, locked } = info;
+			const expired = moment(Date.now()).isAfter(expire);
+			this.btnAdd.visible = !expired;
+			this.btnAdd.enabled = isRpcWalletConnected;
+			this.btnRemove.enabled = isRpcWalletConnected && !(locked && !moment(startDate).isSameOrBefore());
+			this.btnLock.enabled = isRpcWalletConnected && !locked;
+			this.btnLock.caption = locked ? 'Locked' : 'Lock';
+		} else {
+			this.hStackActions.visible = false;
+			this.lbMsg.caption = msg ?? (!walletConnected ? 'Please connect with your wallet' : 'Invalid configurator data');
+			this.lbMsg.visible = true;
+		}
+		this.btnWallet.visible = !walletConnected || !isRpcWalletConnected;
+		this.btnWallet.caption = !walletConnected ? 'Connect Wallet' : 'Switch Wallet';
+		this.panelHome.visible = true;
 		this.panelLiquidity.visible = false;
 		if (this.loadingElm) {
 			this.loadingElm.visible = false;
 		}
+	}
+
+	private onBack = () => {
+		this.panelLiquidity.visible = false;
+		this.panelHome.visible = true;
+	}
+
+	private onActions = async (action: Action) => {
+		this.actionType = action;
+		if (action === Action.LOCK) {
+			this.showLockModal();
+		} else {
+			if (this.loadingElm) this.loadingElm.visible = true;
+			await this.renderForm();
+			if (this.loadingElm) this.loadingElm.visible = false;
+		}
+	}
+
+	private showLockModal = () => {
+		const chainId = this.state.getChainId();
+		this.firstCheckbox.value = false;
+		this.secondCheckbox.value = false;
+		this.firstCheckbox.checked = false;
+		this.secondCheckbox.checked = false;
+		this.lockOrderBtn.enabled = false;
+		this.lockModalTitle.clearInnerHTML();
+		this.lockModalTitle.appendChild(
+			<i-hstack gap={4} verticalAlignment="center">
+				<i-image width={28} height={28} url={tokenAssets.tokenPath(this.fromTokenObject, chainId)} fallbackUrl={fallbackUrl} />
+				<i-image width={28} height={28} url={tokenAssets.tokenPath(this.toTokenObject, chainId)} fallbackUrl={fallbackUrl} />
+				<i-label caption={tokenSymbol(chainId, this.fromTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
+				<i-icon name="arrow-right" fill={Theme.colors.primary.main} width="14" height="14" />
+				<i-label class="hightlight-yellow" caption={tokenSymbol(chainId, this.toTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
+				<i-label class="hightlight-yellow" caption={`#${this.offerIndex}`} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
+			</i-hstack>
+		)
+		this.lockModal.visible = true;
+	}
+
+	private closeLockModal = () => {
+		this.lockModal.visible = false;
+	}
+
+	private onChangeFirstChecked(source: Control, event: Event) {
+		this.firstCheckbox.checked = (source as Checkbox).checked;
+		this.lockOrderBtn.enabled = (source as Checkbox).checked && this.secondCheckbox.checked;
+	}
+
+	private onChangeSecondChecked(source: Control, event: Event) {
+		this.secondCheckbox.checked = (source as Checkbox).checked;
+		this.lockOrderBtn.enabled = this.firstCheckbox.checked && (source as Checkbox).checked;
+	}
+
+	private onConfirmLock = async () => {
+		this.showMessage('warning', 'Confirming');
+		const callback = async (err: Error, receipt?: string) => {
+			if (err) {
+				this.showMessage('error', err);
+			} else if (receipt) {
+				this.closeLockModal();
+				this.showMessage('success', receipt);
+				this.btnLock.enabled = false;
+				this.btnLock.rightIcon.visible = true;
+				this.btnLock.caption = 'Locking';
+				this.btnRemove.enabled = false;
+			}
+		};
+
+		const confirmationCallback = async (receipt: any) => {
+			this.btnLock.rightIcon.visible = false;
+			this.btnLock.caption = 'Locked';
+		};
+
+		registerSendTxEvents({
+			transactionHash: callback,
+			confirmation: confirmationCallback
+		});
+
+		lockGroupQueueOffer(this.chainId, this.pairAddress, this.fromTokenObject, this.toTokenObject, this.offerIndex);
 	}
 
 	private initWallet = async () => {
@@ -413,15 +576,21 @@ export default class ScomLiquidityProvider extends Module {
 	async init() {
 		this.isReadyCallbackQueued = true;
 		super.init();
+		this.lockModal.onClose = () => {
+			this.firstCheckbox.checked = false;
+			this.secondCheckbox.checked = false;
+			this.lockOrderBtn.enabled = false;
+		};
 		const lazyLoad = this.getAttribute('lazyLoad', true, false);
 		if (!lazyLoad) {
 			const chainId = this.getAttribute('chainId', true);
 			const tokenIn = this.getAttribute('tokenIn', true);
 			const tokenOut = this.getAttribute('tokenOut', true);
+			const offerIndex = this.getAttribute('offerIndex', true, 0);
 			const wallets = this.getAttribute('wallets', true, []);
 			const networks = this.getAttribute('networks', true, []);
 			const showHeader = this.getAttribute('showHeader', true, true);
-			await this.setData({ chainId, tokenIn, tokenOut, wallets, networks, showHeader });
+			await this.setData({ chainId, tokenIn, tokenOut, offerIndex, wallets, networks, showHeader });
 		}
 		this.isReadyCallbackQueued = false;
 		this.executeReadyCallback();
@@ -446,13 +615,57 @@ export default class ScomLiquidityProvider extends Module {
 										/>
 									</i-vstack>
 								</i-vstack>
-								<i-panel id="panelMsg" visible={false}>
-									<i-vstack gap={10} verticalAlignment="center" alignItems="center">
+								<i-panel id="panelHome" visible={false}>
+									<i-vstack verticalAlignment="center" alignItems="center">
 										<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
-										<i-label id="lbMsg" />
+										<i-label id="lbMsg" margin={{ top: 10 }} />
+										<i-hstack id="hStackActions" gap={10} margin={{ top: 10 }} verticalAlignment="center" horizontalAlignment="center" wrap="wrap">
+											<i-button
+												id="btnAdd"
+												caption="Add"
+												class="btn-os"
+												minHeight={36}
+												width={120}
+												rightIcon={{ spin: true, visible: false }}
+												onClick={() => this.onActions(Action.ADD)}
+											/>
+											<i-button
+												id="btnRemove"
+												caption="Remove"
+												class="btn-os"
+												minHeight={36}
+												width={120}
+												rightIcon={{ spin: true, visible: false }}
+												onClick={() => this.onActions(Action.REMOVE)}
+											/>
+											<i-button
+												id="btnLock"
+												caption="Lock"
+												class="btn-os"
+												minHeight={36}
+												width={120}
+												rightIcon={{ spin: true, visible: false }}
+												onClick={() => this.onActions(Action.LOCK)}
+											/>
+										</i-hstack>
+										<i-button
+											id="btnWallet"
+											caption="Connect Wallet"
+											visible={false}
+											class="btn-os"
+											minHeight={36}
+											maxWidth="90%"
+											width={240}
+											margin={{ top: 10 }}
+											onClick={this.connectWallet}
+										/>
 									</i-vstack>
 								</i-panel>
 								<i-panel id="panelLiquidity">
+									<i-hstack id="hStackBack" margin={{ bottom: 10 }} gap={4} verticalAlignment="center" width="fit-content" class="pointer" onClick={this.onBack}>
+										<i-icon name="arrow-left" fill={Theme.colors.primary.main} width={20} height={20} />
+										<i-label caption="Back" font={{ bold: true, color: Theme.colors.primary.main, size: '20px' }} lineHeight="18px" />
+									</i-hstack>
 									<i-hstack gap="20px" margin={{ bottom: 16 }} wrap="wrap">
 										<i-panel class="custom-container">
 											<liquidity-form id="detailForm" />
@@ -468,6 +681,51 @@ export default class ScomLiquidityProvider extends Module {
 							</i-panel>
 						</i-panel>
 					</i-panel>
+
+					<i-modal id="lockModal" class="bg-modal" title="Lock the order" closeIcon={{ name: 'times' }}>
+						<i-panel class="i-modal_content text-center">
+							<i-hstack id="lockModalTitle" verticalAlignment="center" horizontalAlignment="center" margin={{ bottom: 16 }} />
+							<i-hstack verticalAlignment="center" horizontalAlignment="center" margin={{ bottom: 16 }}>
+								<i-image width={80} height={80} url={Assets.fullPath('img/warning-icon.png')} />
+							</i-hstack>
+							<i-vstack verticalAlignment="center" padding={{ left: 20, right: 20 }}>
+								<i-label margin={{ bottom: 16 }} caption="Please confirm the bellow items before you lock the Group Queue" />
+								<i-vstack verticalAlignment="center">
+									<i-checkbox
+										id="firstCheckbox"
+										width="100%"
+										caption="You understand that you cannot remove any tokens from the offer until the expiry date."
+										class="pointer"
+										font={{ color: Theme.colors.primary.main }}
+										onChanged={this.onChangeFirstChecked}
+									/>
+									<i-checkbox
+										id="secondCheckbox"
+										width="100%"
+										margin={{ top: 16 }}
+										caption="You are aware that you cannot edit the whitelisted addrresses and allocations until the expiry date."
+										class="pointer"
+										font={{ color: Theme.colors.primary.main }}
+										onChanged={this.onChangeSecondChecked}
+									/>
+								</i-vstack>
+							</i-vstack>
+							<i-hstack verticalAlignment="center" horizontalAlignment="center" gap="10px" margin={{ top: 20, bottom: 10 }}>
+								<i-button
+									caption="Cancel"
+									class="btn-os btn-cancel"
+									onClick={this.closeLockModal}
+								/>
+								<i-button
+									id="lockOrderBtn"
+									caption="Lock"
+									enabled={false}
+									class="btn-os"
+									onClick={this.onConfirmLock}
+								/>
+							</i-hstack>
+						</i-panel>
+					</i-modal>
 					<i-scom-wallet-modal id="mdWallet" wallets={[]} />
 					<i-scom-tx-status-modal id="txStatusModal" />
 				</i-panel>

@@ -1,5 +1,9 @@
+import { ComboBox, IComboItem } from "@ijstech/components";
 import ScomNetworkPicker from "@scom/scom-network-picker";
 import ScomTokenInput from "@scom/scom-token-input";
+import { State } from './store/index';
+import { getOfferIndexes, getPair } from "./liquidity-utils";
+import { tokenStore } from "@scom/scom-token-list";
 
 const theme = {
     type: 'object',
@@ -39,6 +43,9 @@ export default {
                 type: 'string',
                 required: true
             },
+            offerIndex: {
+                type: 'string'
+            },
             dark: theme,
             light: theme
         }
@@ -64,6 +71,10 @@ export default {
                             {
                                 type: 'Control',
                                 scope: '#/properties/tokenOut'
+                            },
+                            {
+                                type: 'Control',
+                                scope: '#/properties/offerIndex'
                             }
                         ]
                     }
@@ -92,10 +103,32 @@ export default {
             }
         ]
     },
-    customControls(rpcWalletId: string) {
+    customControls(rpcWalletId: string, state: State) {
         let networkPicker: ScomNetworkPicker;
         let firstTokenInput: ScomTokenInput;
         let secondTokenInput: ScomTokenInput;
+        let combobox: ComboBox;
+
+        const initCombobox = async () => {
+            if (!combobox) return;
+            combobox.clear();
+            const fromToken = firstTokenInput?.token;
+            const toToken = secondTokenInput?.token;
+            try {
+                if (fromToken && toToken) {
+                    const pairAddress = await getPair(state, fromToken, toToken);
+                    const fromTokenAddress = fromToken.address?.toLowerCase() || fromToken.symbol;
+                    const toTokenAddress = toToken.address?.toLowerCase() || toToken.symbol;
+                    const offerIndexes = await getOfferIndexes(state, pairAddress, fromTokenAddress, toTokenAddress);
+                    combobox.items = [{ label: '', value: '' }].concat(offerIndexes.map(v => { return { label: v.toString(), value: v.toString() } }));
+                } else {
+                    combobox.items = [{ label: '', value: '' }];
+                }
+            } catch {
+                combobox.items = [{ label: '', value: '' }];
+            }
+        }
+
         return {
             "#/properties/chainId": {
                 render: () => {
@@ -106,6 +139,8 @@ export default {
                             const chainId = networkPicker.selectedNetwork?.chainId;
                             firstTokenInput.chainId = chainId;
                             secondTokenInput.chainId = chainId;
+                            combobox.items = [{ label: '', value: '' }];
+                            combobox.clear();
                         }
                     });
                     return networkPicker;
@@ -133,6 +168,9 @@ export default {
                     if (chainId && firstTokenInput.chainId !== chainId) {
                         firstTokenInput.chainId = chainId;
                     }
+                    firstTokenInput.onSelectToken = () => {
+                        initCombobox();
+                    }
                     return firstTokenInput;
                 },
                 getData: (control: ScomTokenInput) => {
@@ -140,6 +178,7 @@ export default {
                 },
                 setData: (control: ScomTokenInput, value: string) => {
                     control.address = value;
+                    initCombobox();
                 }
             },
             "#/properties/tokenOut": {
@@ -156,6 +195,9 @@ export default {
                     if (chainId && secondTokenInput.chainId !== chainId) {
                         secondTokenInput.chainId = chainId;
                     }
+                    secondTokenInput.onSelectToken = () => {
+                        initCombobox();
+                    }
                     return secondTokenInput;
                 },
                 getData: (control: ScomTokenInput) => {
@@ -163,9 +205,25 @@ export default {
                 },
                 setData: (control: ScomTokenInput, value: string) => {
                     control.address = value;
+                    initCombobox();
+                }
+            },
+            "#/properties/offerIndex": {
+                render: () => {
+                    combobox = new ComboBox(undefined, {
+                        maxWidth: 300,
+                        height: 43,
+                        items: [{ label: '', value: '' }]
+                    });
+                    return combobox;
+                },
+                getData: (control: ComboBox) => {
+                    return (control.selectedItem as IComboItem)?.value || '';
+                },
+                setData: (control: ComboBox, value: string) => {
+                    control.selectedItem = { label: value, value };
                 }
             }
         }
-
     }
 }

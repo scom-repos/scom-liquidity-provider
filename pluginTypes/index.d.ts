@@ -2,6 +2,7 @@
 /// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-token-input/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-token-input/@scom/scom-token-modal/@ijstech/eth-wallet/index.d.ts" />
+/// <reference path="@ijstech/eth-contract/index.d.ts" />
 /// <amd-module name="@scom/scom-liquidity-provider/assets.ts" />
 declare module "@scom/scom-liquidity-provider/assets.ts" {
     function fullPath(path: string): string;
@@ -86,10 +87,290 @@ declare module "@scom/scom-liquidity-provider/index.css.ts" {
     export const liquidityProviderComponent: string;
     export const liquidityProviderForm: string;
 }
+/// <amd-module name="@scom/scom-liquidity-provider/global/utils/helper.ts" />
+declare module "@scom/scom-liquidity-provider/global/utils/helper.ts" {
+    import { BigNumber } from "@ijstech/eth-wallet";
+    import { ITokenObject } from "@scom/scom-token-list";
+    export type TokenMapType = {
+        [token: string]: ITokenObject;
+    };
+    export interface IBalanceTooltip {
+        title?: string;
+        value: any;
+        symbol?: string;
+        icon?: string;
+        prefix?: string;
+        isWrapped?: boolean | null;
+        allowZero?: boolean | null;
+    }
+    export const DefaultDateTimeFormat = "DD/MM/YYYY HH:mm:ss";
+    export const DefaultDateFormat = "DD/MM/YYYY";
+    export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
+    export const formatNumber: (value: any, decimals?: number) => string;
+    export const renderBalanceTooltip: (params: IBalanceTooltip, tokenMap: TokenMapType, isBold?: boolean) => any;
+    export const formatNumberValue: (data: IBalanceTooltip, tokenMap: TokenMapType) => any;
+    export const isInvalidInput: (val: any) => boolean;
+    export const limitInputNumber: (input: any, decimals?: number) => void;
+    export const limitDecimals: (value: any, decimals: number) => any;
+    export const toWeiInv: (n: string, unit?: number) => BigNumber;
+}
+/// <amd-module name="@scom/scom-liquidity-provider/global/utils/interfaces.ts" />
+declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
+    import { BigNumber } from "@ijstech/eth-contract";
+    import { INetworkConfig } from "@scom/scom-network-picker";
+    import { IWalletPlugin } from "@scom/scom-wallet-modal";
+    export interface ICommissionInfo {
+        chainId: number;
+        walletAddress: string;
+        share: string;
+    }
+    export interface ILiquidityProvider {
+        chainId: number;
+        tokenIn: string;
+        tokenOut: string;
+        offerIndex?: number;
+        wallets: IWalletPlugin[];
+        networks: INetworkConfig[];
+        showHeader?: boolean;
+    }
+    export interface IAllocation {
+        address: string;
+        allocation: string | number;
+        oldAllocation?: string | number;
+        allocationVal?: string | number;
+        isOld?: boolean;
+        isDuplicated?: boolean;
+        invalid?: boolean;
+    }
+    export interface ProviderGroupQueue {
+        pairAddress: string;
+        fromTokenAddress: string;
+        toTokenAddress: string;
+        amount: string;
+        offerPrice: string;
+        startDate: number;
+        endDate: number;
+        state: string;
+        allowAll: boolean;
+        direct: boolean;
+        offerIndex: BigNumber;
+        addresses: IAllocation[];
+        allocation: string;
+        willGet: string;
+    }
+}
+/// <amd-module name="@scom/scom-liquidity-provider/global/utils/common.ts" />
+declare module "@scom/scom-liquidity-provider/global/utils/common.ts" {
+    import { ISendTxEventsOptions } from '@ijstech/eth-wallet';
+    export const registerSendTxEvents: (sendTxEventHandlers: ISendTxEventsOptions) => void;
+}
+/// <amd-module name="@scom/scom-liquidity-provider/global/utils/index.ts" />
+declare module "@scom/scom-liquidity-provider/global/utils/index.ts" {
+    export * from "@scom/scom-liquidity-provider/global/utils/helper.ts";
+    export * from "@scom/scom-liquidity-provider/global/utils/interfaces.ts";
+    export * from "@scom/scom-liquidity-provider/global/utils/common.ts";
+}
+/// <amd-module name="@scom/scom-liquidity-provider/global/index.ts" />
+declare module "@scom/scom-liquidity-provider/global/index.ts" {
+    export * from "@scom/scom-liquidity-provider/global/utils/index.ts";
+    export const isAddressValid: (address: string) => Promise<any>;
+}
+/// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/API.ts" />
+declare module "@scom/scom-liquidity-provider/liquidity-utils/API.ts" {
+    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
+    import { BigNumber } from '@ijstech/eth-wallet';
+    import { State } from "@scom/scom-liquidity-provider/store/index.ts";
+    import { ITokenObject } from '@scom/scom-token-list';
+    export function getAddresses(chainId: number): {};
+    const getQueueStakeToken: (chainId: number) => ITokenObject | null;
+    const getLiquidityProviderAddress: (chainId: number) => any;
+    const getPair: (state: State, tokenA: ITokenObject, tokenB: ITokenObject) => Promise<string>;
+    const getPairInfo: (state: State, pairAddress: string, tokenAddress: string, offerIndex?: number) => Promise<{
+        feePerOrder: string;
+        feePerTrader: string;
+        maxDur: string;
+        pairAddress: string;
+        fromTokenAddress: string;
+        toTokenAddress: string;
+        pairIndex: BigNumber;
+    }>;
+    const getToBeApprovedTokens: (chainId: number, tokenObj: ITokenObject, amount: string, stake: string) => Promise<string[]>;
+    const addLiquidity: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenIn: ITokenObject, pairIndex: number, offerIndex: number, amountIn: number, allowAll: boolean, restrictedPrice: string, startDate: number, expire: number, deadline: number, whitelistAddress: IAllocation[]) => Promise<any>;
+    const removeLiquidity: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenOut: ITokenObject, amountOut: string, receivingOut: string, orderIndex: any, deadline: number) => Promise<import("@ijstech/eth-contract").TransactionReceipt>;
+    const lockGroupQueueOffer: (chainId: number, pairAddress: string, tokenA: ITokenObject, tokenB: ITokenObject, offerIndex: number | BigNumber) => Promise<import("@ijstech/eth-contract").TransactionReceipt>;
+    const convertWhitelistedAddresses: (inputText: string) => IAllocation[];
+    function isPairRegistered(state: State, tokenA: string, tokenB: string): Promise<boolean>;
+    function getOfferIndexes(state: State, pairAddress: string, tokenA: string, tokenB: string): Promise<BigNumber[]>;
+    export { getPair, isPairRegistered, getPairInfo, getToBeApprovedTokens, getLiquidityProviderAddress, addLiquidity, removeLiquidity, lockGroupQueueOffer, getQueueStakeToken, convertWhitelistedAddresses, getOfferIndexes };
+}
+/// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/model.ts" />
+declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
+    import { BigNumber } from "@ijstech/eth-wallet";
+    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
+    import { State } from "@scom/scom-liquidity-provider/store/index.ts";
+    import { ITokenObject } from "@scom/scom-token-list";
+    export enum Stage {
+        NONE = 0,
+        SET_AMOUNT = 1,
+        SET_OFFER_PRICE = 2,
+        SET_START_DATE = 3,
+        SET_END_DATE = 4,
+        SET_OFFER_TO = 5,
+        SET_LOCKED = 6,
+        SET_ADDRESS = 7,
+        FIRST_TOKEN_APPROVAL = 8,
+        WAITING_FOR_FIRST_TOKEN_APPROVAL = 9,
+        GOV_TOKEN_APPROVAL = 10,
+        WAITING_FOR_GOV_TOKEN_APPROVAL = 11,
+        SUBMIT = 12
+    }
+    export enum Action {
+        CREATE = 0,
+        ADD = 1,
+        REMOVE = 2,
+        LOCK = 3
+    }
+    export enum OfferState {
+        Everyone = "Everyone",
+        Whitelist = "Whitelist Addresses"
+    }
+    export enum LockState {
+        Locked = "Locked",
+        Unlocked = "Unlocked"
+    }
+    export const setOnApproving: (callback: any) => void;
+    export const setOnApproved: (callback: any) => void;
+    export const toLastSecond: (datetime: any) => any;
+    export class Model {
+        private state;
+        private currentStage;
+        private pairAddress;
+        private offerIndex;
+        private fromTokenAddress;
+        private toTokenAddress;
+        private actionType;
+        private pairIndex;
+        private isFirstLoad;
+        private pairCustomParams;
+        private fromTokenInput;
+        private fromTokenInputText;
+        private offerPriceText;
+        private offerTo;
+        private originalFee;
+        private whitelistFee;
+        private fee;
+        private startDate;
+        private endDate;
+        private switchLock;
+        private addresses;
+        private approvalModelAction;
+        onShowTxStatus: (status: 'success' | 'warning' | 'error', content: string | Error) => void;
+        onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean, offerIndex?: number) => void;
+        onBack: () => void;
+        private get fromTokenObject();
+        private get toTokenObject();
+        private get fromTokenSymbol();
+        private summaryData;
+        private get enableApproveAllowance();
+        private get fromTokenInputValid();
+        private get offerPriceInputValid();
+        private get fromTokenBalanceExact();
+        private get govTokenBalanceExact();
+        private get getJoinValidation();
+        private isProceedButtonDisabled;
+        private get proceedButtonText();
+        private get nextButtonText();
+        private get isFirstTokenApproved();
+        private get isGovTokenApproved();
+        private get isWaitingForApproval();
+        private get newAmount();
+        private get listAddress();
+        private get newTotalAddress();
+        private get newTotalAllocation();
+        private get currentTotalAllocation();
+        private setCurrentStage;
+        getState: () => {
+            currentStage: () => Stage;
+            setCurrentStage: (stage: Stage) => void;
+            fromTokenAddress: () => string;
+            toTokenAddress: () => string;
+            fromTokenObject: () => ITokenObject;
+            toTokenObject: () => ITokenObject;
+            fromTokenInput: () => BigNumber;
+            fromTokenInputText: () => string;
+            isProceedButtonDisabled: () => boolean;
+            proceedButtonText: () => string;
+            nextButtonText: () => string;
+            offerPriceText: () => string;
+            offerPriceInputTextChange: (value: string) => void;
+            offerTo: () => OfferState;
+            offerToChange: (value: OfferState) => void;
+            summaryData: () => any;
+            adviceTexts: () => any[];
+            isFirstTokenApproved: () => boolean;
+            isGovTokenApproved: () => boolean;
+            isWaitingForApproval: () => boolean;
+            fromTokenInputTextChange: (value: string) => Promise<void>;
+            fromTokenBalance: () => number;
+            govTokenBalance: () => number;
+            proceed: () => Promise<void>;
+            fetchData: () => Promise<void>;
+            fromTokenInputValid: () => boolean;
+            enableApproveAllowance: () => boolean;
+            startDate: () => any;
+            endDate: () => any;
+            startDateChange: (value: string | number) => void;
+            endDateChange: (value: string | number) => void;
+            switchLock: () => LockState;
+            addresses: () => IAllocation[];
+            addressChange: (value: IAllocation[]) => void;
+            pairCustomParams: () => any;
+            fee: () => string;
+            feeChange: (value: string) => void;
+            setMaxBalanceToFromToken: () => void;
+            newAmount: () => BigNumber;
+            newTotalAddress: () => number;
+            newTotalAllocation: () => number;
+            setSummaryData: (value: boolean) => void;
+        };
+        private fetchData;
+        private setSummaryData;
+        private proceed;
+        private get validateEmptyInput();
+        private get fromTokenBalance();
+        private get govTokenBalance();
+        private get fromTokenDecimals();
+        private get adviceTexts();
+        constructor(state: State, pairAddress: string, fromTokenAddress: string, offerIndex: number, actionType: number);
+        private showTxStatus;
+        private setSubmitBtnStatus;
+        initApprovalModelAction(): Promise<void>;
+        private fromTokenInputTextChange;
+        private setMaxBalanceToFromToken;
+        private fromTokenInputChange;
+        private offerPriceInputTextChange;
+        private startDateChange;
+        private endDateChange;
+        private offerToChange;
+        private addressChange;
+        private feeChange;
+        private getNextTokenApprovalStage;
+        private approveToken;
+        private addLiquidityAction;
+        private removeLiquidityAction;
+    }
+}
+/// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/index.ts" />
+declare module "@scom/scom-liquidity-provider/liquidity-utils/index.ts" {
+    export * from "@scom/scom-liquidity-provider/liquidity-utils/API.ts";
+    export * from "@scom/scom-liquidity-provider/liquidity-utils/model.ts";
+}
 /// <amd-module name="@scom/scom-liquidity-provider/formSchema.ts" />
 declare module "@scom/scom-liquidity-provider/formSchema.ts" {
+    import { ComboBox } from "@ijstech/components";
     import ScomNetworkPicker from "@scom/scom-network-picker";
     import ScomTokenInput from "@scom/scom-token-input";
+    import { State } from "@scom/scom-liquidity-provider/store/index.ts";
     const _default_2: {
         dataSchema: {
             type: string;
@@ -105,6 +386,9 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 tokenOut: {
                     type: string;
                     required: boolean;
+                };
+                offerIndex: {
+                    type: string;
                 };
                 dark: {
                     type: string;
@@ -175,7 +459,7 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 }[];
             })[];
         };
-        customControls(rpcWalletId: string): {
+        customControls(rpcWalletId: string, state: State): {
             "#/properties/chainId": {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;
@@ -191,248 +475,14 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 getData: (control: ScomTokenInput) => string;
                 setData: (control: ScomTokenInput, value: string) => void;
             };
+            "#/properties/offerIndex": {
+                render: () => ComboBox;
+                getData: (control: ComboBox) => string;
+                setData: (control: ComboBox, value: string) => void;
+            };
         };
     };
     export default _default_2;
-}
-/// <amd-module name="@scom/scom-liquidity-provider/global/utils/helper.ts" />
-declare module "@scom/scom-liquidity-provider/global/utils/helper.ts" {
-    import { BigNumber } from "@ijstech/eth-wallet";
-    import { ITokenObject } from "@scom/scom-token-list";
-    export type TokenMapType = {
-        [token: string]: ITokenObject;
-    };
-    export interface IBalanceTooltip {
-        title?: string;
-        value: any;
-        symbol?: string;
-        icon?: string;
-        prefix?: string;
-        isWrapped?: boolean | null;
-        allowZero?: boolean | null;
-    }
-    export const DefaultDateTimeFormat = "DD/MM/YYYY HH:mm:ss";
-    export const DefaultDateFormat = "DD/MM/YYYY";
-    export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
-    export const formatNumber: (value: any, decimals?: number) => string;
-    export const renderBalanceTooltip: (params: IBalanceTooltip, tokenMap: TokenMapType, isBold?: boolean) => any;
-    export const formatNumberValue: (data: IBalanceTooltip, tokenMap: TokenMapType) => any;
-    export const isInvalidInput: (val: any) => boolean;
-    export const limitInputNumber: (input: any, decimals?: number) => void;
-    export const limitDecimals: (value: any, decimals: number) => any;
-    export const toWeiInv: (n: string, unit?: number) => BigNumber;
-}
-/// <amd-module name="@scom/scom-liquidity-provider/global/utils/interfaces.ts" />
-declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
-    import { INetworkConfig } from "@scom/scom-network-picker";
-    import { IWalletPlugin } from "@scom/scom-wallet-modal";
-    export interface ICommissionInfo {
-        chainId: number;
-        walletAddress: string;
-        share: string;
-    }
-    export interface ILiquidityProvider {
-        chainId: number;
-        tokenIn: string;
-        tokenOut: string;
-        wallets: IWalletPlugin[];
-        networks: INetworkConfig[];
-        showHeader?: boolean;
-    }
-    export interface IAllocation {
-        address: string;
-        allocation: string | number;
-        oldAllocation?: string | number;
-        allocationVal?: string | number;
-        isOld?: boolean;
-        isDuplicated?: boolean;
-        invalid?: boolean;
-    }
-}
-/// <amd-module name="@scom/scom-liquidity-provider/global/utils/index.ts" />
-declare module "@scom/scom-liquidity-provider/global/utils/index.ts" {
-    export * from "@scom/scom-liquidity-provider/global/utils/helper.ts";
-    export * from "@scom/scom-liquidity-provider/global/utils/interfaces.ts";
-}
-/// <amd-module name="@scom/scom-liquidity-provider/global/index.ts" />
-declare module "@scom/scom-liquidity-provider/global/index.ts" {
-    export * from "@scom/scom-liquidity-provider/global/utils/index.ts";
-    export const isAddressValid: (address: string) => Promise<any>;
-}
-/// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/API.ts" />
-declare module "@scom/scom-liquidity-provider/liquidity-utils/API.ts" {
-    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
-    import { BigNumber } from '@ijstech/eth-wallet';
-    import { State } from "@scom/scom-liquidity-provider/store/index.ts";
-    import { ITokenObject } from '@scom/scom-token-list';
-    export function getAddresses(chainId: number): {};
-    const getQueueStakeToken: (chainId: number) => ITokenObject | null;
-    const getLiquidityProviderAddress: (chainId: number) => any;
-    const getPair: (state: State, tokenA: ITokenObject, tokenB: ITokenObject) => Promise<string>;
-    const getPairInfo: (state: State, pairAddress: string, tokenAddress: string, provider?: string, offerIndex?: number) => Promise<{
-        feePerOrder: string;
-        feePerTrader: string;
-        maxDur: string;
-        pairAddress: string;
-        fromTokenAddress: string;
-        toTokenAddress: string;
-        pairIndex: BigNumber;
-    }>;
-    const getToBeApprovedTokens: (chainId: number, tokenObj: ITokenObject, amount: string, stake: string) => Promise<string[]>;
-    const addLiquidity: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenIn: ITokenObject, pairIndex: number, offerIndex: number, amountIn: number, allowAll: boolean, restrictedPrice: string, startDate: number, expire: number, deadline: number, whitelistAddress: IAllocation[]) => Promise<any>;
-    const convertWhitelistedAddresses: (inputText: string) => IAllocation[];
-    function isPairRegistered(state: State, tokenA: string, tokenB: string): Promise<boolean>;
-    export { getPair, isPairRegistered, getPairInfo, getToBeApprovedTokens, getLiquidityProviderAddress, addLiquidity, getQueueStakeToken, convertWhitelistedAddresses };
-}
-/// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/model.ts" />
-declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
-    import { BigNumber } from "@ijstech/eth-wallet";
-    import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
-    import { State } from "@scom/scom-liquidity-provider/store/index.ts";
-    import { ITokenObject } from "@scom/scom-token-list";
-    export enum Stage {
-        NONE = 0,
-        SET_AMOUNT = 1,
-        SET_OFFER_PRICE = 2,
-        SET_START_DATE = 3,
-        SET_END_DATE = 4,
-        SET_OFFER_TO = 5,
-        SET_LOCKED = 6,
-        SET_ADDRESS = 7,
-        FIRST_TOKEN_APPROVAL = 8,
-        WAITING_FOR_FIRST_TOKEN_APPROVAL = 9,
-        GOV_TOKEN_APPROVAL = 10,
-        WAITING_FOR_GOV_TOKEN_APPROVAL = 11,
-        SUBMIT = 12
-    }
-    export enum OfferState {
-        Everyone = "Everyone",
-        Whitelist = "Whitelist Addresses"
-    }
-    export enum LockState {
-        Locked = "Locked",
-        Unlocked = "Unlocked"
-    }
-    export const setOnApproving: (callback: any) => void;
-    export const setOnApproved: (callback: any) => void;
-    export const toLastSecond: (datetime: any) => any;
-    export class Model {
-        private state;
-        private currentStage;
-        private pairAddress;
-        private offerIndex;
-        private fromTokenAddress;
-        private toTokenAddress;
-        private pairIndex;
-        private isFirstLoad;
-        private pairCustomParams;
-        private fromTokenInput;
-        private fromTokenInputText;
-        private offerPriceText;
-        private offerTo;
-        private originalFee;
-        private whitelistFee;
-        private fee;
-        private startDate;
-        private endDate;
-        private switchLock;
-        private addresses;
-        private approvalModelAction;
-        onShowTxStatus: (status: 'success' | 'warning' | 'error', content: string | Error) => void;
-        onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean, resetForm?: boolean) => void;
-        private get fromTokenObject();
-        private get toTokenObject();
-        private get fromTokenSymbol();
-        private summaryData;
-        private get enableApproveAllowance();
-        private get fromTokenInputValid();
-        private get offerPriceInputValid();
-        private get fromTokenBalanceExact();
-        private get govTokenBalanceExact();
-        private get getJoinValidation();
-        private isProceedButtonDisabled;
-        private get proceedButtonText();
-        private get nextButtonText();
-        private get isFirstTokenApproved();
-        private get isGovTokenApproved();
-        private get isWaitingForApproval();
-        private get newAmount();
-        private get listAddress();
-        private get newTotalAddress();
-        private get newTotalAllocation();
-        private setCurrentStage;
-        getState: () => {
-            currentStage: () => Stage;
-            setCurrentStage: (stage: Stage) => void;
-            fromTokenAddress: () => string;
-            toTokenAddress: () => string;
-            fromTokenObject: () => ITokenObject;
-            toTokenObject: () => ITokenObject;
-            fromTokenInput: () => BigNumber;
-            fromTokenInputText: () => string;
-            isProceedButtonDisabled: () => boolean;
-            proceedButtonText: () => string;
-            nextButtonText: () => string;
-            offerPriceText: () => string;
-            offerPriceInputTextChange: (value: string) => void;
-            offerTo: () => OfferState;
-            offerToChange: (value: OfferState) => void;
-            summaryData: () => any;
-            adviceTexts: () => any[];
-            isFirstTokenApproved: () => boolean;
-            isGovTokenApproved: () => boolean;
-            isWaitingForApproval: () => boolean;
-            fromTokenInputTextChange: (value: string) => Promise<void>;
-            fromTokenBalance: () => number;
-            govTokenBalance: () => number;
-            proceed: () => Promise<void>;
-            fetchData: () => Promise<void>;
-            fromTokenInputValid: () => boolean;
-            enableApproveAllowance: () => boolean;
-            startDate: () => any;
-            endDate: () => any;
-            startDateChange: (value: string | number) => void;
-            endDateChange: (value: string | number) => void;
-            switchLock: () => LockState;
-            addresses: () => IAllocation[];
-            addressChange: (value: IAllocation[]) => void;
-            pairCustomParams: () => any;
-            fee: () => string;
-            feeChange: (value: string) => void;
-            setMaxBalanceToFromToken: () => void;
-            newAmount: () => BigNumber;
-            newTotalAddress: () => number;
-            newTotalAllocation: () => number;
-            setSummaryData: (value: boolean) => void;
-        };
-        private fetchData;
-        private setSummaryData;
-        private proceed;
-        private get fromTokenBalance();
-        private get govTokenBalance();
-        private get fromTokenDecimals();
-        private get adviceTexts();
-        constructor(state: State, pairAddress: string, fromTokenAddress: string, offerIndex: number);
-        private showTxStatus;
-        private setSubmitBtnStatus;
-        initApprovalModelAction(): Promise<void>;
-        private fromTokenInputTextChange;
-        private setMaxBalanceToFromToken;
-        private offerPriceInputTextChange;
-        private startDateChange;
-        private endDateChange;
-        private offerToChange;
-        private addressChange;
-        private feeChange;
-        private getNextTokenApprovalStage;
-        private approveToken;
-        private addLiquidityAction;
-    }
-}
-/// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/index.ts" />
-declare module "@scom/scom-liquidity-provider/liquidity-utils/index.ts" {
-    export * from "@scom/scom-liquidity-provider/liquidity-utils/API.ts";
-    export * from "@scom/scom-liquidity-provider/liquidity-utils/model.ts";
 }
 /// <amd-module name="@scom/scom-liquidity-provider/detail/whitelist.css.ts" />
 declare module "@scom/scom-liquidity-provider/detail/whitelist.css.ts" {
@@ -577,6 +627,7 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         private oswapToken;
         private offerTo;
         private _model;
+        private _actionType;
         private currentFocus?;
         updateHelpContent: () => void;
         updateSummary: () => void;
@@ -587,7 +638,13 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         get state(): State;
         get model(): any;
         set model(value: any);
+        get actionType(): number;
+        set actionType(value: number);
+        get isCreate(): boolean;
+        get isAdd(): boolean;
+        get isRemove(): boolean;
         get chainId(): number;
+        get balanceTitle(): "You Are Selling" | "You Are Collecting";
         get currentStage(): any;
         get fromTokenAddress(): any;
         get toTokenAddress(): any;
@@ -726,6 +783,7 @@ declare module "@scom/scom-liquidity-provider/detail/summary.tsx" {
         private feeRow;
         private _summaryData;
         private _fromTokenAddress;
+        private _actionType;
         private isSummaryLoaded;
         private _fetchData;
         private manageWhitelist;
@@ -735,6 +793,8 @@ declare module "@scom/scom-liquidity-provider/detail/summary.tsx" {
         get chainId(): number;
         get fromTokenAddress(): string;
         set fromTokenAddress(value: string);
+        get actionType(): number;
+        set actionType(value: number);
         get summaryData(): any;
         set summaryData(value: any);
         get isPriceError(): boolean;
@@ -809,8 +869,23 @@ declare module "@scom/scom-liquidity-provider" {
         private model;
         private modelState;
         private panelLiquidity;
-        private panelMsg;
+        private panelHome;
         private lbMsg;
+        private hStackActions;
+        private btnAdd;
+        private btnRemove;
+        private btnLock;
+        private btnWallet;
+        private hStackBack;
+        private lockModal;
+        private lockModalTitle;
+        private firstCheckbox;
+        private secondCheckbox;
+        private lockOrderBtn;
+        private actionType;
+        private newOfferIndex;
+        private pairAddress;
+        private liquidities;
         private rpcWalletEvents;
         private _getActions;
         getConfigurators(): {
@@ -840,6 +915,9 @@ declare module "@scom/scom-liquidity-provider" {
         private get rpcWallet();
         private get fromTokenAddress();
         private get toTokenAddress();
+        private get offerIndex();
+        private get fromTokenObject();
+        private get toTokenObject();
         constructor(parent?: Container, options?: ControlElement);
         removeRpcWalletEvents(): void;
         onHide(): void;
@@ -848,7 +926,15 @@ declare module "@scom/scom-liquidity-provider" {
         private initializeWidgetConfig;
         private fetchData;
         private renderForm;
-        private renderEmpty;
+        private connectWallet;
+        private renderHome;
+        private onBack;
+        private onActions;
+        private showLockModal;
+        private closeLockModal;
+        private onChangeFirstChecked;
+        private onChangeSecondChecked;
+        private onConfirmLock;
         private initWallet;
         private showMessage;
         private checkValidation;

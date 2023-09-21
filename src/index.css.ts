@@ -78,6 +78,67 @@ export const liquidityProviderComponent = Styles.style({
     },
     'i-modal .modal': {
       background: Theme.background.modal,
+    },
+    '#lockModal': {
+      $nest: {
+        '.modal': {
+          width: 480,
+          maxWidth: '100%',
+          padding: '0.75rem 1rem',
+          borderRadius: '1rem',
+          color: Theme.text.primary
+        },
+        '.i-modal_header': {
+          marginBottom: '1.5rem',
+          paddingBottom: '0.5rem',
+          borderBottom: `2px solid ${Theme.input.background}`,
+          color: Theme.colors.primary.main,
+          fontSize: '1.25rem',
+          fontWeight: 700,
+        },
+        '.i-modal_header > i-icon': {
+          fill: `${Theme.colors.primary.main} !important`
+        },
+        '.i-modal_header ~ i-icon': {
+          display: 'inline-block',
+          margin: '0.75rem 0',
+          border: '2px solid transparent',
+          borderRadius: '50%',
+          padding: '0.25rem'
+        },
+        'i-button': {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '150px',
+          height: '50px !important',
+          fontWeight: 600,
+          borderRadius: 5,
+          margin: '0.5rem',
+        },
+        '.btn-cancel': {
+          background: `${Theme.text.primary} !important`,
+          color: `${Theme.background.main} !important`,
+        },
+        '.i-checkbox': {
+          cursor: 'pointer',
+        },
+        'i-checkbox .checkmark': {
+          backgroundColor: '#fff',
+          height: '18px',
+          width: '18px',
+          $nest: {
+            '&::after': {
+              top: '2px',
+              left: '6px',
+              borderColor: '#fff',
+            },
+          },
+        },
+        'i-checkbox.is-checked .checkmark': {
+          backgroundColor: Theme.colors.primary.main
+        }
+      }
     }
   }
 })
@@ -113,6 +174,7 @@ export const liquidityProviderForm = Styles.style({
     },
     '.custom-container': {
       width: 'calc(50% - 10px)',
+      minWidth: 320,
       marginInline: 'auto'
     },
     '.detail-col': {

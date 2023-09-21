@@ -1,7 +1,7 @@
 import { moment, Control, Module, Label, Input, ControlElement, customElements, Panel, Button, Datepicker, VStack, Modal, Container, Styles } from '@ijstech/components';
 import { BigNumber, Wallet } from '@ijstech/eth-wallet';
 import { State, fallbackUrl, getTokenDecimals, tokenSymbol } from '../store/index';
-import { getQueueStakeToken, convertWhitelistedAddresses, Stage, OfferState, setOnApproving, setOnApproved } from '../liquidity-utils';
+import { getQueueStakeToken, convertWhitelistedAddresses, Stage, OfferState, setOnApproving, setOnApproved, Action } from '../liquidity-utils';
 import { limitInputNumber, renderBalanceTooltip, limitDecimals, IAllocation } from '../global/index';
 import { ManageWhitelist } from './whitelist';
 import Assets from '../assets';
@@ -65,6 +65,7 @@ export class LiquidityForm extends Module {
   private oswapToken: ITokenObject | null;
   private offerTo: OfferState;
   private _model: any;
+  private _actionType: number;
   private currentFocus?: Element;
   updateHelpContent: () => void;
   updateSummary: () => void;
@@ -93,8 +94,32 @@ export class LiquidityForm extends Module {
     this.renderUI();
   }
 
+  get actionType(): number {
+    return this._actionType;
+  }
+
+  set actionType(value: number) {
+    this._actionType = value;
+  }
+
+  get isCreate() {
+    return this.actionType === Action.CREATE;
+  }
+
+  get isAdd() {
+    return this.actionType === Action.ADD;
+  }
+
+  get isRemove() {
+    return this.actionType === Action.REMOVE;
+  }
+
   get chainId() {
     return this.state?.getChainId();
+  }
+
+  get balanceTitle() {
+    return this.isCreate || this.isAdd ? 'You Are Selling' : 'You Are Collecting';
   }
 
   get currentStage() {
@@ -142,15 +167,15 @@ export class LiquidityForm extends Module {
   }
 
   get isOfferPriceDisabled() {
-    return this.currentStage < Stage.SET_OFFER_PRICE;
+    return this.isCreate && this.currentStage < Stage.SET_OFFER_PRICE;
   };
 
   get isStartDateDisabled() {
-    return this.currentStage < Stage.SET_START_DATE;
+    return this.isCreate && this.currentStage < Stage.SET_START_DATE;
   };
 
   get isEndDateDisabled() {
-    return this.currentStage < Stage.SET_END_DATE && (!this.model.startDate() || (this.model.startDate() && this.currentStage !== Stage.SET_START_DATE));
+    return this.isCreate && this.currentStage < Stage.SET_END_DATE && (!this.model.startDate() || (this.model.startDate() && this.currentStage !== Stage.SET_START_DATE));
   };
 
   get isOfferToDisabled() {
@@ -158,11 +183,11 @@ export class LiquidityForm extends Module {
   };
 
   get isLockDisabled() {
-    return this.currentStage < Stage.SET_LOCKED;
+    return this.isCreate && this.currentStage < Stage.SET_LOCKED;
   };
 
   get isAddressDisabled() {
-    return this.currentStage < Stage.SET_ADDRESS || this.isLockDisabled;
+    return this.isCreate && this.currentStage < Stage.SET_ADDRESS || this.isLockDisabled;
   };
 
   get isAddressShown() {
@@ -175,9 +200,12 @@ export class LiquidityForm extends Module {
 
   get isSubmitButtonDisabled() {
     if (!this.state.isRpcWalletConnected()) return false;
-    return this.isProceedButtonDisabled ||
-      !(this.currentStage === Stage.SUBMIT || this.currentStage === Stage.FIRST_TOKEN_APPROVAL || this.currentStage === Stage.GOV_TOKEN_APPROVAL) ||
-      (new BigNumber(this.model.fee()).gt(this.model.govTokenBalance()));
+    if (this.isCreate) {
+      return this.isProceedButtonDisabled ||
+        !(this.currentStage === Stage.SUBMIT || this.currentStage === Stage.FIRST_TOKEN_APPROVAL || this.currentStage === Stage.GOV_TOKEN_APPROVAL) ||
+        (new BigNumber(this.model.fee()).gt(this.model.govTokenBalance()));
+    }
+    return this.isProceedButtonDisabled;
   }
 
   get proceedButtonText() {
@@ -289,18 +317,28 @@ export class LiquidityForm extends Module {
       await clientWallet.switchNetwork(this.state.getChainId());
       return;
     }
-    if (this.currentStage === Stage.SUBMIT) {
+    if (this.isCreate && this.currentStage === Stage.SUBMIT) {
       this.showConfirmation(true);
     } else {
       await this.model.proceed();
     }
-    if (this.offerTo === OfferState.Whitelist && ["submitBtn", "nextBtn5"].includes(source.id)) {
-      this.removeBorder();
-      if (source.id === "nextBtn5") {
-        this.updateProgress();
+    if (this.isCreate) {
+      if (this.offerTo === OfferState.Whitelist && ["submitBtn", "nextBtn5"].includes(source.id)) {
+        this.removeBorder();
+        if (source.id === "nextBtn5") {
+          this.updateProgress();
+        }
+        this.updateSummaryField();
+      } else if (this.offerTo === OfferState.Everyone && ["submitBtn", "nextBtn4"].includes(source.id)) {
+        this.removeBorder();
+        if (source.id === "nextBtn4") {
+          this.updateProgress();
+        }
+        this.updateSummaryField();
+      } else {
+        this.setBorder(source);
       }
-      this.updateSummaryField();
-    } else if (this.offerTo === OfferState.Everyone && ["submitBtn", "nextBtn4"].includes(source.id)) {
+    } else if (["submitBtn", "nextBtn4"].includes(source.id)) {
       this.removeBorder();
       if (source.id === "nextBtn4") {
         this.updateProgress();
@@ -313,36 +351,40 @@ export class LiquidityForm extends Module {
   }
 
   handleTokenInputState = () => {
-    this.secondTokenPanel.enabled = !this.isOfferPriceDisabled;
-    this.secondInput.enabled = !this.isOfferPriceDisabled;
-    this.startDateContainer.enabled = !this.isStartDateDisabled;
-    this.endDateContainer.enabled = !this.isEndDateDisabled;
-    this.inputStartDate.enabled = !this.isStartDateDisabled;
-    this.inputEndDate.enabled = !this.isEndDateDisabled;
-    this.statusPanel.enabled = !this.isOfferToDisabled;
-    this.offerToDropdown.enabled = !this.isOfferToDisabled;
-    this.addressPanel.visible = this.isAddressShown;
-    this.addressPanel.enabled = !this.isAddressDisabled;
-    this.btnAddress.enabled = !this.isAddressDisabled;
+    if (this.isCreate) {
+      this.secondTokenPanel.enabled = !this.isOfferPriceDisabled;
+      this.secondInput.enabled = !this.isOfferPriceDisabled;
+      this.startDateContainer.enabled = !this.isStartDateDisabled;
+      this.endDateContainer.enabled = !this.isEndDateDisabled;
+      this.inputStartDate.enabled = !this.isStartDateDisabled;
+      this.inputEndDate.enabled = !this.isEndDateDisabled;
+      this.statusPanel.enabled = !this.isOfferToDisabled;
+      this.offerToDropdown.enabled = !this.isOfferToDisabled;
+      this.addressPanel.visible = this.isAddressShown;
+      this.addressPanel.enabled = !this.isAddressDisabled;
+      this.btnAddress.enabled = !this.isAddressDisabled;
+    }
     this.handleBtnState();
   }
 
   handleBtnState = () => {
-    this.nextBtn1.visible = this.isSetOrderAmountStage;
-    this.nextBtn2.visible = this.isOfferPriceStage;
-    this.nextBtn3.visible = this.isStartDateStage || this.isEndDateStage;
-    this.nextBtn4.visible = this.isOfferToStage;
-    this.nextBtn5.visible = this.isAddressStage;
-    this.nextBtn1.enabled = !this.isProceedButtonDisabled;
-    this.nextBtn1.caption = this.nextButtonText;
-    this.nextBtn2.enabled = !this.isProceedButtonDisabled;
-    this.nextBtn2.caption = this.nextButtonText;
-    this.nextBtn3.enabled = !this.isProceedButtonDisabled;
-    this.nextBtn3.caption = this.nextButtonText;
-    this.nextBtn4.enabled = !this.isProceedButtonDisabled;
-    this.nextBtn4.caption = this.nextButtonText;
-    this.nextBtn5.enabled = !this.isProceedButtonDisabled;
-    this.nextBtn5.caption = this.nextButtonText;
+    if (this.isCreate) {
+      this.nextBtn1.visible = this.isSetOrderAmountStage;
+      this.nextBtn2.visible = this.isOfferPriceStage;
+      this.nextBtn3.visible = this.isStartDateStage || this.isEndDateStage;
+      this.nextBtn4.visible = this.isOfferToStage;
+      this.nextBtn5.visible = this.isAddressStage;
+      this.nextBtn1.enabled = !this.isProceedButtonDisabled;
+      this.nextBtn1.caption = this.nextButtonText;
+      this.nextBtn2.enabled = !this.isProceedButtonDisabled;
+      this.nextBtn2.caption = this.nextButtonText;
+      this.nextBtn3.enabled = !this.isProceedButtonDisabled;
+      this.nextBtn3.caption = this.nextButtonText;
+      this.nextBtn4.enabled = !this.isProceedButtonDisabled;
+      this.nextBtn4.caption = this.nextButtonText;
+      this.nextBtn5.enabled = !this.isProceedButtonDisabled;
+      this.nextBtn5.caption = this.nextButtonText;
+    }
     this.submitBtn.enabled = !this.isSubmitButtonDisabled;
     this.submitBtn.caption = this.proceedButtonText;
   }
@@ -410,7 +452,9 @@ export class LiquidityForm extends Module {
       const val = date;
       inputEndDate.min = val.format('YYYY-MM-DD HH:mm');
     }
-    this.onUpdateSummary();
+    if (this.isCreate) {
+      this.onUpdateSummary();
+    }
   };
 
   changeEndDate = (value: any) => {
@@ -426,6 +470,7 @@ export class LiquidityForm extends Module {
   };
 
   setAttrDatePicker = () => {
+    if (!this.isCreate) return;
     this.inputStartDate.onChanged = (datepickerElm: any) => this.changeStartDate(datepickerElm.inputElm.value);
     this.inputEndDate.onChanged = (datepickerElm: any) => this.changeEndDate(datepickerElm.inputElm.value);
     const minDate = moment().format('YYYY-MM-DDTHH:mm');
@@ -467,6 +512,7 @@ export class LiquidityForm extends Module {
   }
 
   updateTextValues = () => {
+    if (!(this.isCreate || this.isAdd)) return;
     const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
     this.lbWillGet.caption = renderBalanceTooltip({ value: this.newAmount.multipliedBy(this.offerPriceText || 0).toNumber(), symbol: tokenSymbol(this.chainId, this.toTokenAddress) }, tokenMap);
     this.lbFee.caption = renderBalanceTooltip({ value: this.fee, symbol: this.oswapSymbol }, tokenMap);
@@ -490,7 +536,12 @@ export class LiquidityForm extends Module {
   getAddress = (data: any) => {
     this.addresses = data.addresses;
     this.model.addressChange(this.addresses);
-    this.model.feeChange(data.fee.plus(this.pairCustomParams.feePerOrder).toFixed());
+    if (this.isCreate) {
+      this.model.feeChange(data.fee.plus(this.pairCustomParams.feePerOrder).toFixed());
+    } else {
+      this.model.feeChange(data.fee.toFixed());
+      this.handleBtnState();
+    }
     this.lbAddress.caption = this.addressText;
     this.btnAddress.caption = this.btnAddressText;
     this.onUpdateSummary();
@@ -539,7 +590,7 @@ export class LiquidityForm extends Module {
     this.headerSection.innerHTML = '';
     const elm = (
       <i-hstack verticalAlignment="center">
-        <i-image width="20px" class="icon-left inline-block" url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} />
+        <i-image width="20px" class="inline-block" url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} />
         <i-image width="20px" class="icon-right inline-block" url={tokenAssets.tokenPath(this.model.toTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} />
         <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label" margin={{ right: 8 }} />
         <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} margin={{ right: 8 }} />
@@ -553,15 +604,17 @@ export class LiquidityForm extends Module {
     this.pnlForm.clearInnerHTML();
     this.currentFocus = undefined;
     const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
-    this.inputStartDate = await Datepicker.create({ type: 'dateTime', enabled: !this.isStartDateDisabled, width: '100%', height: '60px' });
-    this.inputStartDate.classList.add('custom-datepicker');
-    if (this.model.startDate && this.model.startDate()) {
-      this.inputStartDate.value = this.model.startDate();
-    }
-    this.inputEndDate = await Datepicker.create({ type: 'dateTime', enabled: !this.isEndDateDisabled, width: '100%', height: '60px' });
-    this.inputEndDate.classList.add('custom-datepicker');
-    if (this.model.endDate && this.model.endDate()) {
-      this.inputEndDate.value = this.model.endDate();
+    if (this.isCreate) {
+      this.inputStartDate = await Datepicker.create({ type: 'dateTime', enabled: !this.isStartDateDisabled, width: '100%', height: '60px' });
+      this.inputStartDate.classList.add('custom-datepicker');
+      if (this.model.startDate && this.model.startDate()) {
+        this.inputStartDate.value = this.model.startDate();
+      }
+      this.inputEndDate = await Datepicker.create({ type: 'dateTime', enabled: !this.isEndDateDisabled, width: '100%', height: '60px' });
+      this.inputEndDate.classList.add('custom-datepicker');
+      if (this.model.endDate && this.model.endDate()) {
+        this.inputEndDate.value = this.model.endDate();
+      }
     }
     let newElm = (
       <i-panel>
@@ -607,204 +660,222 @@ export class LiquidityForm extends Module {
           <i-button
             id="nextBtn1"
             class="btn-os btn-next"
-            visible={this.isSetOrderAmountStage}
+            visible={this.isCreate && this.isSetOrderAmountStage}
             caption={this.nextButtonText}
             onClick={() => this.onProceed(this.secondInput)}
             enabled={!this.isProceedButtonDisabled}
           />
         </i-panel>
-        <i-panel id="secondTokenPanel" class="token-box" enabled={!this.isOfferPriceDisabled}>
-          <i-vstack class="input--token-container" >
-            <i-hstack class="balance-info" horizontalAlignment="space-between" verticalAlignment="center" width="100%">
-              <i-hstack gap={4} verticalAlignment="center">
-                <i-label font={{ bold: true }} caption="Offer Price" />
-                <i-label id="lbOfferPrice1" font={{ bold: true }} caption={`(${tokenSymbol(this.chainId, this.toTokenAddress)}`} />
-                <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} />
-                <i-label id="lbOfferPrice2" font={{ bold: true }} caption={`${tokenSymbol(this.chainId, this.fromTokenAddress)})`} />
-              </i-hstack>
-              <i-icon tooltip={{ content: 'Switch Price' }} width={32} height={32} class="toggle-icon" name="arrows-alt-v" fill={Theme.input.fontColor} background={{ color: Theme.input.background }} onClick={this.onSwitchPrice} />
-            </i-hstack>
-            <i-panel class="bg-box" width="100%">
-              <i-hstack class={`input--token-box ${this.isOfferPriceStage && 'bordered'}`} verticalAlignment="center" horizontalAlignment="space-between" width="100%">
-                <i-vstack width="calc(100% - 160px)" height={48}>
-                  <i-input
-                    id="secondInput"
-                    value={this.offerPriceText}
-                    inputType="number"
-                    placeholder="0.0"
-                    margin={{ right: 4 }}
-                    class="token-input w-100"
-                    width="100%"
-                    enabled={!this.isOfferPriceDisabled}
-                    onChanged={this.changeOfferPrice.bind(this)}
-                    onFocus={(source: Control) => this.handleFocusInput(source, Stage.SET_OFFER_PRICE)}
-                  />
-                </i-vstack>
-                <i-vstack width="155px">
-                  <i-scom-token-input
-                    class="float-right"
-                    width="100%"
-                    id="secondTokenInput"
-                    background={{ color: 'transparent' }}
-                    tokenReadOnly={true}
-                    isInputShown={false}
-                    isBtnMaxShown={false}
-                    isBalanceShown={false}
-                  />
-                </i-vstack>
-              </i-hstack>
-            </i-panel>
-          </i-vstack>
-          <i-button
-            id="nextBtn2"
-            class="btn-os btn-next"
-            visible={this.isOfferPriceStage}
-            caption={this.nextButtonText}
-            onClick={() => this.onProceed(this.inputStartDate)}
-            enabled={!this.isProceedButtonDisabled}
-          />
-        </i-panel>
-        <i-panel id="datePanel" class="token-box">
-          <i-hstack gap="10px">
-            <i-vstack id="startDateContainer" enabled={!this.isStartDateDisabled} class="input--token-container" >
-              <i-hstack horizontalAlignment="space-between" verticalAlignment="center" width="100%">
-                <i-label font={{ bold: true }} caption="Start Date" />
-              </i-hstack>
-              <i-panel class="bg-box" width="100%">
-                <i-hstack class="input--token-box" verticalAlignment="center" width="100%">
-                  <i-vstack width="100%">
-                    {this.inputStartDate}
-                  </i-vstack>
+        {
+          this.isCreate ? (
+            <i-panel id="secondTokenPanel" class="token-box" enabled={!this.isOfferPriceDisabled}>
+              <i-vstack class="input--token-container" >
+                <i-hstack class="balance-info" horizontalAlignment="space-between" verticalAlignment="center" width="100%">
+                  <i-hstack gap={4} verticalAlignment="center">
+                    <i-label font={{ bold: true }} caption="Offer Price" />
+                    <i-label id="lbOfferPrice1" font={{ bold: true }} caption={`(${tokenSymbol(this.chainId, this.toTokenAddress)}`} />
+                    <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} />
+                    <i-label id="lbOfferPrice2" font={{ bold: true }} caption={`${tokenSymbol(this.chainId, this.fromTokenAddress)})`} />
+                  </i-hstack>
+                  <i-icon tooltip={{ content: 'Switch Price' }} width={32} height={32} class="toggle-icon" name="arrows-alt-v" fill={Theme.input.fontColor} background={{ color: Theme.input.background }} onClick={this.onSwitchPrice} />
                 </i-hstack>
-              </i-panel>
-            </i-vstack>
-            <i-vstack id="endDateContainer" enabled={!this.isEndDateDisabled} class="input--token-container">
-              <i-hstack horizontalAlignment="space-between" verticalAlignment="center" width="100%">
-                <i-label font={{ bold: true }} caption="End Date" />
-              </i-hstack>
-              <i-panel class="bg-box" width="100%">
-                <i-hstack class="input--token-box" verticalAlignment="center" width="100%">
-                  <i-vstack width="100%">
-                    {this.inputEndDate}
-                  </i-vstack>
-                </i-hstack>
-              </i-panel>
-            </i-vstack>
-          </i-hstack>
-          <i-button
-            id="nextBtn3"
-            class="btn-os btn-next"
-            visible={this.isStartDateStage || this.isEndDateStage}
-            caption={this.nextButtonText}
-            onClick={() => this.preProceed(this.offerToDropdown, Stage.SET_END_DATE)}
-            enabled={!this.isProceedButtonDisabled}
-          />
-        </i-panel>
-        <i-panel id="statusPanel" class="token-box" enabled={!this.isOfferToDisabled}>
-          <i-vstack class="input--token-container">
-            <i-label caption="Offer To" font={{ bold: true }} />
-            <i-panel class="bg-box" width="100%">
-              <i-hstack class="input--token-box" height={60} padding={{ left: 0, right: 0 }} verticalAlignment="center" width="100%">
-                <i-panel class="btn-dropdown">
-                  <i-button
-                    id="offerToDropdown"
-                    width="calc(100% - 1px)"
-                    enabled={!this.isOfferToDisabled}
-                    caption={this.offerTo}
-                    onClick={(source: Control) => this.onOfferTo(source)}
-                  ></i-button>
-                  <i-modal
-                    id="offerToModal"
-                    showBackdrop={false}
-                    height='auto'
-                    popupPlacement='bottom'
-                  >
-                    <i-panel>
-                      {
-                        statusList.map((status: OfferState) =>
-                          <i-button
-                            caption={status}
-                            onClick={() => this.handleChangeOfferTo(status)}
-                          />
-                        )
-                      }
-                    </i-panel>
-                  </i-modal>
+                <i-panel class="bg-box" width="100%">
+                  <i-hstack class={`input--token-box ${this.isOfferPriceStage && 'bordered'}`} verticalAlignment="center" horizontalAlignment="space-between" width="100%">
+                    <i-vstack width="calc(100% - 160px)" height={48}>
+                      <i-input
+                        id="secondInput"
+                        value={this.offerPriceText}
+                        inputType="number"
+                        placeholder="0.0"
+                        margin={{ right: 4 }}
+                        class="token-input w-100"
+                        width="100%"
+                        enabled={!this.isOfferPriceDisabled}
+                        onChanged={this.changeOfferPrice.bind(this)}
+                        onFocus={(source: Control) => this.handleFocusInput(source, Stage.SET_OFFER_PRICE)}
+                      />
+                    </i-vstack>
+                    <i-vstack width="155px">
+                      <i-scom-token-input
+                        class="float-right"
+                        width="100%"
+                        id="secondTokenInput"
+                        background={{ color: 'transparent' }}
+                        tokenReadOnly={true}
+                        isInputShown={false}
+                        isBtnMaxShown={false}
+                        isBalanceShown={false}
+                      />
+                    </i-vstack>
+                  </i-hstack>
                 </i-panel>
-              </i-hstack>
-            </i-panel>
-          </i-vstack>
-          <i-button
-            id="nextBtn4"
-            class="btn-os btn-next"
-            visible={this.isOfferToStage}
-            caption={this.nextButtonText}
-            onClick={() => this.onProceed(this.isAddressShown ? this.btnAddress : this.nextBtn4)}
-            enabled={!this.isProceedButtonDisabled}
-          />
-        </i-panel>
-        <i-panel id="addressPanel" class="token-box" visible={this.isAddressShown} enabled={!this.isAddressDisabled}>
-          <i-vstack class="input--token-container">
-            <i-hstack verticalAlignment="center">
-              <i-label caption="Whitelist Address" margin={{ right: 4 }} font={{ bold: true }} />
-              <i-icon name="question-circle" width={15} height={15}
-                tooltip={{
-                  content: 'Only whitelisted address(es) are allowed to buy the tokens at your offer price.'
-                }}
-                class="custom-question-icon"
+              </i-vstack>
+              <i-button
+                id="nextBtn2"
+                class="btn-os btn-next"
+                visible={this.isOfferPriceStage}
+                caption={this.nextButtonText}
+                onClick={() => this.onProceed(this.inputStartDate)}
+                enabled={!this.isProceedButtonDisabled}
               />
-            </i-hstack>
-            <i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center">
-              <i-label id="lbAddress" font={{ bold: true }} caption={this.addressText} />
-              <i-button id="btnAddress" class="btn-os btn-address" enabled={!this.isAddressDisabled} caption={this.btnAddressText} onClick={this.showWhitelistModal} />
-            </i-hstack>
-          </i-vstack>
-          <i-button
-            id="nextBtn5"
-            class="btn-os btn-next"
-            visible={this.isAddressStage}
-            caption={this.nextButtonText}
-            onClick={this.onProceed}
-            enabled={!this.isProceedButtonDisabled}
-          />
-        </i-panel>
-        <i-panel class="token-box">
-          <i-vstack class="input--token-container">
-            <i-hstack verticalAlignment="center" horizontalAlignment="space-between">
-              <i-label caption="You will get" />
-              <i-hstack verticalAlignment="center">
-                <i-label caption="OSWAP Fee" margin={{ right: 4 }} />
-                <i-icon name="question-circle" width={15} height={15}
-                  tooltip={{
-                    content: 'The OSWAP fee is calculated by a fixed offer fee + whitelist address fee * no. of whitelisted addresses'
-                  }}
-                />
+            </i-panel>) : []
+        }
+        {
+          this.isCreate ? (
+            <i-panel id="datePanel" class="token-box">
+              <i-hstack gap="10px">
+                <i-vstack id="startDateContainer" enabled={!this.isStartDateDisabled} class="input--token-container" >
+                  <i-hstack horizontalAlignment="space-between" verticalAlignment="center" width="100%">
+                    <i-label font={{ bold: true }} caption="Start Date" />
+                  </i-hstack>
+                  <i-panel class="bg-box" width="100%">
+                    <i-hstack class="input--token-box" verticalAlignment="center" width="100%">
+                      <i-vstack width="100%">
+                        {this.inputStartDate}
+                      </i-vstack>
+                    </i-hstack>
+                  </i-panel>
+                </i-vstack>
+                <i-vstack id="endDateContainer" enabled={!this.isEndDateDisabled} class="input--token-container">
+                  <i-hstack horizontalAlignment="space-between" verticalAlignment="center" width="100%">
+                    <i-label font={{ bold: true }} caption="End Date" />
+                  </i-hstack>
+                  <i-panel class="bg-box" width="100%">
+                    <i-hstack class="input--token-box" verticalAlignment="center" width="100%">
+                      <i-vstack width="100%">
+                        {this.inputEndDate}
+                      </i-vstack>
+                    </i-hstack>
+                  </i-panel>
+                </i-vstack>
               </i-hstack>
-            </i-hstack>
-            <i-hstack width="100%" horizontalAlignment="space-between">
-              <i-label id="lbWillGet" font={{ bold: true }} />
-              <i-label id="lbFee" font={{ bold: true }} />
-            </i-hstack>
-            <i-hstack horizontalAlignment="end">
-              <i-label id="lbGovBalance" opacity={0.8} margin={{ left: 'auto' }} caption={renderBalanceTooltip({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap)} />
-            </i-hstack>
-          </i-vstack>
-        </i-panel>
-        <i-panel id="approveAllowancePanel" class="token-box">
-          <i-vstack class="input--token-container">
-            <i-label caption="Approve Allowance" font={{ bold: true }} />
-            <i-panel class="bg-box" width="100%">
-              <i-hstack class="input--token-box" verticalAlignment="center" horizontalAlignment="center" width="100%" gap="15px" height={60}>
-                <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} font={{ bold: true }} />
-                <i-image url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} width="30" class="inline-block" />
-                <i-label caption="-" class="inline-block" margin={{ right: 8, left: 8 }} font={{ bold: true }} />
-                <i-image url={this.oswapIcon} width="30" class="inline-block" />
-                <i-label caption={this.oswapSymbol} font={{ bold: true }} />
-              </i-hstack>
-            </i-panel>
-          </i-vstack>
-        </i-panel>
-        {this.renderProgress()}
+              <i-button
+                id="nextBtn3"
+                class="btn-os btn-next"
+                visible={this.isStartDateStage || this.isEndDateStage}
+                caption={this.nextButtonText}
+                onClick={() => this.preProceed(this.offerToDropdown, Stage.SET_END_DATE)}
+                enabled={!this.isProceedButtonDisabled}
+              />
+            </i-panel>) : []
+        }
+        {
+          this.isCreate ? (
+            <i-panel id="statusPanel" class="token-box" enabled={!this.isOfferToDisabled}>
+              <i-vstack class="input--token-container">
+                <i-label caption="Offer To" font={{ bold: true }} />
+                <i-panel class="bg-box" width="100%">
+                  <i-hstack class="input--token-box" height={60} padding={{ left: 0, right: 0 }} verticalAlignment="center" width="100%">
+                    <i-panel class="btn-dropdown">
+                      <i-button
+                        id="offerToDropdown"
+                        width="calc(100% - 1px)"
+                        enabled={!this.isOfferToDisabled}
+                        caption={this.offerTo}
+                        onClick={(source: Control) => this.onOfferTo(source)}
+                      ></i-button>
+                      <i-modal
+                        id="offerToModal"
+                        showBackdrop={false}
+                        height='auto'
+                        popupPlacement='bottom'
+                      >
+                        <i-panel>
+                          {
+                            statusList.map((status: OfferState) =>
+                              <i-button
+                                caption={status}
+                                onClick={() => this.handleChangeOfferTo(status)}
+                              />
+                            )
+                          }
+                        </i-panel>
+                      </i-modal>
+                    </i-panel>
+                  </i-hstack>
+                </i-panel>
+              </i-vstack>
+              <i-button
+                id="nextBtn4"
+                class="btn-os btn-next"
+                visible={this.isOfferToStage}
+                caption={this.nextButtonText}
+                onClick={() => this.onProceed(this.isAddressShown ? this.btnAddress : this.nextBtn4)}
+                enabled={!this.isProceedButtonDisabled}
+              />
+            </i-panel>) : []
+        }
+        {
+          !this.isRemove ? (
+            <i-panel id="addressPanel" class="token-box" visible={this.isAddressShown} enabled={!this.isAddressDisabled}>
+              <i-vstack class="input--token-container">
+                <i-hstack verticalAlignment="center">
+                  <i-label caption="Whitelist Address" margin={{ right: 4 }} font={{ bold: true }} />
+                  <i-icon name="question-circle" width={15} height={15}
+                    tooltip={{
+                      content: 'Only whitelisted address(es) are allowed to buy the tokens at your offer price.'
+                    }}
+                    class="custom-question-icon"
+                  />
+                </i-hstack>
+                <i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center">
+                  <i-label id="lbAddress" font={{ bold: true }} caption={this.addressText} />
+                  <i-button id="btnAddress" class="btn-os btn-address" enabled={!this.isAddressDisabled} caption={this.btnAddressText} onClick={this.showWhitelistModal} />
+                </i-hstack>
+              </i-vstack>
+              <i-button
+                id="nextBtn5"
+                class="btn-os btn-next"
+                visible={this.isAddressStage}
+                caption={this.nextButtonText}
+                onClick={this.onProceed}
+                enabled={!this.isProceedButtonDisabled}
+              />
+            </i-panel>) : []
+        }
+        {
+          this.isCreate || this.isAdd ? (
+            <i-panel class="token-box">
+              <i-vstack class="input--token-container">
+                <i-hstack verticalAlignment="center" horizontalAlignment="space-between">
+                  <i-label caption="You will get" />
+                  <i-hstack verticalAlignment="center">
+                    <i-label caption="OSWAP Fee" margin={{ right: 4 }} />
+                    <i-icon name="question-circle" width={15} height={15}
+                      tooltip={{
+                        content: 'The OSWAP fee is calculated by a fixed offer fee + whitelist address fee * no. of whitelisted addresses'
+                      }}
+                    />
+                  </i-hstack>
+                </i-hstack>
+                <i-hstack width="100%" horizontalAlignment="space-between">
+                  <i-label id="lbWillGet" font={{ bold: true }} />
+                  <i-label id="lbFee" font={{ bold: true }} />
+                </i-hstack>
+                <i-hstack horizontalAlignment="end">
+                  <i-label id="lbGovBalance" opacity={0.8} margin={{ left: 'auto' }} caption={renderBalanceTooltip({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap)} />
+                </i-hstack>
+              </i-vstack>
+            </i-panel>) : []
+        }
+        {
+          this.isCreate ? (
+            <i-panel id="approveAllowancePanel" class="token-box">
+              <i-vstack class="input--token-container">
+                <i-label caption="Approve Allowance" font={{ bold: true }} />
+                <i-panel class="bg-box" width="100%">
+                  <i-hstack class="input--token-box" verticalAlignment="center" horizontalAlignment="center" width="100%" gap="15px" height={60}>
+                    <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} font={{ bold: true }} />
+                    <i-image url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} width="30" class="inline-block" />
+                    <i-label caption="-" class="inline-block" margin={{ right: 8, left: 8 }} font={{ bold: true }} />
+                    <i-image url={this.oswapIcon} width="30" class="inline-block" />
+                    <i-label caption={this.oswapSymbol} font={{ bold: true }} />
+                  </i-hstack>
+                </i-panel>
+              </i-vstack>
+            </i-panel>) : []
+        }
+        {this.isCreate ? this.renderProgress() : []}
         <i-button
           id="submitBtn"
           class="btn-os btn-next"
@@ -813,7 +884,7 @@ export class LiquidityForm extends Module {
           rightIcon={{ spin: true, visible: false }}
           onClick={this.onProceed}
         />
-        <manage-whitelist id="manageWhitelist" />
+        {!this.isRemove ? <manage-whitelist id="manageWhitelist" /> : []}
       </i-panel>
     )
     const rpcWallet = this.state.getRpcWallet();

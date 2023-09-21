@@ -3,7 +3,7 @@ import { State, tokenSymbol } from '../store/index';
 import { DefaultDateTimeFormat, IAllocation, formatDate, renderBalanceTooltip } from '../global/index';
 import { BigNumber } from '@ijstech/eth-wallet';
 import { ManageWhitelist } from './whitelist';
-import { Stage, OfferState } from '../liquidity-utils/index';
+import { Stage, OfferState, Action } from '../liquidity-utils/index';
 import { tokenStore } from '@scom/scom-token-list';
 import { LiquidityProgress } from './progress';
 
@@ -46,6 +46,7 @@ export class LiquiditySummary extends Module {
   private feeRow: Panel;
   private _summaryData: any;
   private _fromTokenAddress: string;
+  private _actionType: number;
   private isSummaryLoaded: boolean;
   private _fetchData: any;
   private manageWhitelist: ManageWhitelist;
@@ -69,8 +70,19 @@ export class LiquiditySummary extends Module {
   get fromTokenAddress(): string {
     return this._fromTokenAddress;
   }
+
   set fromTokenAddress(value: string) {
     this._fromTokenAddress = value;
+  }
+
+  get actionType(): number {
+    return this._actionType;
+  }
+
+  set actionType(value: number) {
+    if (this._actionType === value) return;
+    this._actionType = value;
+    this.isSummaryLoaded = false;
   }
 
   get summaryData() {
@@ -141,19 +153,40 @@ export class LiquiditySummary extends Module {
     const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
     const isOfferPriceValid = newOfferPrice ? new BigNumber(newOfferPrice).gt(0) : false;
 
-    amountRow = [
-      {
-        id: 'amountRow',
-        title: 'Amount',
-        data: {
-          row1: {
-            display: renderBalanceTooltip({ value: newAmount || 0, symbol: fromSymbol }, tokenMap),
-            className: 'highlight-value'
-          }
-        },
-        shown: true
-      }
-    ]
+    if (this.actionType === Action.CREATE) {
+      amountRow = [
+        {
+          id: 'amountRow',
+          title: 'Amount',
+          data: {
+            row1: {
+              display: renderBalanceTooltip({ value: newAmount || 0, symbol: fromSymbol }, tokenMap),
+              className: 'highlight-value'
+            }
+          },
+          shown: true
+        }
+      ]
+    } else {
+      amountRow = [
+        {
+          id: 'amountRow',
+          title: 'Amount',
+          data: {
+            row1: {
+              display: renderBalanceTooltip({ value: amount || 0, symbol: fromSymbol }, tokenMap),
+              className: 'text-left'
+            },
+            row2: {
+              display: renderBalanceTooltip({ value: newAmount || 0, symbol: fromSymbol }, tokenMap),
+              className: 'highlight-value text-right'
+            }
+          },
+          className: 'summary-row--one',
+          shown: true
+        }
+      ]
+    }
     offerPriceRow = [
       {
         id: 'offerPriceRow',
@@ -190,7 +223,7 @@ export class LiquiditySummary extends Module {
             className: 'highlight-value'
           }
         },
-        shown: true
+        shown: this.actionType === Action.CREATE || this.actionType === Action.REMOVE
       }
     ];
     endDateRow = [
@@ -203,7 +236,7 @@ export class LiquiditySummary extends Module {
             className: 'highlight-value'
           }
         },
-        shown: true
+        shown: this.actionType === Action.CREATE || this.actionType === Action.REMOVE
       }
     ]
     statusRow = [

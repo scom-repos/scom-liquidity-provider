@@ -14,7 +14,7 @@
         "@scom/scom-network-picker",
         "@scom/scom-token-modal",
         "@scom/scom-token-input",
-        "@scom/oswap-openswap-contract",
-        "@ijstech/eth-contract"
+        "@ijstech/eth-contract",
+        "@scom/oswap-openswap-contract"
     ]
 }

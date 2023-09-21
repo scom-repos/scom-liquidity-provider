@@ -10,11 +10,14 @@ import {
   getToBeApprovedTokens,
   addLiquidity,
   getQueueStakeToken,
-  getLiquidityProviderAddress
+  getLiquidityProviderAddress,
+  removeLiquidity,
+  getOfferIndexes
 } from './API';
 import { State, getTokenDecimals } from '../store/index';
 import { moment } from '@ijstech/components';
 import { ITokenObject, tokenStore } from "@scom/scom-token-list";
+import { Contracts } from "@scom/oswap-openswap-contract";
 
 export enum Stage {
   NONE,
@@ -30,6 +33,13 @@ export enum Stage {
   GOV_TOKEN_APPROVAL,
   WAITING_FOR_GOV_TOKEN_APPROVAL,
   SUBMIT,
+}
+
+export enum Action {
+  CREATE,
+  ADD,
+  REMOVE,
+  LOCK
 }
 
 export enum OfferState {
@@ -62,6 +72,7 @@ export class Model {
   private offerIndex: number;
   private fromTokenAddress = '';
   private toTokenAddress = '';
+  private actionType = 0;
   private pairIndex = 0;
   private isFirstLoad = true;
   private pairCustomParams: any;
@@ -79,7 +90,8 @@ export class Model {
 
   private approvalModelAction: IERC20ApprovalAction;
   onShowTxStatus: (status: 'success' | 'warning' | 'error', content: string | Error) => void;
-  onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean, resetForm?: boolean) => void;
+  onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean, offerIndex?: number) => void;
+  onBack: () => void;
 
   private get fromTokenObject() {
     const tokenMap = tokenStore.getTokenMapByChainId(this.state.getChainId());
@@ -106,11 +118,16 @@ export class Model {
   }
 
   private get enableApproveAllowance(): boolean {
+    if (this.actionType !== Action.CREATE) return true;
     return this.fromTokenInputValid;
   }
 
   private get fromTokenInputValid(): boolean {
-    return this.fromTokenInput.gt(0) && this.fromTokenInput.lte(this.fromTokenBalanceExact);
+    const allowZero = [Action.CREATE, Action.ADD].some(n => n === this.actionType);
+    if (allowZero && this.fromTokenInputText === '') {
+      return false;
+    }
+    return (this.fromTokenInput.gt(0) || allowZero) && this.fromTokenInput.lte(this.fromTokenBalanceExact);
   }
 
   private get offerPriceInputValid(): boolean {
@@ -119,9 +136,14 @@ export class Model {
 
   private get fromTokenBalanceExact() {
     const tokenBalances = tokenStore.tokenBalances || {};
-    return tokenBalances[this.fromTokenAddress]
-      ? new BigNumber(tokenBalances[this.fromTokenAddress])
-      : new BigNumber(0);
+    if ([Action.CREATE, Action.ADD].some(n => n === this.actionType)) {
+      return tokenBalances[this.fromTokenAddress]
+        ? new BigNumber(tokenBalances[this.fromTokenAddress])
+        : new BigNumber(0);
+    }
+    if (this.actionType === Action.REMOVE) {
+      return new BigNumber(this.summaryData.amount);
+    }
   }
 
   private get govTokenBalanceExact() {
@@ -151,7 +173,14 @@ export class Model {
 
   private isProceedButtonDisabled = () => {
     if (!this.state.isRpcWalletConnected()) return false;
-    if (!this.getJoinValidation) return true;
+    if (Action.CREATE === this.actionType) {
+      if (!this.getJoinValidation) return true;
+    } else {
+      if (!this.validateEmptyInput || !this.fromTokenInputValid) return true;
+      if (Action.ADD === this.actionType && this.fromTokenInput.eq(0) && this.newTotalAddress === this.summaryData.addresses.length && this.currentTotalAllocation == this.newTotalAllocation) {
+        return true;
+      }
+    }
     if ([Stage.NONE, Stage.WAITING_FOR_FIRST_TOKEN_APPROVAL, Stage.WAITING_FOR_GOV_TOKEN_APPROVAL].includes(this.currentStage)) {
       return true;
     }
@@ -167,10 +196,7 @@ export class Model {
     if (this.fromTokenInput.gt(this.fromTokenBalanceExact)) {
       return `Insufficient ${this.fromTokenSymbol} balance`;
     }
-    if (this.fromTokenInput.lte(0)) {
-      return 'Amount must be greater than 0';
-    }
-    if (this.offerPriceText && !this.offerPriceInputValid) {
+    if (this.actionType === Action.CREATE && this.offerPriceText && !this.offerPriceInputValid) {
       return 'Offer Price must be greater than 0';
     }
     if (new BigNumber(this.fee).gt(this.govTokenBalanceExact)) {
@@ -202,9 +228,6 @@ export class Model {
     if (!stakeToken) return '';
     if (this.fromTokenInput.gt(this.fromTokenBalanceExact)) {
       return `Insufficient ${this.fromTokenSymbol} balance`;
-    }
-    if (this.fromTokenInput.lte(0)) {
-      return 'Amount must be greater than 0';
     }
     if (this.offerPriceText && !this.offerPriceInputValid) {
       return 'Offer Price must be greater than 0';
@@ -240,7 +263,17 @@ export class Model {
   }
 
   private get newAmount() {
-    return this.fromTokenInput;
+    if (this.actionType === Action.CREATE) {
+      return this.fromTokenInput;
+    }
+    const amount = this.summaryData.amount;
+    if (this.actionType === Action.ADD) {
+      return new BigNumber(amount).plus(this.fromTokenInput);
+    }
+    if (this.actionType === Action.REMOVE) {
+      return new BigNumber(amount).minus(this.fromTokenInput);
+    }
+    return new BigNumber(amount);
   }
 
   private get listAddress() {
@@ -261,6 +294,11 @@ export class Model {
 
   private get newTotalAllocation() {
     const totalAddress = this.listAddress.reduce((pv: number, cv: any) => pv + parseFloat(cv.allocation), 0);
+    return totalAddress;
+  }
+
+  private get currentTotalAllocation() {
+    const totalAddress = this.summaryData.addresses.reduce((pv: any, cv: any) => pv + parseFloat(cv.allocation), 0);
     return totalAddress;
   }
 
@@ -316,14 +354,41 @@ export class Model {
   }
 
   private fetchData = async () => {
-    const response = await getPairInfo(this.state, this.pairAddress, this.fromTokenAddress);
-    this.toTokenAddress = response.toTokenAddress || '';
-    if (this.isFirstLoad) {
-      this.isFirstLoad = false;
-      this.fee = response.feePerOrder;
-      this.originalFee = response.feePerOrder;
+    if (this.actionType === Action.CREATE) {
+      const response = await getPairInfo(this.state, this.pairAddress, this.fromTokenAddress);
+      this.toTokenAddress = response.toTokenAddress || '';
+      if (this.isFirstLoad) {
+        this.isFirstLoad = false;
+        this.fee = response.feePerOrder;
+        this.originalFee = response.feePerOrder;
+      }
+      this.setSummaryData(response);
+    } else if (this.actionType === Action.ADD) {
+      const response: any = await getPairInfo(this.state, this.pairAddress, this.fromTokenAddress, this.offerIndex);
+      this.toTokenAddress = response.toTokenAddress;
+      if (this.isFirstLoad) {
+        this.isFirstLoad = false;
+        this.offerPriceText = response.offerPrice;
+        this.startDate = moment(response.startDate);
+        this.endDate = moment(response.expire);
+        this.switchLock = response.locked ? LockState.Locked : LockState.Unlocked;
+        this.offerTo = response.allowAll ? OfferState.Everyone : OfferState.Whitelist;
+        this.addresses = response.addresses;
+        await this.fromTokenInputTextChange('');
+        await this.getNextTokenApprovalStage();
+      }
+      this.setSummaryData(response);
+    } else {
+      const response: any = await getPairInfo(this.state, this.pairAddress, this.fromTokenAddress, this.offerIndex);
+      this.toTokenAddress = response.toTokenAddress;
+      this.offerPriceText = response.offerPrice;
+      this.startDate = moment(response.startDate);
+      this.endDate = moment(response.expire);
+      this.switchLock = response.locked ? LockState.Locked : LockState.Unlocked;
+      this.offerTo = response.allowAll ? OfferState.Everyone : OfferState.Whitelist;
+      this.addresses = response.addresses;
+      this.setSummaryData(response);
     }
-    this.setSummaryData(response);
   };
 
   private setSummaryData(response: any, updateField?: boolean) {
@@ -377,6 +442,11 @@ export class Model {
   private proceed = async () => {
     const stakeToken = getQueueStakeToken(this.state.getChainId());
     if (!stakeToken) return;
+    if (this.actionType === Action.ADD) {
+      await this.getNextTokenApprovalStage();
+    } else if (this.actionType === Action.REMOVE) {
+      this.currentStage = Stage.SUBMIT;
+    }
     if (this.currentStage === Stage.SET_AMOUNT) {
       this.currentStage = Stage.SET_OFFER_PRICE;
     } else if (this.currentStage === Stage.SET_OFFER_PRICE) {
@@ -386,7 +456,8 @@ export class Model {
     } else if (this.currentStage === Stage.SET_END_DATE) {
       this.currentStage = Stage.SET_OFFER_TO;
     } else if (this.currentStage === Stage.SET_OFFER_TO) {
-      const isAddressShown = this.offerTo === OfferState.Whitelist;
+      const isCreation = Action.CREATE === this.actionType;
+      const isAddressShown = !isCreation || (isCreation && this.offerTo === OfferState.Whitelist);
       if (isAddressShown) {
         this.currentStage = Stage.SET_ADDRESS;
       } else {
@@ -401,6 +472,25 @@ export class Model {
     } else if (this.currentStage === Stage.SUBMIT) {
       this.approvalModelAction.doPayAction();
     }
+  }
+
+  private get validateEmptyInput() {
+    const fromTokenInputCheck = this.fromTokenInput && this.fromTokenInput.gt(0);
+    const offerPriceCheck = this.offerPriceInputValid;
+    const startDateCheck = !!this.startDate;
+    const endDateCheck = !!this.endDate;
+    const stateCheck = !!this.switchLock;
+    const addressesCheck = this.addresses && this.addresses.length;
+    if (Action.CREATE === this.actionType) {
+      if (!fromTokenInputCheck || !offerPriceCheck || !startDateCheck || !endDateCheck || !stateCheck || !addressesCheck) {
+        return false;
+      }
+    } else if (this.actionType === Action.ADD) {
+      if (!offerPriceCheck || !startDateCheck || !endDateCheck) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private get fromTokenBalance() {
@@ -423,7 +513,13 @@ export class Model {
         break;
       case Stage.SET_AMOUNT:
         let msg: string;
-        msg = `Input the total amount of ${this.fromTokenSymbol} you would like to sell.`;
+        if (this.actionType === Action.CREATE) {
+          msg = `Input the total amount of ${this.fromTokenSymbol} you would like to sell.`;
+        } else if (this.actionType === Action.ADD) {
+          msg = 'Please input the amount of the token you wish to add to the liquidity.';
+        } else {
+          msg = 'Please input the amount of the token you wish to remove from the liquidity.';
+        }
         arr.push(msg);
         break;
       case Stage.SET_OFFER_PRICE:
@@ -465,12 +561,17 @@ export class Model {
     return arr;
   }
 
-  constructor(state: State, pairAddress: string, fromTokenAddress: string, offerIndex: number) {
+  constructor(state: State, pairAddress: string, fromTokenAddress: string, offerIndex: number, actionType: number) {
     this.state = state;
     this.pairAddress = pairAddress;
     this.fromTokenAddress = fromTokenAddress;
     this.offerIndex = offerIndex;
-    this.currentStage = Stage.SET_AMOUNT;
+    this.actionType = actionType;
+    if (this.actionType === Action.CREATE) {
+      this.currentStage = Stage.SET_AMOUNT;
+    } else {
+      this.currentStage = Stage.NONE;
+    }
     tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
     this.initApprovalModelAction();
   }
@@ -481,9 +582,9 @@ export class Model {
     }
   }
 
-  private setSubmitBtnStatus(isLoading: boolean, isApproval?: boolean, resetForm?: boolean) {
+  private setSubmitBtnStatus(isLoading: boolean, isApproval?: boolean, offerIndex?: number) {
     if (this.onSubmitBtnStatus) {
-      this.onSubmitBtnStatus(isLoading, isApproval, resetForm);
+      this.onSubmitBtnStatus(isLoading, isApproval, offerIndex);
     }
   }
 
@@ -493,7 +594,16 @@ export class Model {
       sender: this,
       payAction: async () => {
         const deadline = Math.floor(Date.now() / 1000) + this.state.transactionDeadline * 60;
-        this.addLiquidityAction(this.endDate.unix(), deadline);
+        if (this.actionType === Action.CREATE) {
+          this.addLiquidityAction(this.endDate.unix(), deadline);
+        } else if (this.actionType === Action.ADD) {
+          let pair = new Contracts.OSWAP_RestrictedPair(this.state.getRpcWallet(), this.pairAddress);
+          let direction = (await pair.token0()).toLowerCase() == this.toTokenAddress.toLowerCase()
+          let endDatetime = (await pair.offers({ param1: direction, param2: this.offerIndex })).expire;
+          this.addLiquidityAction(endDatetime.toNumber(), deadline);
+        } else {
+          this.removeLiquidityAction(deadline, false);
+        }
       },
       onToBeApproved: async (token: ITokenObject) => {
       },
@@ -523,7 +633,14 @@ export class Model {
       },
       onPaid: async (receipt?: any) => {
         tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
-        this.setSubmitBtnStatus(false, false, true);
+        if (this.actionType === Action.CREATE) {
+          const offerIndexes = await getOfferIndexes(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
+          console.log(offerIndexes);
+          this.setSubmitBtnStatus(false, false, Number(offerIndexes[offerIndexes.length - 1]));
+        } else {
+          this.setSubmitBtnStatus(false, false);
+          if (this.onBack) this.onBack();
+        }
       },
       onPayingError: async (err: Error) => {
         this.showTxStatus('error', err);
@@ -538,12 +655,23 @@ export class Model {
     this.fromTokenInput = new BigNumber(this.fromTokenInputText);
     if (this.fromTokenInput.isNaN()) {
       this.fromTokenInput = new BigNumber(0);
+    } else {
+      this.fromTokenInputChange();
     }
   }
 
   private setMaxBalanceToFromToken = () => {
     this.fromTokenInput = this.fromTokenBalanceExact;
     this.fromTokenInputText = this.fromTokenInput.toString();
+    this.fromTokenInputChange();
+  }
+
+  private fromTokenInputChange = async () => {
+    if (this.actionType != Action.CREATE) {
+      if (this.fromTokenInputValid) {
+        await this.getNextTokenApprovalStage();
+      }
+    }
   }
 
   private offerPriceInputTextChange = (value: string) => {
@@ -586,7 +714,7 @@ export class Model {
       this.fromTokenInput.toString(),
       this.fee.toString(),
     );
-    if (tokens && tokens.length > 0) {
+    if ([Action.CREATE, Action.ADD].some(n => n === this.actionType) && tokens && tokens.length > 0) {
       if (tokens.includes(this.fromTokenAddress)) {
         this.currentStage = Stage.FIRST_TOKEN_APPROVAL;
       } else if (tokens.includes(stakeToken.address!)) {
@@ -622,6 +750,27 @@ export class Model {
       endDate,
       deadline,
       arrWhitelist
+    );
+  }
+
+  private async removeLiquidityAction(deadline: number, collectFromProceeds: boolean) {
+    this.showTxStatus('warning', '');
+    let amountOut = '';
+    let reserveOut = '';
+    if (collectFromProceeds) {
+      reserveOut = this.fromTokenInput.toString();
+    } else {
+      amountOut = this.fromTokenInput.toString();
+    }
+    removeLiquidity(
+      this.state.getChainId(),
+      this.fromTokenObject,
+      this.toTokenObject,
+      this.fromTokenObject,
+      amountOut,
+      reserveOut,
+      this.offerIndex,
+      deadline
     );
   }
 }

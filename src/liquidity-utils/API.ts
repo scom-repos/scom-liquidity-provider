@@ -1,4 +1,4 @@
-import { IAllocation, toWeiInv } from '../global/index';
+import { IAllocation, ProviderGroupQueue, toWeiInv } from '../global/index';
 import { BigNumber, Wallet, Utils } from '@ijstech/eth-wallet';
 import {
   State,
@@ -134,7 +134,7 @@ const getRestrictedPairCustomParams = async (state: State) => {
   }
 }
 
-const getPairInfo = async (state: State, pairAddress: string, tokenAddress: string, provider?: string, offerIndex?: number) => {
+const getPairInfo = async (state: State, pairAddress: string, tokenAddress: string, offerIndex?: number) => {
   const wallet = state.getRpcWallet();
   const chainId = state.getChainId();
   const nativeToken = getChainNativeToken(chainId);
@@ -181,7 +181,7 @@ const getPairInfo = async (state: State, pairAddress: string, tokenAddress: stri
   };
 
 
-  if (provider && offerIndex) {
+  if (offerIndex) {
     const getProviderQueuePairInfo = async function () {
       let againstTokenDecimals = againstToken.decimals;
       let [addresses, offer] = await Promise.all([
@@ -390,6 +390,55 @@ const addLiquidity = async (chainId: number, tokenA: ITokenObject, tokenB: IToke
   return receipt;
 }
 
+const removeLiquidity = async (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenOut: ITokenObject, amountOut: string, receivingOut: string, orderIndex: any, deadline: number) => {
+  let address = getLiquidityProviderAddress(chainId);
+  const toAddress = Wallet.getClientInstance().address;
+  const liquidityProviderContract = new Contracts.OSWAP_RestrictedLiquidityProvider1(Wallet.getClientInstance(), address)
+  let receivingToken = tokenA.address == tokenOut.address ? tokenB : tokenA;
+  if (!amountOut) amountOut = '0';
+  if (!receivingOut) receivingOut = '0';
+  if (!tokenA.address || !tokenB.address) {
+    let erc20Token = tokenA.address ? tokenA : tokenB;
+    var receipt = await liquidityProviderContract.removeLiquidityETH({
+      tokenA: erc20Token.address as string,
+      removingTokenA: erc20Token == tokenOut,
+      to: toAddress,
+      pairIndex: 0, //TODO
+      offerIndex: orderIndex,
+      amountOut: toTokenAmount(tokenOut, amountOut),
+      receivingOut: toTokenAmount(receivingToken, receivingOut),
+      deadline
+    });
+  } else {
+    var receipt = await liquidityProviderContract.removeLiquidity({
+      tokenA: tokenA.address,
+      tokenB: tokenB.address,
+      removingTokenA: tokenA == tokenOut,
+      to: toAddress,
+      pairIndex: 0,
+      offerIndex: orderIndex,
+      amountOut: toTokenAmount(tokenOut, amountOut),
+      receivingOut: toTokenAmount(receivingToken, receivingOut),
+      deadline
+    });
+  }
+  return receipt;
+}
+
+
+const lockGroupQueueOffer = async (chainId: number, pairAddress: string, tokenA: ITokenObject, tokenB: ITokenObject, offerIndex: number | BigNumber) => {
+  const wallet = Wallet.getClientInstance();
+  const WETH9Address = getAddressByKey(chainId, 'WETH9');
+
+  // BigNumber constructor, only string values in hexadecimal literal form, e.g. '0xff' or '0xFF' (but not '0xfF') are valid
+  const tokenInAddress = (tokenA?.address ?? WETH9Address).toLowerCase();
+  const tokenOutAddress = (tokenB?.address ?? WETH9Address).toLowerCase();
+  const direction = (new BigNumber(tokenInAddress).lt(tokenOutAddress)) ? false : true;
+  const oraclePairContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
+  const receipt = await oraclePairContract.lockOffer({ direction, index: offerIndex });
+  return receipt;
+}
+
 const convertWhitelistedAddresses = (inputText: string): IAllocation[] => {
 
   function splitByMultipleSeparator(input: string, separators: any[]): string[] {
@@ -443,6 +492,21 @@ async function isPairRegistered(state: State, tokenA: string, tokenB: string) {
   return oracleAddress != nullAddress
 }
 
+async function getOfferIndexes(state: State, pairAddress: string, tokenA: string, tokenB: string) {
+  const wallet = state.getRpcWallet();
+  const chainId = state.getChainId();
+  const provider = wallet.address;
+  const pairContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
+  const WETH9Address = getAddressByKey(chainId, 'WETH9');
+  let token0Address = tokenA.startsWith('0x') ? tokenA : WETH9Address;
+  let token1Address = tokenB.startsWith('0x') ? tokenA : WETH9Address;
+
+  let inverseDirection = new BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase());
+  let direction = !inverseDirection;
+  let rawOffers = await pairContract.getProviderOffer({ provider, direction, start: 0, length: 100 });
+  return rawOffers.index;
+}
+
 export {
   getPair,
   isPairRegistered,
@@ -450,6 +514,9 @@ export {
   getToBeApprovedTokens,
   getLiquidityProviderAddress,
   addLiquidity,
+  removeLiquidity,
+  lockGroupQueueOffer,
   getQueueStakeToken,
-  convertWhitelistedAddresses
+  convertWhitelistedAddresses,
+  getOfferIndexes
 }
