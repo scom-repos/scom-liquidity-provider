@@ -1,0 +1,20 @@
+{
+    "name": "@scom/scom-liquidity-provider",
+    "type": "widget",
+    "version": "0.1.0",
+    "dependencies": [
+        "@ijstech/components",
+        "@ijstech/eth-wallet",
+        "@scom/scom-token-list",
+        "@scom/scom-network-list",
+        "@scom/scom-multicall",
+        "@scom/scom-dapp-container",
+        "@scom/scom-wallet-modal",
+        "@scom/scom-tx-status-modal",
+        "@scom/scom-network-picker",
+        "@scom/scom-token-modal",
+        "@scom/scom-token-input",
+        "@ijstech/eth-contract",
+        "@scom/oswap-openswap-contract"
+    ]
+}

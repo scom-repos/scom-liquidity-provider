@@ -10,7 +10,7 @@ docker-compose up install
 docker-compose up build
 ```
 
-## For test
+## Test
 ## Step 3: Install packages
 ```sh
 docker-compose up installTest
@@ -21,4 +21,4 @@ docker-compose up installTest
 docker-compose up test
 ```
 
-Access the dev server via http://127.0.0.1:8055/
+Access the dev server via http://127.0.0.1:8096/
