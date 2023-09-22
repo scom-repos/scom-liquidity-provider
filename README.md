@@ -1,3 +1,6 @@
+# scom-liquidity-provider
+Add liquidity to group queue offer by calling OSWAP_RestrictedLiquidityProvider.addLiquidityAndTrader
+
 ## Step 1: Install packages
 ```sh
 docker-compose up install

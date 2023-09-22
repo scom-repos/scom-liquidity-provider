@@ -23,11 +23,11 @@
     "@scom/scom-token-input": "^0.1.1",
     "@scom/scom-network-picker": "^0.1.1",
     "@scom/scom-wallet-modal": "^0.1.0",
-    "@scom/scom-tx-status-modal": "^0.1.0",
-    "@scom/oswap-openswap-contract": "^0.1.0"
+    "@scom/scom-tx-status-modal": "^0.1.0"
   },
   "devDependencies": {
     "@ijstech/cli": "^0.1.28",
-    "@ijstech/compiler": "^0.1.22"
+    "@ijstech/compiler": "^0.1.22",
+    "@scom/oswap-openswap-contract": "^0.1.0"
   }
 }
