@@ -233,6 +233,9 @@ define("@scom/scom-liquidity-provider/data.json.ts", ["require", "exports"], fun
             "networks": [
                 {
                     "chainId": 43113
+                },
+                {
+                    "chainId": 97
                 }
             ],
             "wallets": [
