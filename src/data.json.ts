@@ -6,6 +6,9 @@ export default {
     "networks": [
       {
         "chainId": 43113
+      },
+      {
+        "chainId": 97
       }
     ],
     "wallets": [
