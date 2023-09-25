@@ -36,7 +36,7 @@ export const formatNumber = (value: any, decimals?: number) => {
   if (val != 0 && new BigNumber(val).lt(minValue)) {
     return `<${minValue}`;
   }
-  return FormatUtils.formatNumberWithSeparators(val, decimals || 4);
+  return FormatUtils.formatNumber(val, { decimalFigures: decimals || 4 });
 }
 
 export const renderBalanceTooltip = (params: IBalanceTooltip, tokenMap: TokenMapType, isBold?: boolean) => {
