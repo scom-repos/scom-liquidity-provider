@@ -2346,7 +2346,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
             let secondTokenInput;
             let combobox;
             const initCombobox = async () => {
-                var _a, _b;
+                var _a, _b, _c;
                 if (!combobox)
                     return;
                 combobox.clear();
@@ -2354,9 +2354,14 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                 const toToken = secondTokenInput === null || secondTokenInput === void 0 ? void 0 : secondTokenInput.token;
                 try {
                     if (fromToken && toToken) {
+                        const wallet = state.getRpcWallet();
+                        const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        if (chainId && chainId != wallet.chainId) {
+                            await wallet.switchNetwork(chainId);
+                        }
                         const pairAddress = await (0, liquidity_utils_1.getPair)(state, fromToken, toToken);
-                        const fromTokenAddress = ((_a = fromToken.address) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || fromToken.symbol;
-                        const toTokenAddress = ((_b = toToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || toToken.symbol;
+                        const fromTokenAddress = ((_b = fromToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || fromToken.symbol;
+                        const toTokenAddress = ((_c = toToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || toToken.symbol;
                         const offerIndexes = await (0, liquidity_utils_1.getOfferIndexes)(state, pairAddress, fromTokenAddress, toTokenAddress);
                         combobox.items = [{ label: '', value: '' }].concat(offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; }));
                     }
@@ -2364,7 +2369,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         combobox.items = [{ label: '', value: '' }];
                     }
                 }
-                catch (_c) {
+                catch (_d) {
                     combobox.items = [{ label: '', value: '' }];
                 }
             };
@@ -2377,10 +2382,14 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             onCustomNetworkSelected: () => {
                                 var _a;
                                 const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                if (firstTokenInput.chainId != chainId) {
+                                    firstTokenInput.token = null;
+                                    secondTokenInput.token = null;
+                                    combobox.items = [{ label: '', value: '' }];
+                                    combobox.clear();
+                                }
                                 firstTokenInput.chainId = chainId;
                                 secondTokenInput.chainId = chainId;
-                                combobox.items = [{ label: '', value: '' }];
-                                combobox.clear();
                             }
                         });
                         return networkPicker;

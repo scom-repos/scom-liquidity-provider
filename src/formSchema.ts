@@ -116,6 +116,11 @@ export default {
             const toToken = secondTokenInput?.token;
             try {
                 if (fromToken && toToken) {
+                    const wallet = state.getRpcWallet();
+                    const chainId = networkPicker.selectedNetwork?.chainId;
+                    if (chainId && chainId != wallet.chainId) {
+                        await wallet.switchNetwork(chainId);
+                    }
                     const pairAddress = await getPair(state, fromToken, toToken);
                     const fromTokenAddress = fromToken.address?.toLowerCase() || fromToken.symbol;
                     const toTokenAddress = toToken.address?.toLowerCase() || toToken.symbol;
@@ -137,10 +142,14 @@ export default {
                         networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v } }),
                         onCustomNetworkSelected: () => {
                             const chainId = networkPicker.selectedNetwork?.chainId;
+                            if (firstTokenInput.chainId != chainId) {
+                                firstTokenInput.token = null;
+                                secondTokenInput.token = null;
+                                combobox.items = [{ label: '', value: '' }];
+                                combobox.clear();
+                            }
                             firstTokenInput.chainId = chainId;
                             secondTokenInput.chainId = chainId;
-                            combobox.items = [{ label: '', value: '' }];
-                            combobox.clear();
                         }
                     });
                     return networkPicker;
