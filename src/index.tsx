@@ -140,8 +140,36 @@ export default class ScomLiquidityProvider extends Module {
 		return actions;
 	}
 
+    private getProjectOwnerActions() {
+        const actions: any[] = [
+			{
+				name: 'Settings',
+				userInputDataSchema: formSchema.dataSchema,
+				userInputUISchema: formSchema.uiSchema,
+				customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.state)
+			}
+        ];
+        return actions;
+    }
+
 	getConfigurators() {
 		return [
+            {
+                name: 'Project Owner Configurator',
+                target: 'Project Owners',
+                getProxySelectors: async (chainId: number) => {
+                    return [];
+                },
+                getActions: () => {
+                    return this.getProjectOwnerActions();
+                },
+                getData: this.getData.bind(this),
+                setData: async (data: any) => {
+                    await this.setData(data);
+                },
+                getTag: this.getTag.bind(this),
+                setTag: this.setTag.bind(this)
+            },
 			{
 				name: 'Builder Configurator',
 				target: 'Builders',
@@ -155,7 +183,22 @@ export default class ScomLiquidityProvider extends Module {
 				},
 				getTag: this.getTag.bind(this),
 				setTag: this.setTag.bind(this)
-			}
+			},
+            {
+                name: 'Embedder Configurator',
+                target: 'Embedders',
+                getData: async () => {
+                    return { ...this._data }
+                },
+                setData: async (properties: ILiquidityProvider, linkParams?: Record<string, any>) => {
+                    let resultingData = {
+                      ...properties
+                    };
+                    await this.setData(resultingData);
+                },
+                getTag: this.getTag.bind(this),
+                setTag: this.setTag.bind(this)
+            }
 		]
 	}
 

@@ -888,7 +888,17 @@ declare module "@scom/scom-liquidity-provider" {
         private liquidities;
         private rpcWalletEvents;
         private _getActions;
-        getConfigurators(): {
+        private getProjectOwnerActions;
+        getConfigurators(): ({
+            name: string;
+            target: string;
+            getProxySelectors: (chainId: number) => Promise<any[]>;
+            getActions: () => any[];
+            getData: any;
+            setData: (data: any) => Promise<void>;
+            getTag: any;
+            setTag: any;
+        } | {
             name: string;
             target: string;
             getActions: (category?: string) => any[];
@@ -896,7 +906,25 @@ declare module "@scom/scom-liquidity-provider" {
             setData: (data: any) => Promise<void>;
             getTag: any;
             setTag: any;
-        }[];
+            getProxySelectors?: undefined;
+        } | {
+            name: string;
+            target: string;
+            getData: () => Promise<{
+                chainId: number;
+                tokenIn: string;
+                tokenOut: string;
+                offerIndex?: number;
+                wallets: IWalletPlugin[];
+                networks: INetworkConfig[];
+                showHeader?: boolean;
+            }>;
+            setData: (properties: ILiquidityProvider, linkParams?: Record<string, any>) => Promise<void>;
+            getTag: any;
+            setTag: any;
+            getProxySelectors?: undefined;
+            getActions?: undefined;
+        })[];
         private getData;
         private resetRpcWallet;
         private setData;

@@ -856,7 +856,7 @@ define("@scom/scom-liquidity-provider/global/utils/helper.ts", ["require", "expo
         if (val != 0 && new eth_wallet_2.BigNumber(val).lt(minValue)) {
             return `<${minValue}`;
         }
-        return components_5.FormatUtils.formatNumberWithSeparators(val, decimals || 4);
+        return components_5.FormatUtils.formatNumber(val, { decimalFigures: decimals || 4 });
     };
     exports.formatNumber = formatNumber;
     const renderBalanceTooltip = (params, tokenMap, isBold) => {
@@ -4351,8 +4351,36 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             }
             return actions;
         }
+        getProjectOwnerActions() {
+            var _a;
+            const actions = [
+                {
+                    name: 'Settings',
+                    userInputDataSchema: formSchema_1.default.dataSchema,
+                    userInputUISchema: formSchema_1.default.uiSchema,
+                    customControls: formSchema_1.default.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId, this.state)
+                }
+            ];
+            return actions;
+        }
         getConfigurators() {
             return [
+                {
+                    name: 'Project Owner Configurator',
+                    target: 'Project Owners',
+                    getProxySelectors: async (chainId) => {
+                        return [];
+                    },
+                    getActions: () => {
+                        return this.getProjectOwnerActions();
+                    },
+                    getData: this.getData.bind(this),
+                    setData: async (data) => {
+                        await this.setData(data);
+                    },
+                    getTag: this.getTag.bind(this),
+                    setTag: this.setTag.bind(this)
+                },
                 {
                     name: 'Builder Configurator',
                     target: 'Builders',
@@ -4363,6 +4391,19 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     setData: async (data) => {
                         const defaultData = data_json_1.default.defaultBuilderData;
                         await this.setData(Object.assign(Object.assign({}, defaultData), data));
+                    },
+                    getTag: this.getTag.bind(this),
+                    setTag: this.setTag.bind(this)
+                },
+                {
+                    name: 'Embedder Configurator',
+                    target: 'Embedders',
+                    getData: async () => {
+                        return Object.assign({}, this._data);
+                    },
+                    setData: async (properties, linkParams) => {
+                        let resultingData = Object.assign({}, properties);
+                        await this.setData(resultingData);
                     },
                     getTag: this.getTag.bind(this),
                     setTag: this.setTag.bind(this)
