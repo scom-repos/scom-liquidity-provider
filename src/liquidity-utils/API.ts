@@ -499,7 +499,7 @@ async function getOfferIndexes(state: State, pairAddress: string, tokenA: string
   const pairContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
   const WETH9Address = getAddressByKey(chainId, 'WETH9');
   let token0Address = tokenA.startsWith('0x') ? tokenA : WETH9Address;
-  let token1Address = tokenB.startsWith('0x') ? tokenA : WETH9Address;
+  let token1Address = tokenB.startsWith('0x') ? tokenB : WETH9Address;
 
   let inverseDirection = new BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase());
   let direction = !inverseDirection;

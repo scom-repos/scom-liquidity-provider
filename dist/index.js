@@ -1512,7 +1512,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         const pairContract = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
         const WETH9Address = getAddressByKey(chainId, 'WETH9');
         let token0Address = tokenA.startsWith('0x') ? tokenA : WETH9Address;
-        let token1Address = tokenB.startsWith('0x') ? tokenA : WETH9Address;
+        let token1Address = tokenB.startsWith('0x') ? tokenB : WETH9Address;
         let inverseDirection = new eth_wallet_5.BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase());
         let direction = !inverseDirection;
         let rawOffers = await pairContract.getProviderOffer({ provider, direction, start: 0, length: 100 });
