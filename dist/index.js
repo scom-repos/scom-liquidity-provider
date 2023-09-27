@@ -4817,7 +4817,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.model.onSubmitBtnStatus = (isLoading, isApproval, offerIndex) => {
                     this.detailForm.onSubmitBtnStatus(isLoading, isApproval);
                     this.hStackActions.enabled = !isLoading;
-                    this.hStackSettings.enabled = false;
+                    this.hStackSettings.visible = false;
                     if (offerIndex) {
                         this.loadingElm.visible = true;
                         this.newOfferIndex = offerIndex;
