@@ -523,9 +523,23 @@ export default class ScomLiquidityProvider extends Module {
 		this.panelHome.visible = true;
 	}
 
-	private onActions = async (action: Action) => {
-		this.actionType = action;
-		if (action === Action.LOCK) {
+	private handleAdd() {
+		this.actionType = Action.ADD;
+		this.onActions();
+	}
+	
+	private handleRemove() {
+		this.actionType = Action.REMOVE;
+		this.onActions();
+	}
+	
+	private handleLock() {
+		this.actionType = Action.LOCK;
+		this.onActions();
+	}
+
+	private onActions = async () => {
+		if (this.actionType === Action.LOCK) {
 			this.showLockModal();
 		} else {
 			if (this.loadingElm) this.loadingElm.visible = true;
@@ -722,7 +736,7 @@ export default class ScomLiquidityProvider extends Module {
 												minHeight={36}
 												width={120}
 												rightIcon={{ spin: true, visible: false }}
-												onClick={() => this.onActions(Action.ADD)}
+												onClick={this.handleAdd.bind(this)}
 											/>
 											<i-button
 												id="btnRemove"
@@ -731,7 +745,7 @@ export default class ScomLiquidityProvider extends Module {
 												minHeight={36}
 												width={120}
 												rightIcon={{ spin: true, visible: false }}
-												onClick={() => this.onActions(Action.REMOVE)}
+												onClick={this.handleRemove.bind(this)}
 											/>
 											<i-button
 												id="btnLock"
@@ -740,7 +754,7 @@ export default class ScomLiquidityProvider extends Module {
 												minHeight={36}
 												width={120}
 												rightIcon={{ spin: true, visible: false }}
-												onClick={() => this.onActions(Action.LOCK)}
+												onClick={this.handleLock.bind(this)}
 											/>
 										</i-hstack>
 										<i-hstack id="hStackSettings" gap={10} margin={{ top: 10 }} verticalAlignment="center" horizontalAlignment="center" wrap="wrap">

@@ -3257,7 +3257,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                     this.$render("i-panel", { id: "addPanel" },
                         this.$render("i-panel", { class: "search-box" },
                             this.$render("i-icon", { name: "search", fill: Theme.input.fontColor, width: 16, height: 16, margin: { right: 4 } }),
-                            this.$render("i-input", { id: "searchInput", class: "input-search", placeholder: "Search", width: "100%", height: 40, onChanged: () => this.searchAddress() })),
+                            this.$render("i-input", { id: "searchInput", class: "input-search", placeholder: "Search", width: "100%", height: 40, onChanged: this.searchAddress })),
                         this.$render("i-hstack", { horizontalAlignment: "space-between" },
                             this.$render("i-hstack", { class: "total-info", horizontalAlignment: "space-between", width: "50%", padding: { left: 8, right: 10 } },
                                 this.$render("i-label", { caption: "Address" }),
@@ -3359,11 +3359,14 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 if (this.onFocusChanged)
                     this.onFocusChanged(this.currentStage);
             };
-            this.showConfirmation = (value) => {
-                this.confirmationModal.visible = value;
+            this.showConfirmation = () => {
+                this.confirmationModal.visible = true;
+            };
+            this.hideConfirmation = () => {
+                this.confirmationModal.visible = false;
             };
             this.onSubmit = () => {
-                this.showConfirmation(false);
+                this.hideConfirmation();
                 this.model.proceed();
             };
             this.preProceed = async (source, stage) => {
@@ -3377,7 +3380,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                     return;
                 }
                 if (this.isCreate && this.currentStage === liquidity_utils_2.Stage.SUBMIT) {
-                    this.showConfirmation(true);
+                    this.showConfirmation();
                 }
                 else {
                     await this.model.proceed();
@@ -3633,10 +3636,10 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
                                     this.$render("i-vstack", { width: "calc(100% - 160px)", height: 48 },
-                                        this.$render("i-input", { id: "firstInput", value: this.fromTokenInputText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", onChanged: this.fromTokenInputTextChange.bind(this), onFocus: (source) => this.handleFocusInput(source, liquidity_utils_2.Stage.SET_AMOUNT) })),
+                                        this.$render("i-input", { id: "firstInput", value: this.fromTokenInputText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", onChanged: this.fromTokenInputTextChange.bind(this), onFocus: this.handleFirstFocusInput.bind(this) })),
                                     this.$render("i-vstack", { width: "155px" },
                                         this.$render("i-scom-token-input", { id: "firstTokenInput", class: "float-right", width: "100%", background: { color: Theme.input.background }, tokenReadOnly: true, isInputShown: false, isBalanceShown: false }))))),
-                        this.$render("i-button", { id: "nextBtn1", class: "btn-os btn-next", visible: this.isCreate && this.isSetOrderAmountStage, caption: this.nextButtonText, onClick: () => this.onProceed(this.secondInput), enabled: !this.isProceedButtonDisabled })),
+                        this.$render("i-button", { id: "nextBtn1", class: "btn-os btn-next", visible: this.isCreate && this.isSetOrderAmountStage, caption: this.nextButtonText, onClick: this.handleNext1.bind(this), enabled: !this.isProceedButtonDisabled })),
                     this.isCreate ? (this.$render("i-panel", { id: "secondTokenPanel", class: "token-box", enabled: !this.isOfferPriceDisabled },
                         this.$render("i-vstack", { class: "input--token-container" },
                             this.$render("i-hstack", { class: "balance-info", horizontalAlignment: "space-between", verticalAlignment: "center", width: "100%" },
@@ -3649,10 +3652,10 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: `input--token-box ${this.isOfferPriceStage && 'bordered'}`, verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
                                     this.$render("i-vstack", { width: "calc(100% - 160px)", height: 48 },
-                                        this.$render("i-input", { id: "secondInput", value: this.offerPriceText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", enabled: !this.isOfferPriceDisabled, onChanged: this.changeOfferPrice.bind(this), onFocus: (source) => this.handleFocusInput(source, liquidity_utils_2.Stage.SET_OFFER_PRICE) })),
+                                        this.$render("i-input", { id: "secondInput", value: this.offerPriceText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", enabled: !this.isOfferPriceDisabled, onChanged: this.changeOfferPrice.bind(this), onFocus: this.handleSecondFocusInput.bind(this) })),
                                     this.$render("i-vstack", { width: "155px" },
                                         this.$render("i-scom-token-input", { class: "float-right", width: "100%", id: "secondTokenInput", background: { color: 'transparent' }, tokenReadOnly: true, isInputShown: false, isBtnMaxShown: false, isBalanceShown: false }))))),
-                        this.$render("i-button", { id: "nextBtn2", class: "btn-os btn-next", visible: this.isOfferPriceStage, caption: this.nextButtonText, onClick: () => this.onProceed(this.inputStartDate), enabled: !this.isProceedButtonDisabled }))) : [],
+                        this.$render("i-button", { id: "nextBtn2", class: "btn-os btn-next", visible: this.isOfferPriceStage, caption: this.nextButtonText, onClick: this.handleNext2.bind(this), enabled: !this.isProceedButtonDisabled }))) : [],
                     this.isCreate ? (this.$render("i-panel", { id: "datePanel", class: "token-box" },
                         this.$render("i-hstack", { gap: "10px" },
                             this.$render("i-vstack", { id: "startDateContainer", enabled: !this.isStartDateDisabled, class: "input--token-container" },
@@ -3667,17 +3670,17 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                                 this.$render("i-panel", { class: "bg-box", width: "100%" },
                                     this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", width: "100%" },
                                         this.$render("i-vstack", { width: "100%" }, this.inputEndDate))))),
-                        this.$render("i-button", { id: "nextBtn3", class: "btn-os btn-next", visible: this.isStartDateStage || this.isEndDateStage, caption: this.nextButtonText, onClick: () => this.preProceed(this.offerToDropdown, liquidity_utils_2.Stage.SET_END_DATE), enabled: !this.isProceedButtonDisabled }))) : [],
+                        this.$render("i-button", { id: "nextBtn3", class: "btn-os btn-next", visible: this.isStartDateStage || this.isEndDateStage, caption: this.nextButtonText, onClick: this.handleNext3.bind(this), enabled: !this.isProceedButtonDisabled }))) : [],
                     this.isCreate ? (this.$render("i-panel", { id: "statusPanel", class: "token-box", enabled: !this.isOfferToDisabled },
                         this.$render("i-vstack", { class: "input--token-container" },
                             this.$render("i-label", { caption: "Offer To", font: { bold: true } }),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: "input--token-box", height: 60, padding: { left: 0, right: 0 }, verticalAlignment: "center", width: "100%" },
                                     this.$render("i-panel", { class: "btn-dropdown" },
-                                        this.$render("i-button", { id: "offerToDropdown", width: "calc(100% - 1px)", enabled: !this.isOfferToDisabled, caption: this.offerTo, onClick: (source) => this.onOfferTo(source) }),
+                                        this.$render("i-button", { id: "offerToDropdown", width: "calc(100% - 1px)", enabled: !this.isOfferToDisabled, caption: this.offerTo, onClick: this.onOfferTo.bind(this) }),
                                         this.$render("i-modal", { id: "offerToModal", showBackdrop: false, height: 'auto', popupPlacement: 'bottom' },
                                             this.$render("i-panel", null, statusList.map((status) => this.$render("i-button", { caption: status, onClick: () => this.handleChangeOfferTo(status) })))))))),
-                        this.$render("i-button", { id: "nextBtn4", class: "btn-os btn-next", visible: this.isOfferToStage, caption: this.nextButtonText, onClick: () => this.onProceed(this.isAddressShown ? this.btnAddress : this.nextBtn4), enabled: !this.isProceedButtonDisabled }))) : [],
+                        this.$render("i-button", { id: "nextBtn4", class: "btn-os btn-next", visible: this.isOfferToStage, caption: this.nextButtonText, onClick: this.handleNext4.bind(this), enabled: !this.isProceedButtonDisabled }))) : [],
                     !this.isRemove ? (this.$render("i-panel", { id: "addressPanel", class: "token-box", visible: this.isAddressShown, enabled: !this.isAddressDisabled },
                         this.$render("i-vstack", { class: "input--token-container" },
                             this.$render("i-hstack", { verticalAlignment: "center" },
@@ -3926,6 +3929,24 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             var _a;
             return this.oswapToken && this.oswapToken.address ? (0, index_7.tokenSymbol)(this.chainId, this.oswapToken.address) : (_a = this.oswapToken.symbol) !== null && _a !== void 0 ? _a : '';
         }
+        handleNext1() {
+            this.onProceed(this.secondInput);
+        }
+        handleNext2() {
+            this.onProceed(this.inputStartDate);
+        }
+        handleNext3() {
+            this.preProceed(this.offerToDropdown, liquidity_utils_2.Stage.SET_END_DATE);
+        }
+        handleNext4() {
+            this.onProceed(this.isAddressShown ? this.btnAddress : this.nextBtn4);
+        }
+        handleFirstFocusInput(source) {
+            this.handleFocusInput(source, liquidity_utils_2.Stage.SET_AMOUNT);
+        }
+        handleSecondFocusInput(source) {
+            this.handleFocusInput(source, liquidity_utils_2.Stage.SET_OFFER_PRICE);
+        }
         setBorder(source) {
             this.removeBorder();
             this.onUpdateHelpContent();
@@ -3980,14 +4001,14 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 this.$render("i-panel", { id: "pnlForm" }),
                 this.$render("i-modal", { id: "confirmationModal", class: "bg-modal", closeIcon: { name: 'times' } },
                     this.$render("i-panel", { class: "header" },
-                        this.$render("i-icon", { width: 24, height: 24, name: "times", class: "pointer", onClick: () => this.showConfirmation(false) })),
+                        this.$render("i-icon", { width: 24, height: 24, name: "times", class: "pointer", onClick: this.hideConfirmation })),
                     this.$render("i-panel", { class: "i-modal_content text-center" },
                         this.$render("i-hstack", { verticalAlignment: "center", horizontalAlignment: "center", margin: { bottom: 16 } },
                             this.$render("i-image", { width: 80, height: 80, url: assets_3.default.fullPath('img/warning-icon.png') })),
                         this.$render("i-vstack", { verticalAlignment: "center", padding: { left: 20, right: 20 } },
                             this.$render("i-label", { class: "text-warning", margin: { bottom: 16 }, caption: "Please double-check and confirm that the information is accurate! Once this order is submitted, you are not allowed to edit the price, the start date, and the end date of the offer." })),
                         this.$render("i-hstack", { verticalAlignment: "center", horizontalAlignment: "center", gap: "10px", margin: { top: 20, bottom: 10 } },
-                            this.$render("i-button", { caption: "Cancel", class: "btn-os btn-cancel", onClick: () => this.showConfirmation(false) }),
+                            this.$render("i-button", { caption: "Cancel", class: "btn-os btn-cancel", onClick: this.hideConfirmation }),
                             this.$render("i-button", { caption: "Proceed", class: "btn-os", onClick: this.onSubmit }))))));
         }
     };
@@ -4320,7 +4341,11 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                 }
                 else {
                     const className = `first-data ${data.row1.className || ''} ${data.row1.shown === false ? 'hidden' : ''} ${data.row1.onClick ? 'text-underline pointer' : ''}`;
-                    return this.$render("i-label", { class: className, caption: data.row1.display, onClick: data.row1.onClick ? data.row1.onClick : '' });
+                    const label = this.$render("i-label", { class: className, caption: data.row1.display });
+                    if (data.row1.onClick) {
+                        label.onClick = data.row1.onClick;
+                    }
+                    return label;
                 }
             };
             childElm = (this.$render("i-panel", null, summaryRows.map(summary => {
@@ -4911,9 +4936,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.panelLiquidity.visible = false;
                 this.panelHome.visible = true;
             };
-            this.onActions = async (action) => {
-                this.actionType = action;
-                if (action === index_13.Action.LOCK) {
+            this.onActions = async () => {
+                if (this.actionType === index_13.Action.LOCK) {
                     this.showLockModal();
                 }
                 else {
@@ -5013,6 +5037,18 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.dappContainer.onHide();
             this.removeRpcWalletEvents();
         }
+        handleAdd() {
+            this.actionType = index_13.Action.ADD;
+            this.onActions();
+        }
+        handleRemove() {
+            this.actionType = index_13.Action.REMOVE;
+            this.onActions();
+        }
+        handleLock() {
+            this.actionType = index_13.Action.LOCK;
+            this.onActions();
+        }
         onChangeFirstChecked(source, event) {
             this.firstCheckbox.checked = source.checked;
             this.lockOrderBtn.enabled = source.checked && this.secondCheckbox.checked;
@@ -5099,9 +5135,9 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                         this.$render("i-image", { url: assets_5.default.fullPath('img/TrollTrooper.svg') }),
                                         this.$render("i-label", { id: "lbMsg", margin: { top: 10 } }),
                                         this.$render("i-hstack", { id: "hStackActions", gap: 10, margin: { top: 10 }, verticalAlignment: "center", horizontalAlignment: "center", wrap: "wrap" },
-                                            this.$render("i-button", { id: "btnAdd", caption: "Add", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: () => this.onActions(index_13.Action.ADD) }),
-                                            this.$render("i-button", { id: "btnRemove", caption: "Remove", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: () => this.onActions(index_13.Action.REMOVE) }),
-                                            this.$render("i-button", { id: "btnLock", caption: "Lock", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: () => this.onActions(index_13.Action.LOCK) })),
+                                            this.$render("i-button", { id: "btnAdd", caption: "Add", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: this.handleAdd.bind(this) }),
+                                            this.$render("i-button", { id: "btnRemove", caption: "Remove", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: this.handleRemove.bind(this) }),
+                                            this.$render("i-button", { id: "btnLock", caption: "Lock", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: this.handleLock.bind(this) })),
                                         this.$render("i-hstack", { id: "hStackSettings", gap: 10, margin: { top: 10 }, verticalAlignment: "center", horizontalAlignment: "center", wrap: "wrap" },
                                             this.$render("i-button", { id: "btnSetting", class: "btn-os", minHeight: 36, width: 240, maxWidth: "90%", caption: "Update Settings", visible: false, onClick: this.onCogClick.bind(this) }),
                                             this.$render("i-button", { id: "btnRefresh", class: "btn-os", minHeight: 36, width: 36, icon: { name: 'sync', width: 18, height: 18, fill: '#fff' }, visible: false, onClick: this.refreshUI.bind(this) })),

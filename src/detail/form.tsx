@@ -302,12 +302,16 @@ export class LiquidityForm extends Module {
     if (this.onFocusChanged) this.onFocusChanged(this.currentStage);
   }
 
-  showConfirmation = (value: boolean) => {
-    this.confirmationModal.visible = value;
+  showConfirmation = () => {
+    this.confirmationModal.visible = true;
+  }
+  
+  hideConfirmation = () => {
+    this.confirmationModal.visible = false;
   }
 
   onSubmit = () => {
-    this.showConfirmation(false);
+    this.hideConfirmation();
     this.model.proceed();
   }
 
@@ -323,7 +327,7 @@ export class LiquidityForm extends Module {
       return;
     }
     if (this.isCreate && this.currentStage === Stage.SUBMIT) {
-      this.showConfirmation(true);
+      this.showConfirmation();
     } else {
       await this.model.proceed();
     }
@@ -353,6 +357,22 @@ export class LiquidityForm extends Module {
       this.setBorder(source);
     }
     this.handleTokenInputState();
+  }
+
+  private handleNext1() {
+    this.onProceed(this.secondInput);
+  }
+
+  private handleNext2() {
+    this.onProceed(this.inputStartDate);
+  }
+
+  private handleNext3() {
+    this.preProceed(this.offerToDropdown, Stage.SET_END_DATE);
+  }
+
+  private handleNext4() {
+    this.onProceed(this.isAddressShown ? this.btnAddress : this.nextBtn4);
   }
 
   handleTokenInputState = () => {
@@ -411,6 +431,14 @@ export class LiquidityForm extends Module {
     this.setBorder(source);
     this.handleTokenInputState();
     this.updateProgress();
+  }
+  
+  handleFirstFocusInput(source: Control) {
+    this.handleFocusInput(source, Stage.SET_AMOUNT);
+  }
+  
+  handleSecondFocusInput(source: Control) {
+    this.handleFocusInput(source, Stage.SET_OFFER_PRICE);
   }
 
   setBorder(source: Control) {
@@ -650,7 +678,7 @@ export class LiquidityForm extends Module {
                     class="token-input w-100"
                     width="100%"
                     onChanged={this.fromTokenInputTextChange.bind(this)}
-                    onFocus={(source: Control) => this.handleFocusInput(source, Stage.SET_AMOUNT)}
+                    onFocus={this.handleFirstFocusInput.bind(this)}
                   />
                 </i-vstack>
                 <i-vstack width="155px">
@@ -672,7 +700,7 @@ export class LiquidityForm extends Module {
             class="btn-os btn-next"
             visible={this.isCreate && this.isSetOrderAmountStage}
             caption={this.nextButtonText}
-            onClick={() => this.onProceed(this.secondInput)}
+            onClick={this.handleNext1.bind(this)}
             enabled={!this.isProceedButtonDisabled}
           />
         </i-panel>
@@ -702,7 +730,7 @@ export class LiquidityForm extends Module {
                         width="100%"
                         enabled={!this.isOfferPriceDisabled}
                         onChanged={this.changeOfferPrice.bind(this)}
-                        onFocus={(source: Control) => this.handleFocusInput(source, Stage.SET_OFFER_PRICE)}
+                        onFocus={this.handleSecondFocusInput.bind(this)}
                       />
                     </i-vstack>
                     <i-vstack width="155px">
@@ -725,7 +753,7 @@ export class LiquidityForm extends Module {
                 class="btn-os btn-next"
                 visible={this.isOfferPriceStage}
                 caption={this.nextButtonText}
-                onClick={() => this.onProceed(this.inputStartDate)}
+                onClick={this.handleNext2.bind(this)}
                 enabled={!this.isProceedButtonDisabled}
               />
             </i-panel>) : []
@@ -764,7 +792,7 @@ export class LiquidityForm extends Module {
                 class="btn-os btn-next"
                 visible={this.isStartDateStage || this.isEndDateStage}
                 caption={this.nextButtonText}
-                onClick={() => this.preProceed(this.offerToDropdown, Stage.SET_END_DATE)}
+                onClick={this.handleNext3.bind(this)}
                 enabled={!this.isProceedButtonDisabled}
               />
             </i-panel>) : []
@@ -782,7 +810,7 @@ export class LiquidityForm extends Module {
                         width="calc(100% - 1px)"
                         enabled={!this.isOfferToDisabled}
                         caption={this.offerTo}
-                        onClick={(source: Control) => this.onOfferTo(source)}
+                        onClick={this.onOfferTo.bind(this)}
                       ></i-button>
                       <i-modal
                         id="offerToModal"
@@ -810,7 +838,7 @@ export class LiquidityForm extends Module {
                 class="btn-os btn-next"
                 visible={this.isOfferToStage}
                 caption={this.nextButtonText}
-                onClick={() => this.onProceed(this.isAddressShown ? this.btnAddress : this.nextBtn4)}
+                onClick={this.handleNext4.bind(this)}
                 enabled={!this.isProceedButtonDisabled}
               />
             </i-panel>) : []
@@ -983,7 +1011,7 @@ export class LiquidityForm extends Module {
               height={24}
               name="times"
               class="pointer"
-              onClick={() => this.showConfirmation(false)}
+              onClick={this.hideConfirmation}
             />
           </i-panel>
           <i-panel class="i-modal_content text-center">
@@ -999,7 +1027,7 @@ export class LiquidityForm extends Module {
               <i-button
                 caption="Cancel"
                 class="btn-os btn-cancel"
-                onClick={() => this.showConfirmation(false)}
+                onClick={this.hideConfirmation}
               />
               <i-button
                 caption="Proceed"

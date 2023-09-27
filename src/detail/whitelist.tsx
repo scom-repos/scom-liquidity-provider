@@ -434,7 +434,7 @@ export class ManageWhitelist extends Module {
           <i-panel id="addPanel">
             <i-panel class="search-box">
               <i-icon name="search" fill={Theme.input.fontColor} width={16} height={16} margin={{ right: 4 }} />
-              <i-input id="searchInput" class="input-search" placeholder="Search" width="100%" height={40} onChanged={() => this.searchAddress()} />
+              <i-input id="searchInput" class="input-search" placeholder="Search" width="100%" height={40} onChanged={this.searchAddress} />
             </i-panel>
             <i-hstack horizontalAlignment="space-between">
               <i-hstack class="total-info" horizontalAlignment="space-between" width="50%" padding={{ left: 8, right: 10 }}>

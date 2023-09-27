@@ -349,7 +349,11 @@ export class LiquiditySummary extends Module {
         )
       } else {
         const className = `first-data ${data.row1.className || ''} ${data.row1.shown === false ? 'hidden' : ''} ${data.row1.onClick ? 'text-underline pointer' : ''}`;
-        return <i-label class={className} caption={data.row1.display} onClick={data.row1.onClick ? data.row1.onClick : ''} />
+        const label: Label = <i-label class={className} caption={data.row1.display} />
+        if (data.row1.onClick) {
+          label.onClick = data.row1.onClick;
+        }
+        return label;
       }
     }
 
