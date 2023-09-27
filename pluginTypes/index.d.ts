@@ -86,6 +86,7 @@ declare module "@scom/scom-liquidity-provider/index.css.ts" {
     export const liquidityProviderContainer: string;
     export const liquidityProviderComponent: string;
     export const liquidityProviderForm: string;
+    export const modalStyle: string;
 }
 /// <amd-module name="@scom/scom-liquidity-provider/global/utils/helper.ts" />
 declare module "@scom/scom-liquidity-provider/global/utils/helper.ts" {
@@ -483,6 +484,55 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
         };
     };
     export default _default_2;
+    export function getFormSchema(): {
+        dataSchema: {
+            type: string;
+            required: string[];
+            properties: {
+                chainId: {
+                    type: string;
+                };
+                tokenIn: {
+                    type: string;
+                };
+                tokenOut: {
+                    type: string;
+                };
+                offerIndex: {
+                    type: string;
+                };
+            };
+        };
+        uiSchema: {
+            type: string;
+            elements: {
+                type: string;
+                scope: string;
+            }[];
+        };
+        customControls(rpcWalletId: string, state: State): {
+            "#/properties/chainId": {
+                render: () => ScomNetworkPicker;
+                getData: (control: ScomNetworkPicker) => number;
+                setData: (control: ScomNetworkPicker, value: number) => void;
+            };
+            '#/properties/tokenIn': {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/tokenOut": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/offerIndex": {
+                render: () => ComboBox;
+                getData: (control: ComboBox) => string;
+                setData: (control: ComboBox, value: string) => void;
+            };
+        };
+    };
 }
 /// <amd-module name="@scom/scom-liquidity-provider/detail/whitelist.css.ts" />
 declare module "@scom/scom-liquidity-provider/detail/whitelist.css.ts" {
@@ -579,10 +629,13 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
     import { Control, Module, ControlElement, Container } from '@ijstech/components';
     import { State } from "@scom/scom-liquidity-provider/store/index.ts";
     import { Stage, OfferState } from "@scom/scom-liquidity-provider/liquidity-utils/index.ts";
+    interface LiquidityFormElememt extends ControlElement {
+        onCogClick?: () => void;
+    }
     global {
         namespace JSX {
             interface IntrinsicElements {
-                ['liquidity-form']: ControlElement;
+                ['liquidity-form']: LiquidityFormElememt;
             }
         }
     }
@@ -633,6 +686,7 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         updateSummary: () => void;
         onFieldChanged: (state: Stage) => void;
         onFocusChanged: (state: Stage) => void;
+        onCogClick: () => void;
         constructor(parent?: Container, options?: any);
         set state(value: State);
         get state(): State;
@@ -704,6 +758,7 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         onOfferTo(source: Control): void;
         private onSwitchPrice;
         renderHeader: () => void;
+        handleCogClick(): void;
         renderUI: () => Promise<void>;
         renderProgress: () => any;
         updateProgress: () => void;
@@ -875,6 +930,9 @@ declare module "@scom/scom-liquidity-provider" {
         private btnAdd;
         private btnRemove;
         private btnLock;
+        private hStackSettings;
+        private btnSetting;
+        private btnRefresh;
         private btnWallet;
         private hStackBack;
         private lockModal;
@@ -882,6 +940,8 @@ declare module "@scom/scom-liquidity-provider" {
         private firstCheckbox;
         private secondCheckbox;
         private lockOrderBtn;
+        private mdSettings;
+        private form;
         private actionType;
         private newOfferIndex;
         private pairAddress;
@@ -967,6 +1027,8 @@ declare module "@scom/scom-liquidity-provider" {
         private showMessage;
         private checkValidation;
         init(): Promise<void>;
+        private handleConfirmClick;
+        private onCogClick;
         render(): any;
     }
 }

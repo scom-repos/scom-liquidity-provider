@@ -249,7 +249,7 @@ define("@scom/scom-liquidity-provider/data.json.ts", ["require", "exports"], fun
 define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/assets.ts"], function (require, exports, components_4, assets_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.liquidityProviderForm = exports.liquidityProviderComponent = exports.liquidityProviderContainer = void 0;
+    exports.modalStyle = exports.liquidityProviderForm = exports.liquidityProviderComponent = exports.liquidityProviderContainer = void 0;
     const Theme = components_4.Styles.Theme.ThemeVars;
     const colorVar = {
         primaryButton: 'transparent linear-gradient(90deg, #AC1D78 0%, #E04862 100%) 0% 0% no-repeat padding-box',
@@ -828,6 +828,17 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                     }
                 },
             },
+        }
+    });
+    exports.modalStyle = components_4.Styles.style({
+        $nest: {
+            '.modal': {
+                padding: '1rem 1.5rem',
+                borderRadius: '0.5rem'
+            },
+            '.modal .i-modal_header': {
+                paddingBottom: '1.5rem'
+            }
         }
     });
 });
@@ -2243,6 +2254,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/index.ts", ["require", "ex
 define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@ijstech/components", "@scom/scom-network-picker", "@scom/scom-token-input", "@scom/scom-liquidity-provider/liquidity-utils/index.ts"], function (require, exports, components_7, scom_network_picker_1, scom_token_input_1, liquidity_utils_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    exports.getFormSchema = void 0;
     const theme = {
         type: 'object',
         properties: {
@@ -2484,6 +2496,190 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
             };
         }
     };
+    function getFormSchema() {
+        return {
+            dataSchema: {
+                type: 'object',
+                required: ['chainId', 'tokenIn', 'tokenOut'],
+                properties: {
+                    chainId: {
+                        type: 'number'
+                    },
+                    tokenIn: {
+                        type: 'string'
+                    },
+                    tokenOut: {
+                        type: 'string'
+                    },
+                    offerIndex: {
+                        type: 'string'
+                    },
+                }
+            },
+            uiSchema: {
+                type: 'VerticalLayout',
+                elements: [
+                    {
+                        type: 'Control',
+                        scope: '#/properties/chainId'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/tokenIn'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/tokenOut'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/offerIndex'
+                    }
+                ]
+            },
+            customControls(rpcWalletId, state) {
+                let networkPicker;
+                let firstTokenInput;
+                let secondTokenInput;
+                let combobox;
+                const initCombobox = async () => {
+                    var _a, _b, _c;
+                    if (!combobox)
+                        return;
+                    combobox.clear();
+                    const fromToken = firstTokenInput === null || firstTokenInput === void 0 ? void 0 : firstTokenInput.token;
+                    const toToken = secondTokenInput === null || secondTokenInput === void 0 ? void 0 : secondTokenInput.token;
+                    try {
+                        if (fromToken && toToken) {
+                            const wallet = state.getRpcWallet();
+                            const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            if (chainId && chainId != wallet.chainId) {
+                                await wallet.switchNetwork(chainId);
+                            }
+                            const pairAddress = await (0, liquidity_utils_1.getPair)(state, fromToken, toToken);
+                            const fromTokenAddress = ((_b = fromToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || fromToken.symbol;
+                            const toTokenAddress = ((_c = toToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || toToken.symbol;
+                            const offerIndexes = await (0, liquidity_utils_1.getOfferIndexes)(state, pairAddress, fromTokenAddress, toTokenAddress);
+                            combobox.items = [{ label: '--Select--', value: '' }].concat(offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; }));
+                        }
+                        else {
+                            combobox.items = [{ label: '--Select--', value: '' }];
+                        }
+                    }
+                    catch (_d) {
+                        combobox.items = [{ label: '--Select--', value: '' }];
+                    }
+                };
+                return {
+                    "#/properties/chainId": {
+                        render: () => {
+                            networkPicker = new scom_network_picker_1.default(undefined, {
+                                type: 'combobox',
+                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                                onCustomNetworkSelected: () => {
+                                    var _a;
+                                    const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                    if (firstTokenInput.chainId != chainId) {
+                                        firstTokenInput.token = null;
+                                        secondTokenInput.token = null;
+                                        combobox.items = [{ label: '', value: '' }];
+                                        combobox.clear();
+                                    }
+                                    firstTokenInput.chainId = chainId;
+                                    secondTokenInput.chainId = chainId;
+                                }
+                            });
+                            return networkPicker;
+                        },
+                        getData: (control) => {
+                            var _a;
+                            return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        },
+                        setData: (control, value) => {
+                            control.setNetworkByChainId(value);
+                            if (firstTokenInput)
+                                firstTokenInput.chainId = value;
+                            if (secondTokenInput)
+                                secondTokenInput.chainId = value;
+                        }
+                    },
+                    '#/properties/tokenIn': {
+                        render: () => {
+                            var _a;
+                            firstTokenInput = new scom_token_input_1.default(undefined, {
+                                type: 'combobox',
+                                isBalanceShown: false,
+                                isBtnMaxShown: false,
+                                isInputShown: false
+                            });
+                            firstTokenInput.rpcWalletId = rpcWalletId;
+                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            if (chainId && firstTokenInput.chainId !== chainId) {
+                                firstTokenInput.chainId = chainId;
+                            }
+                            firstTokenInput.onSelectToken = () => {
+                                initCombobox();
+                            };
+                            return firstTokenInput;
+                        },
+                        getData: (control) => {
+                            var _a, _b;
+                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                        },
+                        setData: (control, value) => {
+                            control.address = value;
+                            initCombobox();
+                        }
+                    },
+                    "#/properties/tokenOut": {
+                        render: () => {
+                            var _a;
+                            secondTokenInput = new scom_token_input_1.default(undefined, {
+                                type: 'combobox',
+                                isBalanceShown: false,
+                                isBtnMaxShown: false,
+                                isInputShown: false
+                            });
+                            secondTokenInput.rpcWalletId = rpcWalletId;
+                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            if (chainId && secondTokenInput.chainId !== chainId) {
+                                secondTokenInput.chainId = chainId;
+                            }
+                            secondTokenInput.onSelectToken = () => {
+                                initCombobox();
+                            };
+                            return secondTokenInput;
+                        },
+                        getData: (control) => {
+                            var _a, _b;
+                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                        },
+                        setData: (control, value) => {
+                            control.address = value;
+                            initCombobox();
+                        }
+                    },
+                    "#/properties/offerIndex": {
+                        render: () => {
+                            combobox = new components_7.ComboBox(undefined, {
+                                height: 43,
+                                items: [{ label: '--Select--', value: '' }]
+                            });
+                            return combobox;
+                        },
+                        getData: (control) => {
+                            var _a;
+                            return ((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value) || '';
+                        },
+                        setData: (control, value) => {
+                            control.selectedItem = { label: value, value };
+                        }
+                    }
+                };
+            }
+        };
+    }
+    exports.getFormSchema = getFormSchema;
 });
 define("@scom/scom-liquidity-provider/detail/whitelist.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_8) {
     "use strict";
@@ -3406,7 +3602,8 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                     this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: scom_token_list_5.assets.tokenPath(this.model.toTokenObject(), this.chainId), fallbackUrl: index_7.fallbackUrl }),
                     this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), class: "small-label", margin: { right: 8 } }),
                     this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: Theme.text.primary, margin: { right: 8 } }),
-                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress), class: "small-label" })));
+                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress), class: "small-label" }),
+                    this.$render("i-icon", { class: "pointer", name: "cog", width: 20, height: 20, fill: Theme.text.primary, margin: { left: 'auto' }, onClick: this.handleCogClick.bind(this) })));
                 this.headerSection.appendChild(elm);
             };
             this.renderUI = async () => {
@@ -3767,6 +3964,10 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             this.offerToModal.width = +this.offerToDropdown.width + 34;
             this.offerToModal.visible = !this.offerToModal.visible;
             this.handleFocusInput(source, liquidity_utils_2.Stage.SET_OFFER_TO);
+        }
+        handleCogClick() {
+            if (this.onCogClick)
+                this.onCogClick();
         }
         init() {
             super.init();
@@ -4616,6 +4817,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.model.onSubmitBtnStatus = (isLoading, isApproval, offerIndex) => {
                     this.detailForm.onSubmitBtnStatus(isLoading, isApproval);
                     this.hStackActions.enabled = !isLoading;
+                    this.hStackSettings.enabled = false;
                     if (offerIndex) {
                         this.loadingElm.visible = true;
                         this.newOfferIndex = offerIndex;
@@ -4669,8 +4871,9 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     return;
                 }
                 if (!this.state.isRpcWalletConnected()) {
+                    const chainId = this.state.getChainId();
                     const clientWallet = eth_wallet_10.Wallet.getClientInstance();
-                    await clientWallet.switchNetwork(this.chainId);
+                    await clientWallet.switchNetwork(chainId);
                 }
             };
             this.renderHome = async (pairAddress, msg) => {
@@ -4693,6 +4896,9 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.lbMsg.caption = msg !== null && msg !== void 0 ? msg : (!walletConnected ? 'Please connect with your wallet' : 'Invalid configurator data');
                     this.lbMsg.visible = true;
                 }
+                this.hStackSettings.visible = isRpcWalletConnected;
+                this.btnSetting.visible = isRpcWalletConnected;
+                this.btnRefresh.visible = isRpcWalletConnected && !pairAddress;
                 this.btnWallet.visible = !walletConnected || !isRpcWalletConnected;
                 this.btnWallet.caption = !walletConnected ? 'Connect Wallet' : 'Switch Wallet';
                 this.panelHome.visible = true;
@@ -4837,6 +5043,44 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.isReadyCallbackQueued = false;
             this.executeReadyCallback();
         }
+        async handleConfirmClick() {
+            const data = await this.form.getFormData();
+            this._data.tokenIn = data.tokenIn;
+            this._data.tokenOut = data.tokenOut;
+            this._data.offerIndex = data.offerIndex || 0;
+            this.mdSettings.visible = false;
+            this.refreshUI();
+        }
+        onCogClick() {
+            var _a;
+            if (!this.form.jsonSchema) {
+                const formSchema = (0, formSchema_1.getFormSchema)();
+                this.form.jsonSchema = formSchema.dataSchema;
+                this.form.uiSchema = formSchema.uiSchema;
+                this.form.formOptions = {
+                    columnWidth: "100%",
+                    confirmButtonOptions: {
+                        caption: 'Confirm',
+                        onClick: this.handleConfirmClick.bind(this)
+                    },
+                    dateTimeFormat: {
+                        date: 'DD/MM/YYYY',
+                        time: 'HH:mm',
+                        dateTime: 'YYYY-MM-DD HH:mm:ss'
+                    },
+                    customControls: formSchema.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId, this.state)
+                };
+                this.form.renderForm();
+                this.form.clearFormData();
+                this.form.setFormData({
+                    chainId: this._data.chainId || this.state.getChainId(),
+                    tokenIn: this._data.tokenIn,
+                    tokenOut: this._data.tokenOut,
+                    offerIndex: this._data.offerIndex
+                });
+            }
+            this.mdSettings.visible = true;
+        }
         render() {
             return (this.$render("i-scom-dapp-container", { id: "dappContainer", class: index_css_1.liquidityProviderContainer },
                 this.$render("i-panel", { class: index_css_1.liquidityProviderComponent, minHeight: 200 },
@@ -4855,6 +5099,9 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                             this.$render("i-button", { id: "btnAdd", caption: "Add", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: () => this.onActions(index_13.Action.ADD) }),
                                             this.$render("i-button", { id: "btnRemove", caption: "Remove", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: () => this.onActions(index_13.Action.REMOVE) }),
                                             this.$render("i-button", { id: "btnLock", caption: "Lock", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: () => this.onActions(index_13.Action.LOCK) })),
+                                        this.$render("i-hstack", { id: "hStackSettings", gap: 10, margin: { top: 10 }, verticalAlignment: "center", horizontalAlignment: "center", wrap: "wrap" },
+                                            this.$render("i-button", { id: "btnSetting", class: "btn-os", minHeight: 36, width: 240, maxWidth: "90%", caption: "Update Settings", visible: false, onClick: this.onCogClick.bind(this) }),
+                                            this.$render("i-button", { id: "btnRefresh", class: "btn-os", minHeight: 36, width: 36, icon: { name: 'sync', width: 18, height: 18, fill: '#fff' }, visible: false, onClick: this.refreshUI.bind(this) })),
                                         this.$render("i-button", { id: "btnWallet", caption: "Connect Wallet", visible: false, class: "btn-os", minHeight: 36, maxWidth: "90%", width: 240, margin: { top: 10 }, onClick: this.connectWallet }))),
                                 this.$render("i-panel", { id: "panelLiquidity" },
                                     this.$render("i-hstack", { id: "hStackBack", margin: { bottom: 10 }, gap: 4, verticalAlignment: "center", width: "fit-content", class: "pointer", onClick: this.onBack },
@@ -4862,7 +5109,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                         this.$render("i-label", { caption: "Back", font: { bold: true, color: Theme.colors.primary.main, size: '20px' }, lineHeight: "18px" })),
                                     this.$render("i-hstack", { gap: "20px", margin: { bottom: 16 }, wrap: "wrap" },
                                         this.$render("i-panel", { class: "custom-container" },
-                                            this.$render("liquidity-form", { id: "detailForm" })),
+                                            this.$render("liquidity-form", { id: "detailForm", onCogClick: this.onCogClick.bind(this) })),
                                         this.$render("i-panel", { class: "custom-container" },
                                             this.$render("i-panel", { id: "summarySection" },
                                                 this.$render("liquidity-summary", { id: "detailSummary" })),
@@ -4880,6 +5127,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                             this.$render("i-hstack", { verticalAlignment: "center", horizontalAlignment: "center", gap: "10px", margin: { top: 20, bottom: 10 } },
                                 this.$render("i-button", { caption: "Cancel", class: "btn-os btn-cancel", onClick: this.closeLockModal }),
                                 this.$render("i-button", { id: "lockOrderBtn", caption: "Lock", enabled: false, class: "btn-os", onClick: this.onConfirmLock })))),
+                    this.$render("i-modal", { id: "mdSettings", class: index_css_1.modalStyle, title: "Update Settings", closeIcon: { name: 'times' }, height: 'auto', maxWidth: 640, closeOnBackdropClick: false },
+                        this.$render("i-form", { id: "form" })),
                     this.$render("i-scom-wallet-modal", { id: "mdWallet", wallets: [] }),
                     this.$render("i-scom-tx-status-modal", { id: "txStatusModal" }))));
         }

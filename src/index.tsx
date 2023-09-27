@@ -1,4 +1,4 @@
-import { Module, Panel, Label, Container, ControlElement, customModule, customElements, HStack, application, moment, Button, Styles, Modal, Checkbox, Control } from '@ijstech/components';
+import { Module, Panel, Label, Container, ControlElement, customModule, customElements, HStack, application, moment, Button, Styles, Modal, Checkbox, Control, Form, IDataSchema, IUISchema } from '@ijstech/components';
 import { Constants, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
 import Assets from './assets';
 import {
@@ -9,12 +9,12 @@ import {
 } from './store/index';
 import { tokenStore, WETHByChainId, assets as tokenAssets } from '@scom/scom-token-list';
 import configData from './data.json';
-import { liquidityProviderComponent, liquidityProviderContainer, liquidityProviderForm } from './index.css';
+import { liquidityProviderComponent, liquidityProviderContainer, liquidityProviderForm, modalStyle } from './index.css';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 import { INetworkConfig } from '@scom/scom-network-picker';
-import formSchema from './formSchema';
+import formSchema, { getFormSchema } from './formSchema';
 import { LiquidityForm, LiquidityHelp, LiquiditySummary } from './detail/index';
 import { Action, Model, Stage, getOfferIndexes, getPair, getPairInfo, isPairRegistered, lockGroupQueueOffer } from './liquidity-utils/index';
 import { ILiquidityProvider, ProviderGroupQueue, registerSendTxEvents } from './global/index';
@@ -58,6 +58,9 @@ export default class ScomLiquidityProvider extends Module {
 	private btnAdd: Button;
 	private btnRemove: Button;
 	private btnLock: Button;
+	private hStackSettings: HStack;
+	private btnSetting: Button;
+	private btnRefresh: Button;
 	private btnWallet: Button;
 	private hStackBack: HStack;
 	private lockModal: Modal;
@@ -65,6 +68,8 @@ export default class ScomLiquidityProvider extends Module {
 	private firstCheckbox: Checkbox;
 	private secondCheckbox: Checkbox;
 	private lockOrderBtn: Button;
+	private mdSettings: Modal;
+	private form: Form;
 	private actionType: Action = 0;
 	private newOfferIndex: number = 0;
 	private pairAddress: string = '';
@@ -421,6 +426,7 @@ export default class ScomLiquidityProvider extends Module {
 		this.model.onSubmitBtnStatus = (isLoading, isApproval, offerIndex) => {
 			this.detailForm.onSubmitBtnStatus(isLoading, isApproval);
 			this.hStackActions.enabled = !isLoading;
+			this.hStackSettings.enabled = false;
 			if (offerIndex) {
 				this.loadingElm.visible = true;
 				this.newOfferIndex = offerIndex;
@@ -475,8 +481,9 @@ export default class ScomLiquidityProvider extends Module {
 			return;
 		}
 		if (!this.state.isRpcWalletConnected()) {
+			const chainId = this.state.getChainId();
 			const clientWallet = Wallet.getClientInstance();
-			await clientWallet.switchNetwork(this.chainId);
+			await clientWallet.switchNetwork(chainId);
 		}
 	}
 
@@ -499,6 +506,9 @@ export default class ScomLiquidityProvider extends Module {
 			this.lbMsg.caption = msg ?? (!walletConnected ? 'Please connect with your wallet' : 'Invalid configurator data');
 			this.lbMsg.visible = true;
 		}
+		this.hStackSettings.visible = isRpcWalletConnected;
+		this.btnSetting.visible = isRpcWalletConnected;
+		this.btnRefresh.visible = isRpcWalletConnected && !pairAddress;
 		this.btnWallet.visible = !walletConnected || !isRpcWalletConnected;
 		this.btnWallet.caption = !walletConnected ? 'Connect Wallet' : 'Switch Wallet';
 		this.panelHome.visible = true;
@@ -639,6 +649,45 @@ export default class ScomLiquidityProvider extends Module {
 		this.executeReadyCallback();
 	}
 
+	private async handleConfirmClick() {
+		const data = await this.form.getFormData();
+		this._data.tokenIn = data.tokenIn;
+		this._data.tokenOut = data.tokenOut;
+		this._data.offerIndex = data.offerIndex || 0;
+		this.mdSettings.visible = false;
+		this.refreshUI();
+	}
+
+	private onCogClick() {
+		if (!this.form.jsonSchema) {
+			const formSchema = getFormSchema();
+			this.form.jsonSchema = formSchema.dataSchema as IDataSchema;
+			this.form.uiSchema = formSchema.uiSchema as IUISchema;
+			this.form.formOptions = {
+				columnWidth: "100%",
+				confirmButtonOptions: {
+					caption: 'Confirm',
+					onClick: this.handleConfirmClick.bind(this)
+				},
+				dateTimeFormat: {
+					date: 'DD/MM/YYYY',
+					time: 'HH:mm',
+					dateTime: 'YYYY-MM-DD HH:mm:ss'
+				},
+				customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.state)
+			}
+			this.form.renderForm();
+			this.form.clearFormData();
+			this.form.setFormData({
+				chainId: this._data.chainId || this.state.getChainId(),
+				tokenIn: this._data.tokenIn,
+				tokenOut: this._data.tokenOut,
+				offerIndex: this._data.offerIndex
+			});
+		}
+		this.mdSettings.visible = true;
+	}
+
 	render() {
 		return (
 			<i-scom-dapp-container id="dappContainer" class={liquidityProviderContainer}>
@@ -691,6 +740,27 @@ export default class ScomLiquidityProvider extends Module {
 												onClick={() => this.onActions(Action.LOCK)}
 											/>
 										</i-hstack>
+										<i-hstack id="hStackSettings" gap={10} margin={{ top: 10 }} verticalAlignment="center" horizontalAlignment="center" wrap="wrap">
+											<i-button
+												id="btnSetting"
+												class="btn-os"
+												minHeight={36}
+												width={240}
+												maxWidth="90%"
+												caption="Update Settings"
+												visible={false}
+												onClick={this.onCogClick.bind(this)}
+											></i-button>
+											<i-button
+												id="btnRefresh"
+												class="btn-os"
+												minHeight={36}
+												width={36}
+												icon={{ name: 'sync', width: 18, height: 18, fill: '#fff' }}
+												visible={false}
+												onClick={this.refreshUI.bind(this)}
+											></i-button>
+										</i-hstack>
 										<i-button
 											id="btnWallet"
 											caption="Connect Wallet"
@@ -711,7 +781,7 @@ export default class ScomLiquidityProvider extends Module {
 									</i-hstack>
 									<i-hstack gap="20px" margin={{ bottom: 16 }} wrap="wrap">
 										<i-panel class="custom-container">
-											<liquidity-form id="detailForm" />
+											<liquidity-form id="detailForm" onCogClick={this.onCogClick.bind(this)} />
 										</i-panel>
 										<i-panel class="custom-container">
 											<i-panel id="summarySection" >
@@ -768,6 +838,17 @@ export default class ScomLiquidityProvider extends Module {
 								/>
 							</i-hstack>
 						</i-panel>
+					</i-modal>
+					<i-modal
+						id="mdSettings"
+						class={modalStyle}
+						title="Update Settings"
+						closeIcon={{ name: 'times' }}
+						height='auto'
+						maxWidth={640}
+						closeOnBackdropClick={false}
+					>
+						<i-form id="form"></i-form>
 					</i-modal>
 					<i-scom-wallet-modal id="mdWallet" wallets={[]} />
 					<i-scom-tx-status-modal id="txStatusModal" />

@@ -9,10 +9,14 @@ import ScomTokenInput from '@scom/scom-token-input';
 import { ITokenObject, assets as tokenAssets, tokenStore } from '@scom/scom-token-list';
 const Theme = Styles.Theme.ThemeVars;
 
+interface LiquidityFormElememt extends ControlElement {
+  onCogClick?: () => void;
+}
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      ['liquidity-form']: ControlElement;
+      ['liquidity-form']: LiquidityFormElememt;
     }
   }
 };
@@ -71,6 +75,7 @@ export class LiquidityForm extends Module {
   updateSummary: () => void;
   onFieldChanged: (state: Stage) => void;
   onFocusChanged: (state: Stage) => void;
+  public onCogClick: () => void;
 
   constructor(parent?: Container, options?: any) {
     super(parent, options);
@@ -595,9 +600,14 @@ export class LiquidityForm extends Module {
         <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label" margin={{ right: 8 }} />
         <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} margin={{ right: 8 }} />
         <i-label caption={tokenSymbol(this.chainId, this.toTokenAddress)} class="small-label" />
+        <i-icon class="pointer" name="cog" width={20} height={20} fill={Theme.text.primary} margin={{ left: 'auto' }} onClick={this.handleCogClick.bind(this)}></i-icon>
       </i-hstack>
     )
     this.headerSection.appendChild(elm);
+  }
+
+  handleCogClick() {
+    if (this.onCogClick) this.onCogClick();
   }
 
   renderUI = async () => {
