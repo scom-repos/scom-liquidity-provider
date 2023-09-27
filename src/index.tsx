@@ -654,6 +654,9 @@ export default class ScomLiquidityProvider extends Module {
 		this._data.tokenIn = data.tokenIn;
 		this._data.tokenOut = data.tokenOut;
 		this._data.offerIndex = data.offerIndex || 0;
+		if (!data.offerIndex) {
+			this.actionType = Action.CREATE;
+		}
 		this.mdSettings.visible = false;
 		this.refreshUI();
 	}

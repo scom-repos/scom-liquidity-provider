@@ -5048,6 +5048,9 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this._data.tokenIn = data.tokenIn;
             this._data.tokenOut = data.tokenOut;
             this._data.offerIndex = data.offerIndex || 0;
+            if (!data.offerIndex) {
+                this.actionType = index_13.Action.CREATE;
+            }
             this.mdSettings.visible = false;
             this.refreshUI();
         }
