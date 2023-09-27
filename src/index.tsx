@@ -426,7 +426,7 @@ export default class ScomLiquidityProvider extends Module {
 		this.model.onSubmitBtnStatus = (isLoading, isApproval, offerIndex) => {
 			this.detailForm.onSubmitBtnStatus(isLoading, isApproval);
 			this.hStackActions.enabled = !isLoading;
-			this.hStackSettings.enabled = false;
+			this.hStackSettings.visible = false;
 			if (offerIndex) {
 				this.loadingElm.visible = true;
 				this.newOfferIndex = offerIndex;
