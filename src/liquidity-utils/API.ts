@@ -75,13 +75,17 @@ const getLiquidityProviderAddress = (chainId: number) => {
 }
 
 const getPair = async (state: State, tokenA: ITokenObject, tokenB: ITokenObject) => {
-  const wallet = state.getRpcWallet();
-  const chainId = state.getChainId();
-  let tokens = mapTokenObjectSet(chainId, { tokenA, tokenB });
-  let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
-  let factoryAddress = getFactoryAddress(chainId);
-  let groupQ = new Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
-  return await groupQ.getPair({ ...params, param3: 0 });
+  let pairAddress = '';
+  try {
+    const wallet = state.getRpcWallet();
+    const chainId = state.getChainId();
+    let tokens = mapTokenObjectSet(chainId, { tokenA, tokenB });
+    let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
+    let factoryAddress = getFactoryAddress(chainId);
+    let groupQ = new Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
+    pairAddress = await groupQ.getPair({ ...params, param3: 0 });
+  } catch (err) {}
+  return pairAddress;
 }
 
 interface GroupQOffers {
@@ -488,23 +492,30 @@ async function getTradersAllocation(pair: Contracts.OSWAP_RestrictedPair, direct
 }
 
 async function isPairRegistered(state: State, tokenA: string, tokenB: string) {
-  let oracleAddress = await new Contracts.OSWAP_RestrictedFactory(state.getRpcWallet(), getFactoryAddress(state.getChainId())).oracles({ param1: tokenA, param2: tokenB });
-  return oracleAddress != nullAddress
+  try {
+    let oracleAddress = await new Contracts.OSWAP_RestrictedFactory(state.getRpcWallet(), getFactoryAddress(state.getChainId())).oracles({ param1: tokenA, param2: tokenB });
+    return oracleAddress != nullAddress
+  } catch (err) {}
+  return false;
 }
 
 async function getOfferIndexes(state: State, pairAddress: string, tokenA: string, tokenB: string) {
-  const wallet = state.getRpcWallet();
-  const chainId = state.getChainId();
-  const provider = wallet.address;
-  const pairContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
-  const WETH9Address = getAddressByKey(chainId, 'WETH9');
-  let token0Address = tokenA.startsWith('0x') ? tokenA : WETH9Address;
-  let token1Address = tokenB.startsWith('0x') ? tokenB : WETH9Address;
-
-  let inverseDirection = new BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase());
-  let direction = !inverseDirection;
-  let rawOffers = await pairContract.getProviderOffer({ provider, direction, start: 0, length: 100 });
-  return rawOffers.index;
+  let indexes: BigNumber[] = [];
+  try {
+    const wallet = state.getRpcWallet();
+    const chainId = state.getChainId();
+    const provider = wallet.address;
+    const pairContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
+    const WETH9Address = getAddressByKey(chainId, 'WETH9');
+    let token0Address = tokenA.startsWith('0x') ? tokenA : WETH9Address;
+    let token1Address = tokenB.startsWith('0x') ? tokenB : WETH9Address;
+  
+    let inverseDirection = new BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase());
+    let direction = !inverseDirection;
+    let rawOffers = await pairContract.getProviderOffer({ provider, direction, start: 0, length: 100 });
+    indexes = rawOffers.index;
+  } catch (err) {}
+  return indexes;
 }
 
 export {

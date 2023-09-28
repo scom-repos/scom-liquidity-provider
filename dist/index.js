@@ -1152,13 +1152,18 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
     };
     exports.getLiquidityProviderAddress = getLiquidityProviderAddress;
     const getPair = async (state, tokenA, tokenB) => {
-        const wallet = state.getRpcWallet();
-        const chainId = state.getChainId();
-        let tokens = mapTokenObjectSet(chainId, { tokenA, tokenB });
-        let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
-        let factoryAddress = getFactoryAddress(chainId);
-        let groupQ = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
-        return await groupQ.getPair(Object.assign(Object.assign({}, params), { param3: 0 }));
+        let pairAddress = '';
+        try {
+            const wallet = state.getRpcWallet();
+            const chainId = state.getChainId();
+            let tokens = mapTokenObjectSet(chainId, { tokenA, tokenB });
+            let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
+            let factoryAddress = getFactoryAddress(chainId);
+            let groupQ = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
+            pairAddress = await groupQ.getPair(Object.assign(Object.assign({}, params), { param3: 0 }));
+        }
+        catch (err) { }
+        return pairAddress;
     };
     exports.getPair = getPair;
     function breakDownGroupQOffers(offer) {
@@ -1512,22 +1517,31 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         return allo;
     }
     async function isPairRegistered(state, tokenA, tokenB) {
-        let oracleAddress = await new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedFactory(state.getRpcWallet(), getFactoryAddress(state.getChainId())).oracles({ param1: tokenA, param2: tokenB });
-        return oracleAddress != eth_contract_1.nullAddress;
+        try {
+            let oracleAddress = await new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedFactory(state.getRpcWallet(), getFactoryAddress(state.getChainId())).oracles({ param1: tokenA, param2: tokenB });
+            return oracleAddress != eth_contract_1.nullAddress;
+        }
+        catch (err) { }
+        return false;
     }
     exports.isPairRegistered = isPairRegistered;
     async function getOfferIndexes(state, pairAddress, tokenA, tokenB) {
-        const wallet = state.getRpcWallet();
-        const chainId = state.getChainId();
-        const provider = wallet.address;
-        const pairContract = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
-        const WETH9Address = getAddressByKey(chainId, 'WETH9');
-        let token0Address = tokenA.startsWith('0x') ? tokenA : WETH9Address;
-        let token1Address = tokenB.startsWith('0x') ? tokenB : WETH9Address;
-        let inverseDirection = new eth_wallet_5.BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase());
-        let direction = !inverseDirection;
-        let rawOffers = await pairContract.getProviderOffer({ provider, direction, start: 0, length: 100 });
-        return rawOffers.index;
+        let indexes = [];
+        try {
+            const wallet = state.getRpcWallet();
+            const chainId = state.getChainId();
+            const provider = wallet.address;
+            const pairContract = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
+            const WETH9Address = getAddressByKey(chainId, 'WETH9');
+            let token0Address = tokenA.startsWith('0x') ? tokenA : WETH9Address;
+            let token1Address = tokenB.startsWith('0x') ? tokenB : WETH9Address;
+            let inverseDirection = new eth_wallet_5.BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase());
+            let direction = !inverseDirection;
+            let rawOffers = await pairContract.getProviderOffer({ provider, direction, start: 0, length: 100 });
+            indexes = rawOffers.index;
+        }
+        catch (err) { }
+        return indexes;
     }
     exports.getOfferIndexes = getOfferIndexes;
 });
