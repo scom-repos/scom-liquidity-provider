@@ -925,11 +925,8 @@ export class LiquidityForm extends Module {
         {!this.isRemove ? <manage-whitelist id="manageWhitelist" /> : []}
       </i-panel>
     )
-    const rpcWallet = this.state.getRpcWallet();
-    if (rpcWallet.instanceId) {
-      if (this.firstTokenInput) this.firstTokenInput.rpcWalletId = rpcWallet.instanceId;
-      if (this.secondTokenInput) this.secondTokenInput.rpcWalletId = rpcWallet.instanceId;
-    }
+    if (this.firstTokenInput) this.firstTokenInput.chainId = this.chainId;
+    if (this.secondTokenInput) this.secondTokenInput.chainId = this.chainId;
     this.firstTokenInput.onSetMaxBalance = () => this.onSetMaxBalance();
     this.firstTokenInput.token = this.orderAmountTokenObject;
     if (this.secondTokenInput) {

@@ -138,7 +138,7 @@ export default class ScomLiquidityProvider extends Module {
 					},
 					userInputDataSchema: formSchema.dataSchema,
 					userInputUISchema: formSchema.uiSchema,
-					customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.state)
+					customControls: formSchema.customControls(this.state)
 				}
 			);
 		}
@@ -151,7 +151,7 @@ export default class ScomLiquidityProvider extends Module {
 				name: 'Settings',
 				userInputDataSchema: formSchema.dataSchema,
 				userInputUISchema: formSchema.uiSchema,
-				customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.state)
+				customControls: formSchema.customControls(this.state)
 			}
         ];
         return actions;
@@ -695,7 +695,7 @@ export default class ScomLiquidityProvider extends Module {
 					time: 'HH:mm',
 					dateTime: 'YYYY-MM-DD HH:mm:ss'
 				},
-				customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.state)
+				customControls: formSchema.customControls(this.state)
 			}
 			this.form.renderForm();
 			this.form.clearFormData();

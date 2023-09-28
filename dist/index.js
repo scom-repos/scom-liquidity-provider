@@ -2366,7 +2366,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                 }
             ]
         },
-        customControls(rpcWalletId, state) {
+        customControls(state) {
             let networkPicker;
             let firstTokenInput;
             let secondTokenInput;
@@ -2442,7 +2442,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             isInputShown: false,
                             maxWidth: 300
                         });
-                        firstTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                         if (chainId && firstTokenInput.chainId !== chainId) {
                             firstTokenInput.chainId = chainId;
@@ -2471,7 +2470,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             isInputShown: false,
                             maxWidth: 300
                         });
-                        secondTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                         if (chainId && secondTokenInput.chainId !== chainId) {
                             secondTokenInput.chainId = chainId;
@@ -2569,7 +2567,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     }
                 ]
             },
-            customControls(rpcWalletId, state) {
+            customControls(state) {
                 let networkPicker;
                 let firstTokenInput;
                 let secondTokenInput;
@@ -2644,7 +2642,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 isBtnMaxShown: false,
                                 isInputShown: false
                             });
-                            firstTokenInput.rpcWalletId = rpcWalletId;
                             const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                             if (chainId && firstTokenInput.chainId !== chainId) {
                                 firstTokenInput.chainId = chainId;
@@ -2672,7 +2669,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 isBtnMaxShown: false,
                                 isInputShown: false
                             });
-                            secondTokenInput.rpcWalletId = rpcWalletId;
                             const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                             if (chainId && secondTokenInput.chainId !== chainId) {
                                 secondTokenInput.chainId = chainId;
@@ -3756,13 +3752,10 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                     this.isCreate ? this.renderProgress() : [],
                     this.$render("i-button", { id: "submitBtn", class: "btn-os btn-next", caption: this.proceedButtonText, enabled: !this.isSubmitButtonDisabled, rightIcon: { spin: true, visible: false }, onClick: this.onProceed }),
                     !this.isRemove ? this.$render("manage-whitelist", { id: "manageWhitelist" }) : []));
-                const rpcWallet = this.state.getRpcWallet();
-                if (rpcWallet.instanceId) {
-                    if (this.firstTokenInput)
-                        this.firstTokenInput.rpcWalletId = rpcWallet.instanceId;
-                    if (this.secondTokenInput)
-                        this.secondTokenInput.rpcWalletId = rpcWallet.instanceId;
-                }
+                if (this.firstTokenInput)
+                    this.firstTokenInput.chainId = this.chainId;
+                if (this.secondTokenInput)
+                    this.secondTokenInput.chainId = this.chainId;
                 this.firstTokenInput.onSetMaxBalance = () => this.onSetMaxBalance();
                 this.firstTokenInput.token = this.orderAmountTokenObject;
                 if (this.secondTokenInput) {
@@ -4558,7 +4551,6 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
     const Theme = components_14.Styles.Theme.ThemeVars;
     let ScomLiquidityProvider = class ScomLiquidityProvider extends components_14.Module {
         _getActions(category) {
-            var _a;
             const actions = [];
             if (category && category !== 'offers') {
                 actions.push({
@@ -4621,19 +4613,18 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     },
                     userInputDataSchema: formSchema_1.default.dataSchema,
                     userInputUISchema: formSchema_1.default.uiSchema,
-                    customControls: formSchema_1.default.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId, this.state)
+                    customControls: formSchema_1.default.customControls(this.state)
                 });
             }
             return actions;
         }
         getProjectOwnerActions() {
-            var _a;
             const actions = [
                 {
                     name: 'Settings',
                     userInputDataSchema: formSchema_1.default.dataSchema,
                     userInputUISchema: formSchema_1.default.uiSchema,
-                    customControls: formSchema_1.default.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId, this.state)
+                    customControls: formSchema_1.default.customControls(this.state)
                 }
             ];
             return actions;
@@ -5133,7 +5124,6 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.refreshUI();
         }
         onCogClick() {
-            var _a;
             if (!this.form.jsonSchema) {
                 const formSchema = (0, formSchema_1.getFormSchema)();
                 this.form.jsonSchema = formSchema.dataSchema;
@@ -5149,7 +5139,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                         time: 'HH:mm',
                         dateTime: 'YYYY-MM-DD HH:mm:ss'
                     },
-                    customControls: formSchema.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId, this.state)
+                    customControls: formSchema.customControls(this.state)
                 };
                 this.form.renderForm();
                 this.form.clearFormData();

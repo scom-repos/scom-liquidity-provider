@@ -460,7 +460,7 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 }[];
             })[];
         };
-        customControls(rpcWalletId: string, state: State): {
+        customControls(state: State): {
             "#/properties/chainId": {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;
@@ -528,7 +528,7 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 };
             })[];
         };
-        customControls(rpcWalletId: string, state: State): {
+        customControls(state: State): {
             "#/properties/chainId": {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;

@@ -103,7 +103,7 @@ export default {
             }
         ]
     },
-    customControls(rpcWalletId: string, state: State) {
+    customControls(state: State) {
         let networkPicker: ScomNetworkPicker;
         let firstTokenInput: ScomTokenInput;
         let secondTokenInput: ScomTokenInput;
@@ -172,7 +172,6 @@ export default {
                         isInputShown: false,
                         maxWidth: 300
                     });
-                    firstTokenInput.rpcWalletId = rpcWalletId;
                     const chainId = networkPicker?.selectedNetwork?.chainId;
                     if (chainId && firstTokenInput.chainId !== chainId) {
                         firstTokenInput.chainId = chainId;
@@ -199,7 +198,6 @@ export default {
                         isInputShown: false,
                         maxWidth: 300
                     });
-                    secondTokenInput.rpcWalletId = rpcWalletId;
                     const chainId = networkPicker?.selectedNetwork?.chainId;
                     if (chainId && secondTokenInput.chainId !== chainId) {
                         secondTokenInput.chainId = chainId;
@@ -296,7 +294,7 @@ export function getFormSchema() {
                 }
             ]
         },
-        customControls(rpcWalletId: string, state: State) {
+        customControls(state: State) {
             let networkPicker: ScomNetworkPicker;
             let firstTokenInput: ScomTokenInput;
             let secondTokenInput: ScomTokenInput;
@@ -364,7 +362,6 @@ export function getFormSchema() {
                             isBtnMaxShown: false,
                             isInputShown: false
                         });
-                        firstTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && firstTokenInput.chainId !== chainId) {
                             firstTokenInput.chainId = chainId;
@@ -390,7 +387,6 @@ export function getFormSchema() {
                             isBtnMaxShown: false,
                             isInputShown: false
                         });
-                        secondTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && secondTokenInput.chainId !== chainId) {
                             secondTokenInput.chainId = chainId;
