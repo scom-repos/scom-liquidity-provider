@@ -252,6 +252,11 @@ export function getFormSchema() {
                 tokenOut: {
                     type: 'string'
                 },
+                isCreate: {
+                    type: 'boolean',
+                    title: 'Create New Offer?',
+                    default: true
+                },
                 offerIndex: {
                     type: 'string'
                 },
@@ -274,7 +279,20 @@ export function getFormSchema() {
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/offerIndex'
+                    scope: '#/properties/isCreate'
+                },
+                {
+                    type: 'Control',
+                    scope: '#/properties/offerIndex',
+                    rule: {
+                        effect: 'HIDE',
+                        condition: {
+                            scope: '#/properties/isCreate',
+                            schema: {
+                                const: true
+                            }
+                        }
+                    }
                 }
             ]
         },
@@ -300,12 +318,12 @@ export function getFormSchema() {
                         const fromTokenAddress = fromToken.address?.toLowerCase() || fromToken.symbol;
                         const toTokenAddress = toToken.address?.toLowerCase() || toToken.symbol;
                         const offerIndexes = await getOfferIndexes(state, pairAddress, fromTokenAddress, toTokenAddress);
-                        combobox.items = [{ label: '--Select--', value: '' }].concat(offerIndexes.map(v => { return { label: v.toString(), value: v.toString() } }));
+                        combobox.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() } });
                     } else {
-                        combobox.items = [{ label: '--Select--', value: '' }];
+                        combobox.items = [];
                     }
                 } catch {
-                    combobox.items = [{ label: '--Select--', value: '' }];
+                    combobox.items = [];
                 }
             }
 
@@ -402,7 +420,11 @@ export function getFormSchema() {
                         return (control.selectedItem as IComboItem)?.value || '';
                     },
                     setData: (control: ComboBox, value: string) => {
-                        control.selectedItem = { label: value, value };
+                        if (value) {
+                            control.clear();
+                        } else {
+                            control.selectedItem = { label: value, value };
+                        }
                     }
                 }
             }

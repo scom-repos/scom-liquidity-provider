@@ -498,6 +498,11 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 tokenOut: {
                     type: string;
                 };
+                isCreate: {
+                    type: string;
+                    title: string;
+                    default: boolean;
+                };
                 offerIndex: {
                     type: string;
                 };
@@ -505,10 +510,23 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
         };
         uiSchema: {
             type: string;
-            elements: {
+            elements: ({
                 type: string;
                 scope: string;
-            }[];
+                rule?: undefined;
+            } | {
+                type: string;
+                scope: string;
+                rule: {
+                    effect: string;
+                    condition: {
+                        scope: string;
+                        schema: {
+                            const: boolean;
+                        };
+                    };
+                };
+            })[];
         };
         customControls(rpcWalletId: string, state: State): {
             "#/properties/chainId": {

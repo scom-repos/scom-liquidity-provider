@@ -667,7 +667,11 @@ export default class ScomLiquidityProvider extends Module {
 		const data = await this.form.getFormData();
 		this._data.tokenIn = data.tokenIn;
 		this._data.tokenOut = data.tokenOut;
-		this._data.offerIndex = data.offerIndex || 0;
+		if (data.isCreate) {
+			this._data.offerIndex = 0;
+		} else {
+			this._data.offerIndex = data.offerIndex || 0;
+		}
 		if (!data.offerIndex) {
 			this.actionType = Action.CREATE;
 		}
@@ -699,6 +703,7 @@ export default class ScomLiquidityProvider extends Module {
 				chainId: this._data.chainId || this.state.getChainId(),
 				tokenIn: this._data.tokenIn,
 				tokenOut: this._data.tokenOut,
+				isCreate: !this._data.offerIndex,
 				offerIndex: this._data.offerIndex
 			});
 		}

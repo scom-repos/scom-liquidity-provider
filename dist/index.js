@@ -2511,6 +2511,11 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     tokenOut: {
                         type: 'string'
                     },
+                    isCreate: {
+                        type: 'boolean',
+                        title: 'Create New Offer?',
+                        default: true
+                    },
                     offerIndex: {
                         type: 'string'
                     },
@@ -2533,7 +2538,20 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     },
                     {
                         type: 'Control',
-                        scope: '#/properties/offerIndex'
+                        scope: '#/properties/isCreate'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/offerIndex',
+                        rule: {
+                            effect: 'HIDE',
+                            condition: {
+                                scope: '#/properties/isCreate',
+                                schema: {
+                                    const: true
+                                }
+                            }
+                        }
                     }
                 ]
             },
@@ -2560,14 +2578,14 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             const fromTokenAddress = ((_b = fromToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || fromToken.symbol;
                             const toTokenAddress = ((_c = toToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || toToken.symbol;
                             const offerIndexes = await (0, liquidity_utils_1.getOfferIndexes)(state, pairAddress, fromTokenAddress, toTokenAddress);
-                            combobox.items = [{ label: '--Select--', value: '' }].concat(offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; }));
+                            combobox.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
                         }
                         else {
-                            combobox.items = [{ label: '--Select--', value: '' }];
+                            combobox.items = [];
                         }
                     }
                     catch (_d) {
-                        combobox.items = [{ label: '--Select--', value: '' }];
+                        combobox.items = [];
                     }
                 };
                 return {
@@ -2672,7 +2690,12 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return ((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value) || '';
                         },
                         setData: (control, value) => {
-                            control.selectedItem = { label: value, value };
+                            if (value) {
+                                control.clear();
+                            }
+                            else {
+                                control.selectedItem = { label: value, value };
+                            }
                         }
                     }
                 };
@@ -5083,7 +5106,12 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             const data = await this.form.getFormData();
             this._data.tokenIn = data.tokenIn;
             this._data.tokenOut = data.tokenOut;
-            this._data.offerIndex = data.offerIndex || 0;
+            if (data.isCreate) {
+                this._data.offerIndex = 0;
+            }
+            else {
+                this._data.offerIndex = data.offerIndex || 0;
+            }
             if (!data.offerIndex) {
                 this.actionType = index_13.Action.CREATE;
             }
@@ -5115,6 +5143,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     chainId: this._data.chainId || this.state.getChainId(),
                     tokenIn: this._data.tokenIn,
                     tokenOut: this._data.tokenOut,
+                    isCreate: !this._data.offerIndex,
                     offerIndex: this._data.offerIndex
                 });
             }
