@@ -99,6 +99,7 @@ export default class ScomLiquidityProvider extends Module {
 									chainId,
 									tokenIn,
 									tokenOut,
+									isCreate,
 									offerIndex,
 									...themeSettings
 								} = userInputData;
@@ -112,7 +113,14 @@ export default class ScomLiquidityProvider extends Module {
 								if (generalSettings.chainId !== undefined) this._data.chainId = generalSettings.chainId;
 								if (generalSettings.tokenIn !== undefined) this._data.tokenIn = generalSettings.tokenIn;
 								if (generalSettings.tokenOut !== undefined) this._data.tokenOut = generalSettings.tokenOut;
-								if (generalSettings.offerIndex !== undefined) this._data.offerIndex = generalSettings.offerIndex || 0;
+								if (isCreate) {
+									this._data.offerIndex = 0;
+								} else {
+									this._data.offerIndex = generalSettings.offerIndex || 0;
+								}
+								if (!this._data.offerIndex) {
+									this.actionType = Action.CREATE;
+								}
 								await this.resetRpcWallet();
 								this.refreshUI();
 								if (builder?.setData) builder.setData(this._data);
@@ -195,9 +203,13 @@ export default class ScomLiquidityProvider extends Module {
                     return { ...this._data }
                 },
                 setData: async (properties: ILiquidityProvider, linkParams?: Record<string, any>) => {
-                    let resultingData = {
-                      ...properties
-                    };
+					const { isCreate, ...resultingData } = properties;
+					if (isCreate) {
+						this._data.offerIndex = 0;
+					}
+					if (!this._data.offerIndex) {
+						this.actionType = Action.CREATE;
+					}
                     await this.setData(resultingData);
                 },
                 getTag: this.getTag.bind(this),

@@ -129,6 +129,7 @@ declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
         chainId: number;
         tokenIn: string;
         tokenOut: string;
+        isCreate?: boolean;
         offerIndex?: number;
         wallets: IWalletPlugin[];
         networks: INetworkConfig[];
@@ -388,6 +389,11 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                     type: string;
                     required: boolean;
                 };
+                isCreate: {
+                    type: string;
+                    title: string;
+                    default: boolean;
+                };
                 offerIndex: {
                     type: string;
                 };
@@ -442,10 +448,23 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
                 label: string;
                 elements: {
                     type: string;
-                    elements: {
+                    elements: ({
                         type: string;
                         scope: string;
-                    }[];
+                        rule?: undefined;
+                    } | {
+                        type: string;
+                        scope: string;
+                        rule: {
+                            effect: string;
+                            condition: {
+                                scope: string;
+                                schema: {
+                                    const: boolean;
+                                };
+                            };
+                        };
+                    })[];
                 }[];
             } | {
                 type: string;
@@ -479,7 +498,7 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
             "#/properties/offerIndex": {
                 render: () => ComboBox;
                 getData: (control: ComboBox) => string;
-                setData: (control: ComboBox, value: string) => void;
+                setData: (control: ComboBox, value: string) => Promise<void>;
             };
         };
     };
@@ -547,7 +566,7 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
             "#/properties/offerIndex": {
                 render: () => ComboBox;
                 getData: (control: ComboBox) => string;
-                setData: (control: ComboBox, value: string) => void;
+                setData: (control: ComboBox, value: string) => Promise<void>;
             };
         };
     };
@@ -998,6 +1017,7 @@ declare module "@scom/scom-liquidity-provider" {
                 chainId: number;
                 tokenIn: string;
                 tokenOut: string;
+                isCreate?: boolean;
                 offerIndex?: number;
                 wallets: IWalletPlugin[];
                 networks: INetworkConfig[];

@@ -12,6 +12,7 @@ export interface ILiquidityProvider {
   chainId: number;
   tokenIn: string;
   tokenOut: string;
+  isCreate?: boolean;
   offerIndex?: number;
   wallets: IWalletPlugin[];
   networks: INetworkConfig[];

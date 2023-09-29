@@ -43,6 +43,11 @@ export default {
                 type: 'string',
                 required: true
             },
+            isCreate: {
+                type: 'boolean',
+                title: 'Create New Offer?',
+                default: true
+            },
             offerIndex: {
                 type: 'string'
             },
@@ -74,7 +79,20 @@ export default {
                             },
                             {
                                 type: 'Control',
-                                scope: '#/properties/offerIndex'
+                                scope: '#/properties/isCreate'
+                            },
+                            {
+                                type: 'Control',
+                                scope: '#/properties/offerIndex',
+                                rule: {
+                                    effect: 'HIDE',
+                                    condition: {
+                                        scope: '#/properties/isCreate',
+                                        schema: {
+                                            const: true
+                                        }
+                                    }
+                                }
                             }
                         ]
                     }
@@ -118,6 +136,9 @@ export default {
                 if (fromToken && toToken) {
                     const wallet = state.getRpcWallet();
                     const chainId = networkPicker.selectedNetwork?.chainId;
+                    combobox.icon.name = 'spinner';
+                    combobox.icon.spin = true;
+                    combobox.enabled = false;
                     if (chainId && chainId != wallet.chainId) {
                         await wallet.switchNetwork(chainId);
                     }
@@ -125,12 +146,16 @@ export default {
                     const fromTokenAddress = fromToken.address?.toLowerCase() || fromToken.symbol;
                     const toTokenAddress = toToken.address?.toLowerCase() || toToken.symbol;
                     const offerIndexes = await getOfferIndexes(state, pairAddress, fromTokenAddress, toTokenAddress);
-                    combobox.items = [{ label: '', value: '' }].concat(offerIndexes.map(v => { return { label: v.toString(), value: v.toString() } }));
+                    combobox.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() } });
                 } else {
-                    combobox.items = [{ label: '', value: '' }];
+                    combobox.items = [];
                 }
             } catch {
-                combobox.items = [{ label: '', value: '' }];
+                combobox.items = [];
+            } finally {
+                combobox.icon.name = 'angle-down';
+                combobox.icon.spin = false;
+                combobox.enabled = true;
             }
         }
 
@@ -186,7 +211,6 @@ export default {
                 },
                 setData: (control: ScomTokenInput, value: string) => {
                     control.address = value;
-                    initCombobox();
                 }
             },
             "#/properties/tokenOut": {
@@ -212,7 +236,6 @@ export default {
                 },
                 setData: (control: ScomTokenInput, value: string) => {
                     control.address = value;
-                    initCombobox();
                 }
             },
             "#/properties/offerIndex": {
@@ -220,15 +243,22 @@ export default {
                     combobox = new ComboBox(undefined, {
                         maxWidth: 300,
                         height: 43,
-                        items: [{ label: '', value: '' }]
+                        items: []
                     });
                     return combobox;
                 },
                 getData: (control: ComboBox) => {
                     return (control.selectedItem as IComboItem)?.value || '';
                 },
-                setData: (control: ComboBox, value: string) => {
-                    control.selectedItem = { label: value, value };
+                setData: async (control: ComboBox, value: string) => {
+                    if (value) {
+                        if (!combobox.items || !combobox.items.length) {
+                            await initCombobox();
+                        }
+                        control.selectedItem = { label: value, value };
+                    } else {
+                        control.clear();
+                    }
                 }
             }
         }
@@ -309,6 +339,9 @@ export function getFormSchema() {
                     if (fromToken && toToken) {
                         const wallet = state.getRpcWallet();
                         const chainId = networkPicker.selectedNetwork?.chainId;
+                        combobox.icon.name = 'spinner';
+                        combobox.icon.spin = true;
+                        combobox.enabled = false;
                         if (chainId && chainId != wallet.chainId) {
                             await wallet.switchNetwork(chainId);
                         }
@@ -322,6 +355,10 @@ export function getFormSchema() {
                     }
                 } catch {
                     combobox.items = [];
+                } finally {
+                    combobox.icon.name = 'angle-down';
+                    combobox.icon.spin = false;
+                    combobox.enabled = true;
                 }
             }
 
@@ -376,7 +413,6 @@ export function getFormSchema() {
                     },
                     setData: (control: ScomTokenInput, value: string) => {
                         control.address = value;
-                        initCombobox();
                     }
                 },
                 "#/properties/tokenOut": {
@@ -401,22 +437,24 @@ export function getFormSchema() {
                     },
                     setData: (control: ScomTokenInput, value: string) => {
                         control.address = value;
-                        initCombobox();
                     }
                 },
                 "#/properties/offerIndex": {
                     render: () => {
                         combobox = new ComboBox(undefined, {
                             height: 43,
-                            items: [{ label: '--Select--', value: '' }]
+                            items: []
                         });
                         return combobox;
                     },
                     getData: (control: ComboBox) => {
                         return (control.selectedItem as IComboItem)?.value || '';
                     },
-                    setData: (control: ComboBox, value: string) => {
+                    setData: async (control: ComboBox, value: string) => {
                         if (value) {
+                            if (!combobox.items || !combobox.items.length) {
+                                await initCombobox();
+                            }
                             control.selectedItem = { label: value, value };
                         } else {
                             control.clear();

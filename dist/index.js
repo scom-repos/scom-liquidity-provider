@@ -2306,6 +2306,11 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     type: 'string',
                     required: true
                 },
+                isCreate: {
+                    type: 'boolean',
+                    title: 'Create New Offer?',
+                    default: true
+                },
                 offerIndex: {
                     type: 'string'
                 },
@@ -2337,7 +2342,20 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 },
                                 {
                                     type: 'Control',
-                                    scope: '#/properties/offerIndex'
+                                    scope: '#/properties/isCreate'
+                                },
+                                {
+                                    type: 'Control',
+                                    scope: '#/properties/offerIndex',
+                                    rule: {
+                                        effect: 'HIDE',
+                                        condition: {
+                                            scope: '#/properties/isCreate',
+                                            schema: {
+                                                const: true
+                                            }
+                                        }
+                                    }
                                 }
                             ]
                         }
@@ -2382,6 +2400,9 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     if (fromToken && toToken) {
                         const wallet = state.getRpcWallet();
                         const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        combobox.icon.name = 'spinner';
+                        combobox.icon.spin = true;
+                        combobox.enabled = false;
                         if (chainId && chainId != wallet.chainId) {
                             await wallet.switchNetwork(chainId);
                         }
@@ -2389,14 +2410,19 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         const fromTokenAddress = ((_b = fromToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || fromToken.symbol;
                         const toTokenAddress = ((_c = toToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || toToken.symbol;
                         const offerIndexes = await (0, liquidity_utils_1.getOfferIndexes)(state, pairAddress, fromTokenAddress, toTokenAddress);
-                        combobox.items = [{ label: '', value: '' }].concat(offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; }));
+                        combobox.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
                     }
                     else {
-                        combobox.items = [{ label: '', value: '' }];
+                        combobox.items = [];
                     }
                 }
                 catch (_d) {
-                    combobox.items = [{ label: '', value: '' }];
+                    combobox.items = [];
+                }
+                finally {
+                    combobox.icon.name = 'angle-down';
+                    combobox.icon.spin = false;
+                    combobox.enabled = true;
                 }
             };
             return {
@@ -2457,7 +2483,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     },
                     setData: (control, value) => {
                         control.address = value;
-                        initCombobox();
                     }
                 },
                 "#/properties/tokenOut": {
@@ -2485,7 +2510,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     },
                     setData: (control, value) => {
                         control.address = value;
-                        initCombobox();
                     }
                 },
                 "#/properties/offerIndex": {
@@ -2493,7 +2517,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         combobox = new components_7.ComboBox(undefined, {
                             maxWidth: 300,
                             height: 43,
-                            items: [{ label: '', value: '' }]
+                            items: []
                         });
                         return combobox;
                     },
@@ -2501,8 +2525,16 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         var _a;
                         return ((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value) || '';
                     },
-                    setData: (control, value) => {
-                        control.selectedItem = { label: value, value };
+                    setData: async (control, value) => {
+                        if (value) {
+                            if (!combobox.items || !combobox.items.length) {
+                                await initCombobox();
+                            }
+                            control.selectedItem = { label: value, value };
+                        }
+                        else {
+                            control.clear();
+                        }
                     }
                 }
             };
@@ -2583,6 +2615,9 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         if (fromToken && toToken) {
                             const wallet = state.getRpcWallet();
                             const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            combobox.icon.name = 'spinner';
+                            combobox.icon.spin = true;
+                            combobox.enabled = false;
                             if (chainId && chainId != wallet.chainId) {
                                 await wallet.switchNetwork(chainId);
                             }
@@ -2598,6 +2633,11 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     }
                     catch (_d) {
                         combobox.items = [];
+                    }
+                    finally {
+                        combobox.icon.name = 'angle-down';
+                        combobox.icon.spin = false;
+                        combobox.enabled = true;
                     }
                 };
                 return {
@@ -2657,7 +2697,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         },
                         setData: (control, value) => {
                             control.address = value;
-                            initCombobox();
                         }
                     },
                     "#/properties/tokenOut": {
@@ -2684,14 +2723,13 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         },
                         setData: (control, value) => {
                             control.address = value;
-                            initCombobox();
                         }
                     },
                     "#/properties/offerIndex": {
                         render: () => {
                             combobox = new components_7.ComboBox(undefined, {
                                 height: 43,
-                                items: [{ label: '--Select--', value: '' }]
+                                items: []
                             });
                             return combobox;
                         },
@@ -2699,8 +2737,11 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             var _a;
                             return ((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value) || '';
                         },
-                        setData: (control, value) => {
+                        setData: async (control, value) => {
                             if (value) {
+                                if (!combobox.items || !combobox.items.length) {
+                                    await initCombobox();
+                                }
                                 control.selectedItem = { label: value, value };
                             }
                             else {
@@ -4568,7 +4609,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                         return {
                             execute: async () => {
                                 oldData = JSON.parse(JSON.stringify(this._data));
-                                const { chainId, tokenIn, tokenOut, offerIndex } = userInputData, themeSettings = __rest(userInputData, ["chainId", "tokenIn", "tokenOut", "offerIndex"]);
+                                const { chainId, tokenIn, tokenOut, isCreate, offerIndex } = userInputData, themeSettings = __rest(userInputData, ["chainId", "tokenIn", "tokenOut", "isCreate", "offerIndex"]);
                                 const generalSettings = {
                                     chainId,
                                     tokenIn,
@@ -4581,8 +4622,15 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                     this._data.tokenIn = generalSettings.tokenIn;
                                 if (generalSettings.tokenOut !== undefined)
                                     this._data.tokenOut = generalSettings.tokenOut;
-                                if (generalSettings.offerIndex !== undefined)
+                                if (isCreate) {
+                                    this._data.offerIndex = 0;
+                                }
+                                else {
                                     this._data.offerIndex = generalSettings.offerIndex || 0;
+                                }
+                                if (!this._data.offerIndex) {
+                                    this.actionType = index_13.Action.CREATE;
+                                }
                                 await this.resetRpcWallet();
                                 this.refreshUI();
                                 if (builder === null || builder === void 0 ? void 0 : builder.setData)
@@ -4668,7 +4716,13 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                         return Object.assign({}, this._data);
                     },
                     setData: async (properties, linkParams) => {
-                        let resultingData = Object.assign({}, properties);
+                        const { isCreate } = properties, resultingData = __rest(properties, ["isCreate"]);
+                        if (isCreate) {
+                            this._data.offerIndex = 0;
+                        }
+                        if (!this._data.offerIndex) {
+                            this.actionType = index_13.Action.CREATE;
+                        }
                         await this.setData(resultingData);
                     },
                     getTag: this.getTag.bind(this),
