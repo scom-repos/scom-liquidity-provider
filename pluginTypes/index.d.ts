@@ -968,7 +968,6 @@ declare module "@scom/scom-liquidity-provider" {
         private mdSettings;
         private form;
         private actionType;
-        private newOfferIndex;
         private pairAddress;
         private liquidities;
         private rpcWalletEvents;

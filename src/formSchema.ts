@@ -417,9 +417,9 @@ export function getFormSchema() {
                     },
                     setData: (control: ComboBox, value: string) => {
                         if (value) {
-                            control.clear();
-                        } else {
                             control.selectedItem = { label: value, value };
+                        } else {
+                            control.clear();
                         }
                     }
                 }

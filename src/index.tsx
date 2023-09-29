@@ -71,7 +71,6 @@ export default class ScomLiquidityProvider extends Module {
 	private mdSettings: Modal;
 	private form: Form;
 	private actionType: Action = 0;
-	private newOfferIndex: number = 0;
 	private pairAddress: string = '';
 	private liquidities: ProviderGroupQueue[] = [];
 
@@ -216,11 +215,9 @@ export default class ScomLiquidityProvider extends Module {
 		const rpcWalletId = await this.state.initRpcWallet(this.chainId);
 		const rpcWallet = this.rpcWallet;
 		const chainChangedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.ChainChanged, async (chainId: number) => {
-			this.newOfferIndex = 0;
 			this.onChainChanged();
 		});
 		const connectedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.Connected, async (connected: boolean) => {
-			this.newOfferIndex = 0;
 			this.initializeWidgetConfig();
 		});
 		this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
@@ -238,7 +235,6 @@ export default class ScomLiquidityProvider extends Module {
 	private async setData(value: any) {
 		this._data = value;
 		await this.resetRpcWallet();
-		this.newOfferIndex = 0;
 		this.initializeWidgetConfig();
 	}
 
@@ -328,7 +324,7 @@ export default class ScomLiquidityProvider extends Module {
 	}
 
 	private get offerIndex() {
-		return this._data.offerIndex || this.newOfferIndex || 0;
+		return this._data.offerIndex || 0;
 	}
 
 	private get fromTokenObject() {
@@ -362,7 +358,6 @@ export default class ScomLiquidityProvider extends Module {
 	}
 
 	private refreshUI = () => {
-		this.newOfferIndex = 0;
 		this.initializeWidgetConfig();
 	}
 
@@ -429,7 +424,7 @@ export default class ScomLiquidityProvider extends Module {
 			this.hStackSettings.visible = false;
 			if (offerIndex) {
 				this.loadingElm.visible = true;
-				this.newOfferIndex = offerIndex;
+				this._data.offerIndex = offerIndex;
 				this.renderHome(this.pairAddress);
 			}
 		}
@@ -665,6 +660,7 @@ export default class ScomLiquidityProvider extends Module {
 
 	private async handleConfirmClick() {
 		const data = await this.form.getFormData();
+		this._data.chainId = data.chainId;
 		this._data.tokenIn = data.tokenIn;
 		this._data.tokenOut = data.tokenOut;
 		if (data.isCreate) {
@@ -698,15 +694,15 @@ export default class ScomLiquidityProvider extends Module {
 				customControls: formSchema.customControls(this.state)
 			}
 			this.form.renderForm();
-			this.form.clearFormData();
-			this.form.setFormData({
-				chainId: this._data.chainId || this.state.getChainId(),
-				tokenIn: this._data.tokenIn,
-				tokenOut: this._data.tokenOut,
-				isCreate: !this._data.offerIndex,
-				offerIndex: this._data.offerIndex
-			});
 		}
+		this.form.clearFormData();
+		this.form.setFormData({
+			chainId: this._data.chainId || this.state.getChainId(),
+			tokenIn: this._data.tokenIn,
+			tokenOut: this._data.tokenOut,
+			isCreate: !this._data.offerIndex,
+			offerIndex: this._data.offerIndex
+		});
 		this.mdSettings.visible = true;
 	}
 

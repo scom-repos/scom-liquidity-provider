@@ -2701,10 +2701,10 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         },
                         setData: (control, value) => {
                             if (value) {
-                                control.clear();
+                                control.selectedItem = { label: value, value };
                             }
                             else {
-                                control.selectedItem = { label: value, value };
+                                control.clear();
                             }
                         }
                     }
@@ -4685,11 +4685,9 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             const rpcWalletId = await this.state.initRpcWallet(this.chainId);
             const rpcWallet = this.rpcWallet;
             const chainChangedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_10.Constants.RpcWalletEvent.ChainChanged, async (chainId) => {
-                this.newOfferIndex = 0;
                 this.onChainChanged();
             });
             const connectedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_10.Constants.RpcWalletEvent.Connected, async (connected) => {
-                this.newOfferIndex = 0;
                 this.initializeWidgetConfig();
             });
             this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
@@ -4706,7 +4704,6 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
         async setData(value) {
             this._data = value;
             await this.resetRpcWallet();
-            this.newOfferIndex = 0;
             this.initializeWidgetConfig();
         }
         async getTag() {
@@ -4785,7 +4782,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             return address.startsWith('0x') ? address.toLowerCase() : address;
         }
         get offerIndex() {
-            return this._data.offerIndex || this.newOfferIndex || 0;
+            return this._data.offerIndex || 0;
         }
         get fromTokenObject() {
             return scom_token_list_7.tokenStore.getTokenMapByChainId(this.state.getChainId())[this.fromTokenAddress];
@@ -4798,7 +4795,6 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.tag = {};
             this.defaultEdit = true;
             this.actionType = 0;
-            this.newOfferIndex = 0;
             this.pairAddress = '';
             this.liquidities = [];
             this.rpcWalletEvents = [];
@@ -4806,7 +4802,6 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.initializeWidgetConfig();
             };
             this.refreshUI = () => {
-                this.newOfferIndex = 0;
                 this.initializeWidgetConfig();
             };
             this.initializeWidgetConfig = (hideLoading) => {
@@ -4873,7 +4868,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.hStackSettings.visible = false;
                     if (offerIndex) {
                         this.loadingElm.visible = true;
-                        this.newOfferIndex = offerIndex;
+                        this._data.offerIndex = offerIndex;
                         this.renderHome(this.pairAddress);
                     }
                 };
@@ -5109,6 +5104,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
         }
         async handleConfirmClick() {
             const data = await this.form.getFormData();
+            this._data.chainId = data.chainId;
             this._data.tokenIn = data.tokenIn;
             this._data.tokenOut = data.tokenOut;
             if (data.isCreate) {
@@ -5142,15 +5138,15 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     customControls: formSchema.customControls(this.state)
                 };
                 this.form.renderForm();
-                this.form.clearFormData();
-                this.form.setFormData({
-                    chainId: this._data.chainId || this.state.getChainId(),
-                    tokenIn: this._data.tokenIn,
-                    tokenOut: this._data.tokenOut,
-                    isCreate: !this._data.offerIndex,
-                    offerIndex: this._data.offerIndex
-                });
             }
+            this.form.clearFormData();
+            this.form.setFormData({
+                chainId: this._data.chainId || this.state.getChainId(),
+                tokenIn: this._data.tokenIn,
+                tokenOut: this._data.tokenOut,
+                isCreate: !this._data.offerIndex,
+                offerIndex: this._data.offerIndex
+            });
             this.mdSettings.visible = true;
         }
         render() {
