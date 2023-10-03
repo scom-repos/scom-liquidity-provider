@@ -1,11 +1,12 @@
-import { Module, Panel, Label, Container, ControlElement, customModule, customElements, HStack, application, moment, Button, Styles, Modal, Checkbox, Control, Form, IDataSchema, IUISchema } from '@ijstech/components';
+import { Module, Panel, Label, Container, ControlElement, customModule, customElements, HStack, application, moment, Button, Styles, Modal, Checkbox, Control, Form, IDataSchema, IUISchema, FormatUtils } from '@ijstech/components';
 import { Constants, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
 import Assets from './assets';
 import {
 	State,
 	fallbackUrl,
 	isClientWalletConnected,
-	tokenSymbol
+	tokenSymbol,
+	viewOnExplorerByAddress
 } from './store/index';
 import { tokenStore, WETHByChainId, assets as tokenAssets } from '@scom/scom-token-list';
 import configData from './data.json';
@@ -16,8 +17,8 @@ import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 import { INetworkConfig } from '@scom/scom-network-picker';
 import formSchema, { getFormSchema } from './formSchema';
 import { LiquidityForm, LiquidityHelp, LiquiditySummary } from './detail/index';
-import { Action, Model, Stage, getOfferIndexes, getPair, getPairInfo, isPairRegistered, lockGroupQueueOffer } from './liquidity-utils/index';
-import { ILiquidityProvider, ProviderGroupQueue, registerSendTxEvents } from './global/index';
+import { Action, Model, Stage, getOfferIndexes, getPair, getPairInfo, isPairRegistered, lockGroupQueueOffer, getGroupQueueInfo } from './liquidity-utils/index';
+import { DefaultDateTimeFormat, formatDate, ILiquidityProvider, ProviderGroupQueue, registerSendTxEvents } from './global/index';
 const Theme = Styles.Theme.ThemeVars;
 
 interface ScomLiquidityProviderElement extends ControlElement, ILiquidityProvider {
@@ -53,6 +54,7 @@ export default class ScomLiquidityProvider extends Module {
 	private modelState: any;
 	private panelLiquidity: Panel;
 	private panelHome: Panel;
+	private pnlQueueItem: Panel;
 	private lbMsg: Label;
 	private hStackActions: HStack;
 	private btnAdd: Button;
@@ -152,36 +154,36 @@ export default class ScomLiquidityProvider extends Module {
 		return actions;
 	}
 
-    private getProjectOwnerActions() {
-        const actions: any[] = [
+	private getProjectOwnerActions() {
+		const actions: any[] = [
 			{
 				name: 'Settings',
 				userInputDataSchema: formSchema.dataSchema,
 				userInputUISchema: formSchema.uiSchema,
 				customControls: formSchema.customControls(this.state)
 			}
-        ];
-        return actions;
-    }
+		];
+		return actions;
+	}
 
 	getConfigurators() {
 		return [
-            {
-                name: 'Project Owner Configurator',
-                target: 'Project Owners',
-                getProxySelectors: async (chainId: number) => {
-                    return [];
-                },
-                getActions: () => {
-                    return this.getProjectOwnerActions();
-                },
-                getData: this.getData.bind(this),
-                setData: async (data: any) => {
-                    await this.setData(data);
-                },
-                getTag: this.getTag.bind(this),
-                setTag: this.setTag.bind(this)
-            },
+			{
+				name: 'Project Owner Configurator',
+				target: 'Project Owners',
+				getProxySelectors: async (chainId: number) => {
+					return [];
+				},
+				getActions: () => {
+					return this.getProjectOwnerActions();
+				},
+				getData: this.getData.bind(this),
+				setData: async (data: any) => {
+					await this.setData(data);
+				},
+				getTag: this.getTag.bind(this),
+				setTag: this.setTag.bind(this)
+			},
 			{
 				name: 'Builder Configurator',
 				target: 'Builders',
@@ -196,13 +198,13 @@ export default class ScomLiquidityProvider extends Module {
 				getTag: this.getTag.bind(this),
 				setTag: this.setTag.bind(this)
 			},
-            {
-                name: 'Embedder Configurator',
-                target: 'Embedders',
-                getData: async () => {
-                    return { ...this._data }
-                },
-                setData: async (properties: ILiquidityProvider, linkParams?: Record<string, any>) => {
+			{
+				name: 'Embedder Configurator',
+				target: 'Embedders',
+				getData: async () => {
+					return { ...this._data }
+				},
+				setData: async (properties: ILiquidityProvider, linkParams?: Record<string, any>) => {
 					const { isCreate, ...resultingData } = properties;
 					if (isCreate) {
 						this._data.offerIndex = 0;
@@ -210,11 +212,11 @@ export default class ScomLiquidityProvider extends Module {
 					if (!this._data.offerIndex) {
 						this.actionType = Action.CREATE;
 					}
-                    await this.setData(resultingData);
-                },
-                getTag: this.getTag.bind(this),
-                setTag: this.setTag.bind(this)
-            }
+					await this.setData(resultingData);
+				},
+				getTag: this.getTag.bind(this),
+				setTag: this.setTag.bind(this)
+			}
 		]
 	}
 
@@ -497,6 +499,7 @@ export default class ScomLiquidityProvider extends Module {
 	private renderHome = async (pairAddress?: string, msg?: string) => {
 		const walletConnected = isClientWalletConnected();
 		const isRpcWalletConnected = this.state.isRpcWalletConnected();
+		this.renderQueueItem(pairAddress);
 		if (pairAddress) {
 			this.lbMsg.visible = false;
 			this.hStackActions.visible = true;
@@ -525,6 +528,115 @@ export default class ScomLiquidityProvider extends Module {
 		}
 	}
 
+	private onViewContract(address: string) {
+		const chainId = this.state.getChainId();
+		viewOnExplorerByAddress(chainId, address);
+	}
+
+	private async renderQueueItem(pairAddress?: string) {
+		this.pnlQueueItem.clearInnerHTML();
+		try {
+			if (pairAddress) {
+				const chainId = this.state.getChainId();
+				const fromToken = this.fromTokenObject;
+				const fromTokenSymbol = tokenSymbol(chainId, this.fromTokenAddress);
+				const toToken = this.toTokenObject;
+				const toTokenSymbol = tokenSymbol(chainId, this.toTokenAddress);
+				const info = await getGroupQueueInfo(this.state, pairAddress, fromToken, toToken, this.offerIndex);
+				const amount = `${FormatUtils.formatNumber(info.amount, { decimalFigures: 4, minValue: 0.0001 })} ${fromTokenSymbol}`;
+				const offerPrice = `1 ${fromTokenSymbol} = ${FormatUtils.formatNumber(info.offerPrice, { decimalFigures: 4, minValue: 0.0001 })} ${toTokenSymbol}`;
+				const startDate = formatDate(info.startDate, DefaultDateTimeFormat, true);
+				const endDate = formatDate(info.endDate, DefaultDateTimeFormat, true);
+				const whitelistedAddress = info.allowAll ? 'Everyone' : `${info.addresses.length} Address${info.addresses.length > 1 ? "es" : ""}`;
+				const totalAllocation = `${info.allowAll ? info.amount : info.allocation} ${fromTokenSymbol}`;
+				const youWillGet = `${info.willGet} ${toTokenSymbol}`;
+				this.pnlQueueItem.appendChild(
+					<i-vstack
+						horizontalAlignment="center"
+						verticalAlignment="center"
+						padding={{ bottom: '0.5rem' }}
+					>
+						<i-hstack
+							width="100%"
+							horizontalAlignment="space-between"
+							verticalAlignment="center"
+							padding={{ bottom: 10 }}
+							border={{ bottom: { width: 2, style: 'solid', color: Theme.divider } }}
+						>
+							<i-hstack verticalAlignment="center">
+								<i-hstack verticalAlignment="center" class="pointer" onClick={() => this.onViewContract(pairAddress)}>
+									<i-label font={{ size: '20px', bold: true }} caption={fromTokenSymbol} margin={{ right: 4 }} />
+									<i-icon name="arrow-right" fill="#fff" width="14" height="14" margin={{ right: 4 }} />
+									<i-label font={{ size: '20px', bold: true }} caption={toTokenSymbol} margin={{ right: 4 }} />
+								</i-hstack>
+								<i-hstack verticalAlignment="center">
+									<i-label font={{ size: '20px', bold: true }} caption={`#${this.offerIndex}`} margin={{ right: 4 }} />
+									<i-icon
+										name="question-circle"
+										fill="#fff"
+										width="18"
+										height="18"
+										tooltip={{ content: 'The offer index helps identifying your group queues.' }}
+									/>
+								</i-hstack>
+							</i-hstack>
+							<i-hstack horizontalAlignment="end" verticalAlignment="center">
+								<i-image class="icon-left" width={35} height={35} position="initial" url={tokenAssets.tokenPath(this.fromTokenObject, chainId)} fallbackUrl={fallbackUrl} />
+								<i-image width={50} height={50} position="initial" url={tokenAssets.tokenPath(this.toTokenObject, chainId)} fallbackUrl={fallbackUrl} />
+							</i-hstack>
+						</i-hstack>
+						<i-vstack width="100%" margin={{ top: '1rem' }} horizontalAlignment="center" verticalAlignment="center" gap="1rem">
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption="Amount" />
+								<i-label caption={amount} tooltip={{content: amount, maxWidth: '220px'}} font={{ bold: true }}></i-label>
+							</i-hstack>
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption="Offer Price" />
+								<i-label caption={offerPrice} tooltip={{content: offerPrice, maxWidth: '220px'}} font={{ bold: true }}></i-label>
+							</i-hstack>
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption="Start Date" />
+								<i-label caption={startDate} font={{ bold: true }}></i-label>
+							</i-hstack>
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption="End Date" />
+								<i-label caption={endDate} font={{ bold: true }}></i-label>
+							</i-hstack>
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption="Status" />
+								<i-label caption={info.state} font={{ bold: true }}></i-label>
+							</i-hstack>
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption={`Whitelisted Address${info.addresses.length > 1 ? "es" : ""}`} />
+								<i-label caption={whitelistedAddress} font={{ bold: true }}></i-label>
+							</i-hstack>
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption="Total Allocation" />
+								<i-label caption={totalAllocation} tooltip={{content: totalAllocation, maxWidth: '220px'}} font={{ bold: true }}></i-label>
+							</i-hstack>
+							<i-hstack width="100%" horizontalAlignment="space-between" verticalAlignment="center" gap="4">
+								<i-label caption="You will get" />
+								<i-label caption={youWillGet} tooltip={{content: youWillGet, maxWidth: '220px'}} font={{ bold: true }}></i-label>
+							</i-hstack>
+						</i-vstack>
+					</i-vstack>
+				)
+			} else {
+				this.pnlQueueItem.appendChild(
+					<i-hstack horizontalAlignment="center">
+						<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
+					</i-hstack>
+				);
+			}
+		} catch (err) {
+			this.pnlQueueItem.appendChild(
+				<i-hstack horizontalAlignment="center">
+					<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
+				</i-hstack>
+			);
+		}
+	}
+
 	private onBack = () => {
 		this.panelLiquidity.visible = false;
 		this.panelHome.visible = true;
@@ -534,12 +646,12 @@ export default class ScomLiquidityProvider extends Module {
 		this.actionType = Action.ADD;
 		this.onActions();
 	}
-	
+
 	private handleRemove() {
 		this.actionType = Action.REMOVE;
 		this.onActions();
 	}
-	
+
 	private handleLock() {
 		this.actionType = Action.LOCK;
 		this.onActions();
@@ -739,7 +851,11 @@ export default class ScomLiquidityProvider extends Module {
 								</i-vstack>
 								<i-panel id="panelHome" visible={false}>
 									<i-vstack verticalAlignment="center" alignItems="center">
-										<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
+										<i-panel id="pnlQueueItem" width="100%">
+											<i-hstack horizontalAlignment="center">
+												<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
+											</i-hstack>
+										</i-panel>
 										<i-label id="lbMsg" margin={{ top: 10 }} />
 										<i-hstack id="hStackActions" gap={10} margin={{ top: 10 }} verticalAlignment="center" horizontalAlignment="center" wrap="wrap">
 											<i-button

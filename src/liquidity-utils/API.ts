@@ -211,6 +211,39 @@ const getPairInfo = async (state: State, pairAddress: string, tokenAddress: stri
   return returnObj;
 }
 
+async function getGroupQueueInfo(state: State, pairAddress: string, token0: ITokenObject, token1: ITokenObject, offerIndex: number) {
+  const wallet = state.getRpcWallet();
+  const chainId = state.getChainId();
+  const WETH9Address = getAddressByKey(chainId, 'WETH9');
+  const nativeToken = getChainNativeToken(chainId);
+  const groupPair = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
+  let inverseDirection = new BigNumber(token0.address.toLowerCase()).lt(token1.address.toLowerCase());
+  let direction = !inverseDirection;
+  const offer = await groupPair.offers({ param1: direction, param2: offerIndex});
+  let totalAllocation = new BigNumber('0');
+  let addresses: IAllocation[] = await getTradersAllocation(groupPair, direction, offerIndex, token0.decimals, (address: string, allocation: string) => {
+    totalAllocation = totalAllocation.plus(allocation);
+  });
+  let price = toWeiInv(new BigNumber(offer.restrictedPrice).shiftedBy(-18).toFixed()).shiftedBy(-18).toFixed();
+  let data = {
+    pairAddress: pairAddress.toLowerCase(),
+    fromTokenAddress: token0.address.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : token0.address.toLowerCase(),
+    toTokenAddress: token1.address.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : token1.address.toLowerCase(),
+    amount: new BigNumber(offer.amount).shiftedBy(-token0.decimals).toFixed(),
+    offerPrice: price,
+    startDate: offer.startDate.toNumber() * 1000,
+    endDate: offer.expire.toNumber() * 1000,
+    state: offer.locked ? 'Locked' : 'Unlocked',
+    allowAll: offer.allowAll,
+    direct: true,
+    offerIndex: offerIndex,
+    addresses,
+    allocation: totalAllocation.toFixed(),
+    willGet: new BigNumber(offer.amount).times(new BigNumber(price)).shiftedBy(-Number(token0.decimals)).toFixed()
+  };
+  return data;
+}
+
 const getToBeApprovedTokens = async (chainId: number, tokenObj: ITokenObject, amount: string, stake: string) => {
   const WETH9Address = getAddressByKey(chainId, 'WETH9');
   let tokens = mapTokenObjectSet(chainId, { tokenObj });
@@ -529,5 +562,6 @@ export {
   lockGroupQueueOffer,
   getQueueStakeToken,
   convertWhitelistedAddresses,
-  getOfferIndexes
+  getOfferIndexes,
+  getGroupQueueInfo
 }

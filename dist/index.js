@@ -423,6 +423,9 @@ define("@scom/scom-liquidity-provider/index.css.ts", ["require", "exports", "@ij
                 minWidth: 320,
                 marginInline: 'auto'
             },
+            '.icon-left': {
+                transform: 'translate(10px, 0)',
+            },
             '.detail-col': {
                 font: `normal normal 700 1.5rem/1.5rem ${Theme.typography.fontFamily}`,
                 background: 'hsla(0,0%,100%,0.10196078431372549)',
@@ -1090,7 +1093,7 @@ define("@scom/scom-liquidity-provider/global/index.ts", ["require", "exports", "
 define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "exports", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/oswap-openswap-contract", "@scom/scom-token-list", "@ijstech/eth-contract"], function (require, exports, index_2, eth_wallet_5, index_3, oswap_openswap_contract_1, scom_token_list_2, eth_contract_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getOfferIndexes = exports.convertWhitelistedAddresses = exports.getQueueStakeToken = exports.lockGroupQueueOffer = exports.removeLiquidity = exports.addLiquidity = exports.getLiquidityProviderAddress = exports.getToBeApprovedTokens = exports.getPairInfo = exports.isPairRegistered = exports.getPair = exports.getAddresses = void 0;
+    exports.getGroupQueueInfo = exports.getOfferIndexes = exports.convertWhitelistedAddresses = exports.getQueueStakeToken = exports.lockGroupQueueOffer = exports.removeLiquidity = exports.addLiquidity = exports.getLiquidityProviderAddress = exports.getToBeApprovedTokens = exports.getPairInfo = exports.isPairRegistered = exports.getPair = exports.getAddresses = void 0;
     const ConfigStore = 'OSWAP_ConfigStore';
     const getAddressFromCore = (chainId, key) => {
         let Address = getAddresses(chainId);
@@ -1266,6 +1269,39 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         return returnObj;
     };
     exports.getPairInfo = getPairInfo;
+    async function getGroupQueueInfo(state, pairAddress, token0, token1, offerIndex) {
+        const wallet = state.getRpcWallet();
+        const chainId = state.getChainId();
+        const WETH9Address = getAddressByKey(chainId, 'WETH9');
+        const nativeToken = (0, index_3.getChainNativeToken)(chainId);
+        const groupPair = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
+        let inverseDirection = new eth_wallet_5.BigNumber(token0.address.toLowerCase()).lt(token1.address.toLowerCase());
+        let direction = !inverseDirection;
+        const offer = await groupPair.offers({ param1: direction, param2: offerIndex });
+        let totalAllocation = new eth_wallet_5.BigNumber('0');
+        let addresses = await getTradersAllocation(groupPair, direction, offerIndex, token0.decimals, (address, allocation) => {
+            totalAllocation = totalAllocation.plus(allocation);
+        });
+        let price = (0, index_2.toWeiInv)(new eth_wallet_5.BigNumber(offer.restrictedPrice).shiftedBy(-18).toFixed()).shiftedBy(-18).toFixed();
+        let data = {
+            pairAddress: pairAddress.toLowerCase(),
+            fromTokenAddress: token0.address.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : token0.address.toLowerCase(),
+            toTokenAddress: token1.address.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : token1.address.toLowerCase(),
+            amount: new eth_wallet_5.BigNumber(offer.amount).shiftedBy(-token0.decimals).toFixed(),
+            offerPrice: price,
+            startDate: offer.startDate.toNumber() * 1000,
+            endDate: offer.expire.toNumber() * 1000,
+            state: offer.locked ? 'Locked' : 'Unlocked',
+            allowAll: offer.allowAll,
+            direct: true,
+            offerIndex: offerIndex,
+            addresses,
+            allocation: totalAllocation.toFixed(),
+            willGet: new eth_wallet_5.BigNumber(offer.amount).times(new eth_wallet_5.BigNumber(price)).shiftedBy(-Number(token0.decimals)).toFixed()
+        };
+        return data;
+    }
+    exports.getGroupQueueInfo = getGroupQueueInfo;
     const getToBeApprovedTokens = async (chainId, tokenObj, amount, stake) => {
         const WETH9Address = getAddressByKey(chainId, 'WETH9');
         let tokens = mapTokenObjectSet(chainId, { tokenObj });
@@ -4981,6 +5017,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.renderHome = async (pairAddress, msg) => {
                 const walletConnected = (0, index_12.isClientWalletConnected)();
                 const isRpcWalletConnected = this.state.isRpcWalletConnected();
+                this.renderQueueItem(pairAddress);
                 if (pairAddress) {
                     this.lbMsg.visible = false;
                     this.hStackActions.visible = true;
@@ -5114,6 +5151,76 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             this.dappContainer.onHide();
             this.removeRpcWalletEvents();
         }
+        onViewContract(address) {
+            const chainId = this.state.getChainId();
+            (0, index_12.viewOnExplorerByAddress)(chainId, address);
+        }
+        async renderQueueItem(pairAddress) {
+            this.pnlQueueItem.clearInnerHTML();
+            try {
+                if (pairAddress) {
+                    const chainId = this.state.getChainId();
+                    const fromToken = this.fromTokenObject;
+                    const fromTokenSymbol = (0, index_12.tokenSymbol)(chainId, this.fromTokenAddress);
+                    const toToken = this.toTokenObject;
+                    const toTokenSymbol = (0, index_12.tokenSymbol)(chainId, this.toTokenAddress);
+                    const info = await (0, index_13.getGroupQueueInfo)(this.state, pairAddress, fromToken, toToken, this.offerIndex);
+                    const amount = `${components_14.FormatUtils.formatNumber(info.amount, { decimalFigures: 4, minValue: 0.0001 })} ${fromTokenSymbol}`;
+                    const offerPrice = `1 ${fromTokenSymbol} = ${components_14.FormatUtils.formatNumber(info.offerPrice, { decimalFigures: 4, minValue: 0.0001 })} ${toTokenSymbol}`;
+                    const startDate = (0, index_14.formatDate)(info.startDate, index_14.DefaultDateTimeFormat, true);
+                    const endDate = (0, index_14.formatDate)(info.endDate, index_14.DefaultDateTimeFormat, true);
+                    const whitelistedAddress = info.allowAll ? 'Everyone' : `${info.addresses.length} Address${info.addresses.length > 1 ? "es" : ""}`;
+                    const totalAllocation = `${info.allowAll ? info.amount : info.allocation} ${fromTokenSymbol}`;
+                    const youWillGet = `${info.willGet} ${toTokenSymbol}`;
+                    this.pnlQueueItem.appendChild(this.$render("i-vstack", { horizontalAlignment: "center", verticalAlignment: "center", padding: { bottom: '0.5rem' } },
+                        this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", padding: { bottom: 10 }, border: { bottom: { width: 2, style: 'solid', color: Theme.divider } } },
+                            this.$render("i-hstack", { verticalAlignment: "center" },
+                                this.$render("i-hstack", { verticalAlignment: "center", class: "pointer", onClick: () => this.onViewContract(pairAddress) },
+                                    this.$render("i-label", { font: { size: '20px', bold: true }, caption: fromTokenSymbol, margin: { right: 4 } }),
+                                    this.$render("i-icon", { name: "arrow-right", fill: "#fff", width: "14", height: "14", margin: { right: 4 } }),
+                                    this.$render("i-label", { font: { size: '20px', bold: true }, caption: toTokenSymbol, margin: { right: 4 } })),
+                                this.$render("i-hstack", { verticalAlignment: "center" },
+                                    this.$render("i-label", { font: { size: '20px', bold: true }, caption: `#${this.offerIndex}`, margin: { right: 4 } }),
+                                    this.$render("i-icon", { name: "question-circle", fill: "#fff", width: "18", height: "18", tooltip: { content: 'The offer index helps identifying your group queues.' } }))),
+                            this.$render("i-hstack", { horizontalAlignment: "end", verticalAlignment: "center" },
+                                this.$render("i-image", { class: "icon-left", width: 35, height: 35, position: "initial", url: scom_token_list_7.assets.tokenPath(this.fromTokenObject, chainId), fallbackUrl: index_12.fallbackUrl }),
+                                this.$render("i-image", { width: 50, height: 50, position: "initial", url: scom_token_list_7.assets.tokenPath(this.toTokenObject, chainId), fallbackUrl: index_12.fallbackUrl }))),
+                        this.$render("i-vstack", { width: "100%", margin: { top: '1rem' }, horizontalAlignment: "center", verticalAlignment: "center", gap: "1rem" },
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: "Amount" }),
+                                this.$render("i-label", { caption: amount, tooltip: { content: amount, maxWidth: '220px' }, font: { bold: true } })),
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: "Offer Price" }),
+                                this.$render("i-label", { caption: offerPrice, tooltip: { content: offerPrice, maxWidth: '220px' }, font: { bold: true } })),
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: "Start Date" }),
+                                this.$render("i-label", { caption: startDate, font: { bold: true } })),
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: "End Date" }),
+                                this.$render("i-label", { caption: endDate, font: { bold: true } })),
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: "Status" }),
+                                this.$render("i-label", { caption: info.state, font: { bold: true } })),
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: `Whitelisted Address${info.addresses.length > 1 ? "es" : ""}` }),
+                                this.$render("i-label", { caption: whitelistedAddress, font: { bold: true } })),
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: "Total Allocation" }),
+                                this.$render("i-label", { caption: totalAllocation, tooltip: { content: totalAllocation, maxWidth: '220px' }, font: { bold: true } })),
+                            this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
+                                this.$render("i-label", { caption: "You will get" }),
+                                this.$render("i-label", { caption: youWillGet, tooltip: { content: youWillGet, maxWidth: '220px' }, font: { bold: true } })))));
+                }
+                else {
+                    this.pnlQueueItem.appendChild(this.$render("i-hstack", { horizontalAlignment: "center" },
+                        this.$render("i-image", { url: assets_5.default.fullPath('img/TrollTrooper.svg') })));
+                }
+            }
+            catch (err) {
+                this.pnlQueueItem.appendChild(this.$render("i-hstack", { horizontalAlignment: "center" },
+                    this.$render("i-image", { url: assets_5.default.fullPath('img/TrollTrooper.svg') })));
+            }
+        }
         handleAdd() {
             this.actionType = index_13.Action.ADD;
             this.onActions();
@@ -5215,7 +5322,9 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                         this.$render("i-label", { caption: "Loading...", font: { color: '#FD4A4C', size: '1.5em' }, class: "i-loading-spinner_text" }))),
                                 this.$render("i-panel", { id: "panelHome", visible: false },
                                     this.$render("i-vstack", { verticalAlignment: "center", alignItems: "center" },
-                                        this.$render("i-image", { url: assets_5.default.fullPath('img/TrollTrooper.svg') }),
+                                        this.$render("i-panel", { id: "pnlQueueItem", width: "100%" },
+                                            this.$render("i-hstack", { horizontalAlignment: "center" },
+                                                this.$render("i-image", { url: assets_5.default.fullPath('img/TrollTrooper.svg') }))),
                                         this.$render("i-label", { id: "lbMsg", margin: { top: 10 } }),
                                         this.$render("i-hstack", { id: "hStackActions", gap: 10, margin: { top: 10 }, verticalAlignment: "center", horizontalAlignment: "center", wrap: "wrap" },
                                             this.$render("i-button", { id: "btnAdd", caption: "Add", class: "btn-os", minHeight: 36, width: 120, rightIcon: { spin: true, visible: false }, onClick: this.handleAdd.bind(this) }),

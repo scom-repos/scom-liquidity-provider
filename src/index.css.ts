@@ -177,6 +177,9 @@ export const liquidityProviderForm = Styles.style({
       minWidth: 320,
       marginInline: 'auto'
     },
+    '.icon-left': {
+      transform: 'translate(10px, 0)',
+    },
     '.detail-col': {
       font: `normal normal 700 1.5rem/1.5rem ${Theme.typography.fontFamily}`,
       background: 'hsla(0,0%,100%,0.10196078431372549)',

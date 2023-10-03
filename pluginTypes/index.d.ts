@@ -196,6 +196,22 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/API.ts" {
         toTokenAddress: string;
         pairIndex: BigNumber;
     }>;
+    function getGroupQueueInfo(state: State, pairAddress: string, token0: ITokenObject, token1: ITokenObject, offerIndex: number): Promise<{
+        pairAddress: string;
+        fromTokenAddress: string;
+        toTokenAddress: string;
+        amount: string;
+        offerPrice: string;
+        startDate: number;
+        endDate: number;
+        state: string;
+        allowAll: boolean;
+        direct: boolean;
+        offerIndex: number;
+        addresses: IAllocation[];
+        allocation: string;
+        willGet: string;
+    }>;
     const getToBeApprovedTokens: (chainId: number, tokenObj: ITokenObject, amount: string, stake: string) => Promise<string[]>;
     const addLiquidity: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenIn: ITokenObject, pairIndex: number, offerIndex: number, amountIn: number, allowAll: boolean, restrictedPrice: string, startDate: number, expire: number, deadline: number, whitelistAddress: IAllocation[]) => Promise<any>;
     const removeLiquidity: (chainId: number, tokenA: ITokenObject, tokenB: ITokenObject, tokenOut: ITokenObject, amountOut: string, receivingOut: string, orderIndex: any, deadline: number) => Promise<import("@ijstech/eth-contract").TransactionReceipt>;
@@ -203,7 +219,7 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/API.ts" {
     const convertWhitelistedAddresses: (inputText: string) => IAllocation[];
     function isPairRegistered(state: State, tokenA: string, tokenB: string): Promise<boolean>;
     function getOfferIndexes(state: State, pairAddress: string, tokenA: string, tokenB: string): Promise<BigNumber[]>;
-    export { getPair, isPairRegistered, getPairInfo, getToBeApprovedTokens, getLiquidityProviderAddress, addLiquidity, removeLiquidity, lockGroupQueueOffer, getQueueStakeToken, convertWhitelistedAddresses, getOfferIndexes };
+    export { getPair, isPairRegistered, getPairInfo, getToBeApprovedTokens, getLiquidityProviderAddress, addLiquidity, removeLiquidity, lockGroupQueueOffer, getQueueStakeToken, convertWhitelistedAddresses, getOfferIndexes, getGroupQueueInfo };
 }
 /// <amd-module name="@scom/scom-liquidity-provider/liquidity-utils/model.ts" />
 declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
@@ -969,6 +985,7 @@ declare module "@scom/scom-liquidity-provider" {
         private modelState;
         private panelLiquidity;
         private panelHome;
+        private pnlQueueItem;
         private lbMsg;
         private hStackActions;
         private btnAdd;
@@ -1060,6 +1077,8 @@ declare module "@scom/scom-liquidity-provider" {
         private renderForm;
         private connectWallet;
         private renderHome;
+        private onViewContract;
+        private renderQueueItem;
         private onBack;
         private handleAdd;
         private handleRemove;
