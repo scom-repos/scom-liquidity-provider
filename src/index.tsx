@@ -501,6 +501,7 @@ export default class ScomLiquidityProvider extends Module {
 		const isRpcWalletConnected = this.state.isRpcWalletConnected();
 		this.renderQueueItem(pairAddress);
 		if (pairAddress) {
+			this.panelHome.background.color = "hsla(0,0%,100%,0.10196078431372549)";
 			this.lbMsg.visible = false;
 			this.hStackActions.visible = true;
 			const info: any = await getPairInfo(this.state, pairAddress, this.fromTokenAddress, this.offerIndex);
@@ -512,6 +513,7 @@ export default class ScomLiquidityProvider extends Module {
 			this.btnLock.enabled = isRpcWalletConnected && !locked;
 			this.btnLock.caption = locked ? 'Locked' : 'Lock';
 		} else {
+			this.panelHome.background.color = "";
 			this.hStackActions.visible = false;
 			this.lbMsg.caption = msg ?? (!walletConnected ? 'Please connect with your wallet' : 'Invalid configurator data');
 			this.lbMsg.visible = true;
@@ -849,7 +851,7 @@ export default class ScomLiquidityProvider extends Module {
 										/>
 									</i-vstack>
 								</i-vstack>
-								<i-panel id="panelHome" visible={false}>
+								<i-panel id="panelHome" padding={{ top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }} border={{ radius: '1em' }} visible={false}>
 									<i-vstack verticalAlignment="center" alignItems="center">
 										<i-panel id="pnlQueueItem" width="100%">
 											<i-hstack horizontalAlignment="center">

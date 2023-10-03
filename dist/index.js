@@ -5019,6 +5019,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 const isRpcWalletConnected = this.state.isRpcWalletConnected();
                 this.renderQueueItem(pairAddress);
                 if (pairAddress) {
+                    this.panelHome.background.color = "hsla(0,0%,100%,0.10196078431372549)";
                     this.lbMsg.visible = false;
                     this.hStackActions.visible = true;
                     const info = await (0, index_13.getPairInfo)(this.state, pairAddress, this.fromTokenAddress, this.offerIndex);
@@ -5031,6 +5032,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.btnLock.caption = locked ? 'Locked' : 'Lock';
                 }
                 else {
+                    this.panelHome.background.color = "";
                     this.hStackActions.visible = false;
                     this.lbMsg.caption = msg !== null && msg !== void 0 ? msg : (!walletConnected ? 'Please connect with your wallet' : 'Invalid configurator data');
                     this.lbMsg.visible = true;
@@ -5320,7 +5322,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                     this.$render("i-vstack", { class: "i-loading-spinner", horizontalAlignment: "center", verticalAlignment: "center" },
                                         this.$render("i-icon", { class: "i-loading-spinner_icon", image: { url: assets_5.default.fullPath('img/loading.svg'), width: 36, height: 36 } }),
                                         this.$render("i-label", { caption: "Loading...", font: { color: '#FD4A4C', size: '1.5em' }, class: "i-loading-spinner_text" }))),
-                                this.$render("i-panel", { id: "panelHome", visible: false },
+                                this.$render("i-panel", { id: "panelHome", padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, border: { radius: '1em' }, visible: false },
                                     this.$render("i-vstack", { verticalAlignment: "center", alignItems: "center" },
                                         this.$render("i-panel", { id: "pnlQueueItem", width: "100%" },
                                             this.$render("i-hstack", { horizontalAlignment: "center" },
