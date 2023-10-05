@@ -856,7 +856,9 @@ define("@scom/scom-liquidity-provider/global/utils/helper.ts", ["require", "expo
         const formatType = customType || exports.DefaultDateFormat;
         const formatted = (0, components_5.moment)(date).format(formatType);
         if (showTimezone) {
-            return `${formatted} (UTC+${(0, components_5.moment)().utcOffset() / 60})`;
+            let offsetHour = (0, components_5.moment)().utcOffset() / 60;
+            //will look like UTC-2 UTC+2 UTC+0
+            return `${formatted} (UTC${offsetHour >= 0 ? "+" : ""}${offsetHour})`;
         }
         return formatted;
     };
