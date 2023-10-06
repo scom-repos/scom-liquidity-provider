@@ -19,6 +19,7 @@ import formSchema, { getFormSchema } from './formSchema';
 import { LiquidityForm, LiquidityHelp, LiquiditySummary } from './detail/index';
 import { Action, Model, Stage, getOfferIndexes, getPair, getPairInfo, isPairRegistered, lockGroupQueueOffer, getGroupQueueInfo } from './liquidity-utils/index';
 import { DefaultDateTimeFormat, formatDate, ILiquidityProvider, ProviderGroupQueue, registerSendTxEvents } from './global/index';
+import ScomLiquidityProviderFlowInitialSetup from './flow/initialSetup';
 const Theme = Styles.Theme.ThemeVars;
 
 interface ScomLiquidityProviderElement extends ControlElement, ILiquidityProvider {
@@ -1003,5 +1004,36 @@ export default class ScomLiquidityProvider extends Module {
 				</i-panel>
 			</i-scom-dapp-container>
 		)
+	}
+
+	async handleFlowStage(target: Control, stage: string, options: any) {
+		let widget;
+		if (stage === 'initialSetup') {
+			widget = new ScomLiquidityProviderFlowInitialSetup();
+			target.appendChild(widget);
+			await widget.ready();
+			let properties = options.properties;
+			let tokenRequirements = options.tokenRequirements;
+			let invokerId = options.invokerId;
+			await widget.setData({
+				executionProperties: properties,
+				tokenRequirements,
+				invokerId
+			});
+		} else {
+			widget = this;
+			target.appendChild(widget);
+			await widget.ready();
+			let properties = options.properties;
+			let tag = options.tag;
+			let invokerId = options.invokerId;
+			this.state.setFlowInvokerId(invokerId);
+			await this.setData(properties);
+			if (tag) {
+				this.setTag(tag);
+			}
+		}
+		
+		return { widget }
 	}
 }

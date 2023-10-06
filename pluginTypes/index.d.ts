@@ -28,9 +28,11 @@ declare module "@scom/scom-liquidity-provider/store/utils.ts" {
         embedderCommissionFee: string;
         rpcWalletId: string;
         approvalModel: ERC20ApprovalModel;
+        flowInvokerId: string;
         constructor(options: any);
         initRpcWallet(chainId: number): string;
         private initData;
+        setFlowInvokerId(id: string): void;
         private setNetworkList;
         getProxyAddress(chainId?: number): string;
         getRpcWallet(): import("@ijstech/eth-wallet").IRpcWallet;
@@ -953,9 +955,50 @@ declare module "@scom/scom-liquidity-provider/detail/index.tsx" {
     export { LiquidityHelp } from "@scom/scom-liquidity-provider/detail/help.tsx";
     export { LiquidityProgress } from "@scom/scom-liquidity-provider/detail/progress.tsx";
 }
+/// <amd-module name="@scom/scom-liquidity-provider/flow/initialSetup.tsx" />
+declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
+    import { Container, ControlElement, Module } from "@ijstech/components";
+    interface ScomLiquidityProviderFlowInitialSetupElement extends ControlElement {
+        data?: any;
+    }
+    global {
+        namespace JSX {
+            interface IntrinsicElements {
+                ['i-scom-liquidity-provider-flow-initial-setup']: ScomLiquidityProviderFlowInitialSetupElement;
+            }
+        }
+    }
+    export default class ScomLiquidityProviderFlowInitialSetup extends Module {
+        private lblConnectedStatus;
+        private btnConnectWallet;
+        private tokenInInput;
+        private tokenOutInput;
+        private mdWallet;
+        private state;
+        private tokenRequirements;
+        private executionProperties;
+        private invokerId;
+        private $eventBus;
+        private walletEvents;
+        constructor(parent?: Container, options?: ControlElement);
+        private get rpcWallet();
+        private get chainId();
+        private resetRpcWallet;
+        setData(value: any): Promise<void>;
+        private initWallet;
+        private initializeWidgetConfig;
+        connectWallet(): Promise<void>;
+        private updateConnectStatus;
+        private registerEvents;
+        onHide(): void;
+        init(): void;
+        private handleClickStart;
+        render(): any;
+    }
+}
 /// <amd-module name="@scom/scom-liquidity-provider" />
 declare module "@scom/scom-liquidity-provider" {
-    import { Module, Container, ControlElement } from '@ijstech/components';
+    import { Module, Container, ControlElement, Control } from '@ijstech/components';
     import { IWalletPlugin } from '@scom/scom-wallet-modal';
     import { INetworkConfig } from '@scom/scom-network-picker';
     import { ILiquidityProvider } from "@scom/scom-liquidity-provider/global/index.ts";
@@ -1096,5 +1139,8 @@ declare module "@scom/scom-liquidity-provider" {
         private handleConfirmClick;
         private onCogClick;
         render(): any;
+        handleFlowStage(target: Control, stage: string, options: any): Promise<{
+            widget: any;
+        }>;
     }
 }
