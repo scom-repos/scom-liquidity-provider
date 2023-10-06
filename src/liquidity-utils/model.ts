@@ -15,7 +15,7 @@ import {
   getOfferIndexes
 } from './API';
 import { State, getTokenDecimals } from '../store/index';
-import { moment } from '@ijstech/components';
+import { application, moment } from '@ijstech/components';
 import { ITokenObject, tokenStore } from "@scom/scom-token-list";
 import { Contracts } from "@scom/oswap-openswap-contract";
 
@@ -736,11 +736,15 @@ export class Model {
     const restrictedPrice = toWeiInv(this.offerPriceText).shiftedBy(-Number(18)).toFixed();
     const allowAll = this.offerTo === OfferState.Everyone;
     const arrWhitelist = (allowAll || this.switchLock === LockState.Locked) ? [] : this.addresses;
-    addLiquidity(
-      this.state.getChainId(),
-      this.fromTokenObject,
-      this.toTokenObject,
-      this.fromTokenObject,
+    const chainId = this.state.getChainId();
+    const fromToken = this.fromTokenObject;
+    const toToken = this.toTokenObject;
+    const action = this.actionType === Action.CREATE ? "Create" : "Add";
+    const receipt = await addLiquidity(
+      chainId,
+      fromToken,
+      toToken,
+      fromToken,
       this.pairIndex,
       this.offerIndex ? Number(this.offerIndex) : 0,
       this.fromTokenInput.toNumber(),
@@ -751,6 +755,25 @@ export class Model {
       deadline,
       arrWhitelist
     );
+    if (receipt) {
+        const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
+        const transactionsInfoArr = [
+            {
+                desc: `${action} Group Queue ${fromToken.symbol}/${toToken.symbol}`,
+                chainId: chainId,
+                fromToken: null,
+                toToken: null,
+                fromTokenAmount: '',
+                toTokenAmount: '-',
+                hash: receipt.transactionHash,
+                timestamp
+            }
+        ];
+        const eventName = `${this.state.flowInvokerId}:addTransactions`;
+        application.EventBus.dispatch(eventName, {
+            list: transactionsInfoArr
+        });
+    }
   }
 
   private async removeLiquidityAction(deadline: number, collectFromProceeds: boolean) {
@@ -762,15 +785,37 @@ export class Model {
     } else {
       amountOut = this.fromTokenInput.toString();
     }
-    removeLiquidity(
+    const chainId = this.state.getChainId();
+    const fromToken = this.fromTokenObject;
+    const toToken = this.toTokenObject;
+    const receipt = await removeLiquidity(
       this.state.getChainId(),
-      this.fromTokenObject,
-      this.toTokenObject,
-      this.fromTokenObject,
+      fromToken,
+      toToken,
+      fromToken,
       amountOut,
       reserveOut,
       this.offerIndex,
       deadline
     );
+    if (receipt) {
+        const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
+        const transactionsInfoArr = [
+            {
+                desc: `Remove Group Queue ${fromToken.symbol}/${toToken.symbol}`,
+                chainId: chainId,
+                fromToken: null,
+                toToken: null,
+                fromTokenAmount: '',
+                toTokenAmount: '-',
+                hash: receipt.transactionHash,
+                timestamp
+            }
+        ];
+        const eventName = `${this.state.flowInvokerId}:addTransactions`;
+        application.EventBus.dispatch(eventName, {
+            list: transactionsInfoArr
+        });
+    }
   }
 }

@@ -2282,7 +2282,30 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             const restrictedPrice = (0, index_4.toWeiInv)(this.offerPriceText).shiftedBy(-Number(18)).toFixed();
             const allowAll = this.offerTo === OfferState.Everyone;
             const arrWhitelist = (allowAll || this.switchLock === LockState.Locked) ? [] : this.addresses;
-            (0, API_1.addLiquidity)(this.state.getChainId(), this.fromTokenObject, this.toTokenObject, this.fromTokenObject, this.pairIndex, this.offerIndex ? Number(this.offerIndex) : 0, this.fromTokenInput.toNumber(), allowAll, restrictedPrice, this.startDate.unix(), endDate, deadline, arrWhitelist);
+            const chainId = this.state.getChainId();
+            const fromToken = this.fromTokenObject;
+            const toToken = this.toTokenObject;
+            const action = this.actionType === Action.CREATE ? "Create" : "Add";
+            const receipt = await (0, API_1.addLiquidity)(chainId, fromToken, toToken, fromToken, this.pairIndex, this.offerIndex ? Number(this.offerIndex) : 0, this.fromTokenInput.toNumber(), allowAll, restrictedPrice, this.startDate.unix(), endDate, deadline, arrWhitelist);
+            if (receipt) {
+                const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
+                const transactionsInfoArr = [
+                    {
+                        desc: `${action} Group Queue ${fromToken.symbol}/${toToken.symbol}`,
+                        chainId: chainId,
+                        fromToken: null,
+                        toToken: null,
+                        fromTokenAmount: '',
+                        toTokenAmount: '-',
+                        hash: receipt.transactionHash,
+                        timestamp
+                    }
+                ];
+                const eventName = `${this.state.flowInvokerId}:addTransactions`;
+                components_6.application.EventBus.dispatch(eventName, {
+                    list: transactionsInfoArr
+                });
+            }
         }
         async removeLiquidityAction(deadline, collectFromProceeds) {
             this.showTxStatus('warning', '');
@@ -2294,7 +2317,29 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             else {
                 amountOut = this.fromTokenInput.toString();
             }
-            (0, API_1.removeLiquidity)(this.state.getChainId(), this.fromTokenObject, this.toTokenObject, this.fromTokenObject, amountOut, reserveOut, this.offerIndex, deadline);
+            const chainId = this.state.getChainId();
+            const fromToken = this.fromTokenObject;
+            const toToken = this.toTokenObject;
+            const receipt = await (0, API_1.removeLiquidity)(this.state.getChainId(), fromToken, toToken, fromToken, amountOut, reserveOut, this.offerIndex, deadline);
+            if (receipt) {
+                const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
+                const transactionsInfoArr = [
+                    {
+                        desc: `Remove Group Queue ${fromToken.symbol}/${toToken.symbol}`,
+                        chainId: chainId,
+                        fromToken: null,
+                        toToken: null,
+                        fromTokenAmount: '',
+                        toTokenAmount: '-',
+                        hash: receipt.transactionHash,
+                        timestamp
+                    }
+                ];
+                const eventName = `${this.state.flowInvokerId}:addTransactions`;
+                components_6.application.EventBus.dispatch(eventName, {
+                    list: transactionsInfoArr
+                });
+            }
         }
     }
     exports.Model = Model;
