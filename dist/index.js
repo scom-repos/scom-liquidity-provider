@@ -2287,7 +2287,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             const toToken = this.toTokenObject;
             const action = this.actionType === Action.CREATE ? "Create" : "Add";
             const receipt = await (0, API_1.addLiquidity)(chainId, fromToken, toToken, fromToken, this.pairIndex, this.offerIndex ? Number(this.offerIndex) : 0, this.fromTokenInput.toNumber(), allowAll, restrictedPrice, this.startDate.unix(), endDate, deadline, arrWhitelist);
-            if (receipt) {
+            if (this.state.flowInvokerId && receipt) {
                 const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
                 const transactionsInfoArr = [
                     {
@@ -2321,7 +2321,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             const fromToken = this.fromTokenObject;
             const toToken = this.toTokenObject;
             const receipt = await (0, API_1.removeLiquidity)(this.state.getChainId(), fromToken, toToken, fromToken, amountOut, reserveOut, this.offerIndex, deadline);
-            if (receipt) {
+            if (this.state.flowInvokerId && receipt) {
                 const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
                 const transactionsInfoArr = [
                     {

@@ -755,7 +755,7 @@ export class Model {
       deadline,
       arrWhitelist
     );
-    if (receipt) {
+    if (this.state.flowInvokerId && receipt) {
         const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
         const transactionsInfoArr = [
             {
@@ -798,7 +798,7 @@ export class Model {
       this.offerIndex,
       deadline
     );
-    if (receipt) {
+    if (this.state.flowInvokerId && receipt) {
         const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
         const transactionsInfoArr = [
             {
