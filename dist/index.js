@@ -4712,13 +4712,14 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
             super.init();
             this.tokenInInput.style.setProperty('--input-background', '#232B5A');
             this.tokenInInput.style.setProperty('--input-font_color', '#fff');
-            this.tokenOutInput.style.setProperty('--input-bakcground', '#232B5A');
+            this.tokenOutInput.style.setProperty('--input-background', '#232B5A');
             this.tokenOutInput.style.setProperty('--input-font_color', '#fff');
             this.registerEvents();
         }
         async handleClickStart() {
             var _a, _b, _c, _d;
             let eventName = `${this.invokerId}:nextStep`;
+            this.executionProperties.chainId = this.chainId;
             this.executionProperties.tokenIn = ((_a = this.tokenInInput.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = this.tokenInInput.token) === null || _b === void 0 ? void 0 : _b.symbol);
             this.executionProperties.tokenOut = ((_c = this.tokenOutInput.token) === null || _c === void 0 ? void 0 : _c.address) || ((_d = this.tokenOutInput.token) === null || _d === void 0 ? void 0 : _d.symbol);
             this.$eventBus.dispatch(eventName, {
@@ -4739,8 +4740,8 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                     this.$render("i-scom-token-input", { id: "tokenInInput", type: "combobox", isBalanceShown: false, isBtnMaxShown: false, isInputShown: false, border: { radius: 12 } }),
                     this.$render("i-label", { caption: "to", font: { size: "1rem" } }),
                     this.$render("i-scom-token-input", { id: "tokenOutInput", type: "combobox", isBalanceShown: false, isBtnMaxShown: false, isInputShown: false, border: { radius: 12 } })),
-                this.$render("i-hstack", { verticalAlignment: "center" },
-                    this.$render("i-button", { id: "btnStart", caption: "Start", padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickStart.bind(this) })),
+                this.$render("i-hstack", { horizontalAlignment: "center" },
+                    this.$render("i-button", { id: "btnStart", caption: "Start", padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText, size: '1.5rem' }, onClick: this.handleClickStart.bind(this) })),
                 this.$render("i-scom-wallet-modal", { id: "mdWallet", wallets: [] })));
         }
     };

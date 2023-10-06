@@ -122,12 +122,13 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
         super.init();
         this.tokenInInput.style.setProperty('--input-background', '#232B5A');
         this.tokenInInput.style.setProperty('--input-font_color', '#fff');
-        this.tokenOutInput.style.setProperty('--input-bakcground', '#232B5A');
+        this.tokenOutInput.style.setProperty('--input-background', '#232B5A');
         this.tokenOutInput.style.setProperty('--input-font_color', '#fff');
         this.registerEvents();
     }
     private async handleClickStart() {
         let eventName = `${this.invokerId}:nextStep`;
+        this.executionProperties.chainId = this.chainId;
         this.executionProperties.tokenIn = this.tokenInInput.token?.address || this.tokenInInput.token?.symbol;
         this.executionProperties.tokenOut = this.tokenOutInput.token?.address || this.tokenOutInput.token?.symbol;
         this.$eventBus.dispatch(eventName, {
@@ -173,12 +174,12 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
                         border={{ radius: 12 }}
                     ></i-scom-token-input>
                 </i-hstack>
-                <i-hstack verticalAlignment="center">
+                <i-hstack horizontalAlignment="center">
                     <i-button
                         id="btnStart"
                         caption="Start"
                         padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-                        font={{ color: Theme.colors.primary.contrastText }}
+                        font={{ color: Theme.colors.primary.contrastText, size: '1.5rem' }}
                         onClick={this.handleClickStart.bind(this)}
                     ></i-button>
                 </i-hstack>
