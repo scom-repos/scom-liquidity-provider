@@ -720,7 +720,28 @@ export default class ScomLiquidityProvider extends Module {
 			}
 		};
 
+		const fromToken = this.fromTokenObject;
+		const toToken = this.toTokenObject;
+		const chainId = this.state.getChainId();
 		const confirmationCallback = async (receipt: any) => {
+			if (this.state.handleAddTransactions) {
+				const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
+				const transactionsInfoArr = [
+					{
+						desc: `Lock Order ${fromToken.symbol}/${toToken.symbol} #${this.offerIndex}`,
+						chainId: chainId,
+						fromToken: null,
+						toToken: null,
+						fromTokenAmount: '',
+						toTokenAmount: '',
+						hash: receipt.transactionHash,
+						timestamp
+					}
+				];
+				this.state.handleAddTransactions({
+					list: transactionsInfoArr
+				});
+			}
 			this.btnLock.rightIcon.visible = false;
 			this.btnLock.caption = 'Locked';
 		};
@@ -730,7 +751,7 @@ export default class ScomLiquidityProvider extends Module {
 			confirmation: confirmationCallback
 		});
 
-		lockGroupQueueOffer(this.chainId, this.pairAddress, this.fromTokenObject, this.toTokenObject, this.offerIndex);
+		lockGroupQueueOffer(chainId, this.pairAddress, fromToken, toToken, this.offerIndex);
 	}
 
 	private initWallet = async () => {
