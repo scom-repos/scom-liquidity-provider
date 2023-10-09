@@ -755,7 +755,7 @@ export class Model {
       deadline,
       arrWhitelist
     );
-    if (this.state.flowInvokerId && receipt) {
+    if (this.state.handleAddTransactions && receipt) {
         const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
         const transactionsInfoArr = [
             {
@@ -769,8 +769,7 @@ export class Model {
                 timestamp
             }
         ];
-        const eventName = `${this.state.flowInvokerId}:addTransactions`;
-        application.EventBus.dispatch(eventName, {
+        this.state.handleAddTransactions({
             list: transactionsInfoArr
         });
     }
@@ -798,7 +797,7 @@ export class Model {
       this.offerIndex,
       deadline
     );
-    if (this.state.flowInvokerId && receipt) {
+    if (this.state.handleAddTransactions && receipt) {
         const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
         const transactionsInfoArr = [
             {
@@ -812,8 +811,7 @@ export class Model {
                 timestamp
             }
         ];
-        const eventName = `${this.state.flowInvokerId}:addTransactions`;
-        application.EventBus.dispatch(eventName, {
+        this.state.handleAddTransactions({
             list: transactionsInfoArr
         });
     }

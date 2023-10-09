@@ -1012,13 +1012,14 @@ export default class ScomLiquidityProvider extends Module {
 			widget = new ScomLiquidityProviderFlowInitialSetup();
 			target.appendChild(widget);
 			await widget.ready();
+			widget.state = this.state;
 			let properties = options.properties;
 			let tokenRequirements = options.tokenRequirements;
-			let invokerId = options.invokerId;
+			this.state.handleNextFlowStep = options.onNextStep;
+			this.state.handleAddTransactions = options.onAddTransactions;
 			await widget.setData({
 				executionProperties: properties,
-				tokenRequirements,
-				invokerId
+				tokenRequirements
 			});
 		} else {
 			widget = this;
@@ -1026,8 +1027,8 @@ export default class ScomLiquidityProvider extends Module {
 			await widget.ready();
 			let properties = options.properties;
 			let tag = options.tag;
-			let invokerId = options.invokerId;
-			this.state.setFlowInvokerId(invokerId);
+			this.state.handleNextFlowStep = options.onNextStep;
+			this.state.handleAddTransactions = options.onAddTransactions;
 			await this.setData(properties);
 			if (tag) {
 				this.setTag(tag);

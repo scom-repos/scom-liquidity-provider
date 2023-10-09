@@ -1,5 +1,7 @@
 /// <reference path="@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
+/// <reference path="@scom/scom-token-input/@ijstech/eth-wallet/index.d.ts" />
+/// <reference path="@scom/scom-token-input/@scom/scom-token-modal/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@ijstech/eth-contract/index.d.ts" />
 /// <amd-module name="@scom/scom-liquidity-provider/assets.ts" />
 declare module "@scom/scom-liquidity-provider/assets.ts" {
@@ -26,11 +28,11 @@ declare module "@scom/scom-liquidity-provider/store/utils.ts" {
         embedderCommissionFee: string;
         rpcWalletId: string;
         approvalModel: ERC20ApprovalModel;
-        flowInvokerId: string;
+        handleNextFlowStep: (data: any) => Promise<void>;
+        handleAddTransactions: (data: any) => Promise<void>;
         constructor(options: any);
         initRpcWallet(chainId: number): string;
         private initData;
-        setFlowInvokerId(id: string): void;
         private setNetworkList;
         getProxyAddress(chainId?: number): string;
         getRpcWallet(): import("@ijstech/eth-wallet").IRpcWallet;
@@ -955,7 +957,8 @@ declare module "@scom/scom-liquidity-provider/detail/index.tsx" {
 }
 /// <amd-module name="@scom/scom-liquidity-provider/flow/initialSetup.tsx" />
 declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
-    import { Container, ControlElement, Module } from "@ijstech/components";
+    import { ControlElement, Module } from "@ijstech/components";
+    import { State } from "@scom/scom-liquidity-provider/store/index.ts";
     interface ScomLiquidityProviderFlowInitialSetupElement extends ControlElement {
         data?: any;
     }
@@ -972,13 +975,12 @@ declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
         private tokenInInput;
         private tokenOutInput;
         private mdWallet;
-        private state;
+        private _state;
         private tokenRequirements;
         private executionProperties;
-        private invokerId;
-        private $eventBus;
         private walletEvents;
-        constructor(parent?: Container, options?: ControlElement);
+        get state(): State;
+        set state(value: State);
         private get rpcWallet();
         private get chainId();
         private resetRpcWallet;

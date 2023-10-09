@@ -92,9 +92,6 @@ define("@scom/scom-liquidity-provider/store/utils.ts", ["require", "exports", "@
                 this.embedderCommissionFee = options.embedderCommissionFee;
             }
         }
-        setFlowInvokerId(id) {
-            this.flowInvokerId = id;
-        }
         setNetworkList(networkList, infuraId) {
             const wallet = eth_wallet_1.Wallet.getClientInstance();
             this.networkMap = {};
@@ -2287,7 +2284,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             const toToken = this.toTokenObject;
             const action = this.actionType === Action.CREATE ? "Create" : "Add";
             const receipt = await (0, API_1.addLiquidity)(chainId, fromToken, toToken, fromToken, this.pairIndex, this.offerIndex ? Number(this.offerIndex) : 0, this.fromTokenInput.toNumber(), allowAll, restrictedPrice, this.startDate.unix(), endDate, deadline, arrWhitelist);
-            if (this.state.flowInvokerId && receipt) {
+            if (this.state.handleAddTransactions && receipt) {
                 const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
                 const transactionsInfoArr = [
                     {
@@ -2301,8 +2298,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                         timestamp
                     }
                 ];
-                const eventName = `${this.state.flowInvokerId}:addTransactions`;
-                components_6.application.EventBus.dispatch(eventName, {
+                this.state.handleAddTransactions({
                     list: transactionsInfoArr
                 });
             }
@@ -2321,7 +2317,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             const fromToken = this.fromTokenObject;
             const toToken = this.toTokenObject;
             const receipt = await (0, API_1.removeLiquidity)(this.state.getChainId(), fromToken, toToken, fromToken, amountOut, reserveOut, this.offerIndex, deadline);
-            if (this.state.flowInvokerId && receipt) {
+            if (this.state.handleAddTransactions && receipt) {
                 const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
                 const transactionsInfoArr = [
                     {
@@ -2335,8 +2331,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                         timestamp
                     }
                 ];
-                const eventName = `${this.state.flowInvokerId}:addTransactions`;
-                components_6.application.EventBus.dispatch(eventName, {
+                this.state.handleAddTransactions({
                     list: transactionsInfoArr
                 });
             }
@@ -4677,11 +4672,15 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_14.Styles.Theme.ThemeVars;
     let ScomLiquidityProviderFlowInitialSetup = class ScomLiquidityProviderFlowInitialSetup extends components_14.Module {
-        constructor(parent, options) {
-            super(parent, options);
+        constructor() {
+            super(...arguments);
             this.walletEvents = [];
-            this.state = new index_12.State({});
-            this.$eventBus = components_14.application.EventBus;
+        }
+        get state() {
+            return this._state;
+        }
+        set state(value) {
+            this._state = value;
         }
         get rpcWallet() {
             return this.state.getRpcWallet();
@@ -4695,7 +4694,6 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
         async setData(value) {
             this.executionProperties = value.executionProperties;
             this.tokenRequirements = value.tokenRequirements;
-            this.invokerId = value.invokerId;
             await this.resetRpcWallet();
             await this.initializeWidgetConfig();
         }
@@ -4763,15 +4761,15 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
         }
         async handleClickStart() {
             var _a, _b, _c, _d;
-            let eventName = `${this.invokerId}:nextStep`;
             this.executionProperties.chainId = this.chainId;
             this.executionProperties.tokenIn = ((_a = this.tokenInInput.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = this.tokenInInput.token) === null || _b === void 0 ? void 0 : _b.symbol);
             this.executionProperties.tokenOut = ((_c = this.tokenOutInput.token) === null || _c === void 0 ? void 0 : _c.address) || ((_d = this.tokenOutInput.token) === null || _d === void 0 ? void 0 : _d.symbol);
-            this.$eventBus.dispatch(eventName, {
-                isInitialSetup: true,
-                tokenRequirements: this.tokenRequirements,
-                executionProperties: this.executionProperties
-            });
+            if (this.state.handleNextFlowStep)
+                this.state.handleNextFlowStep({
+                    isInitialSetup: true,
+                    tokenRequirements: this.tokenRequirements,
+                    executionProperties: this.executionProperties
+                });
         }
         render() {
             return (this.$render("i-vstack", { gap: "1rem", padding: { top: 10, bottom: 10, left: 20, right: 20 } },
@@ -5544,13 +5542,14 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 widget = new initialSetup_1.default();
                 target.appendChild(widget);
                 await widget.ready();
+                widget.state = this.state;
                 let properties = options.properties;
                 let tokenRequirements = options.tokenRequirements;
-                let invokerId = options.invokerId;
+                this.state.handleNextFlowStep = options.onNextStep;
+                this.state.handleAddTransactions = options.onAddTransactions;
                 await widget.setData({
                     executionProperties: properties,
-                    tokenRequirements,
-                    invokerId
+                    tokenRequirements
                 });
             }
             else {
@@ -5559,8 +5558,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 await widget.ready();
                 let properties = options.properties;
                 let tag = options.tag;
-                let invokerId = options.invokerId;
-                this.state.setFlowInvokerId(invokerId);
+                this.state.handleNextFlowStep = options.onNextStep;
+                this.state.handleAddTransactions = options.onAddTransactions;
                 await this.setData(properties);
                 if (tag) {
                     this.setTag(tag);
