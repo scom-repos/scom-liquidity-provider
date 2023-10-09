@@ -5270,7 +5270,28 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                         this.btnRemove.enabled = false;
                     }
                 };
+                const fromToken = this.fromTokenObject;
+                const toToken = this.toTokenObject;
+                const chainId = this.state.getChainId();
                 const confirmationCallback = async (receipt) => {
+                    if (this.state.handleAddTransactions) {
+                        const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
+                        const transactionsInfoArr = [
+                            {
+                                desc: `Lock Order ${fromToken.symbol}/${toToken.symbol} #${this.offerIndex}`,
+                                chainId: chainId,
+                                fromToken: null,
+                                toToken: null,
+                                fromTokenAmount: '',
+                                toTokenAmount: '',
+                                hash: receipt.transactionHash,
+                                timestamp
+                            }
+                        ];
+                        this.state.handleAddTransactions({
+                            list: transactionsInfoArr
+                        });
+                    }
                     this.btnLock.rightIcon.visible = false;
                     this.btnLock.caption = 'Locked';
                 };
@@ -5278,7 +5299,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     transactionHash: callback,
                     confirmation: confirmationCallback
                 });
-                (0, index_14.lockGroupQueueOffer)(this.chainId, this.pairAddress, this.fromTokenObject, this.toTokenObject, this.offerIndex);
+                (0, index_14.lockGroupQueueOffer)(chainId, this.pairAddress, fromToken, toToken, this.offerIndex);
             };
             this.initWallet = async () => {
                 try {
