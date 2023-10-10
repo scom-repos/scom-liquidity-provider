@@ -972,9 +972,10 @@ declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
         }
     }
     export default class ScomLiquidityProviderFlowInitialSetup extends Module {
+        private lblTitle;
         private lblConnectedStatus;
         private btnConnectWallet;
-        private btnCreate;
+        private pnlActions;
         private btnAdd;
         private btnRemove;
         private tokenInInput;
@@ -1003,7 +1004,6 @@ declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
         private handleClickStart;
         private handleSelectToken;
         private updateActionButton;
-        private handleClickCreate;
         private handleClickAdd;
         private handleClickRemove;
         render(): any;

@@ -4692,8 +4692,11 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
             await this.state.initRpcWallet(this.chainId);
         }
         async setData(value) {
+            var _a, _b;
             this.executionProperties = value.executionProperties;
             this.tokenRequirements = value.tokenRequirements;
+            this.lblTitle.caption = ((_a = this.executionProperties) === null || _a === void 0 ? void 0 : _a.isCreate) ? "Get Ready to Create Offer" : "Get Ready to Provide Liquidity";
+            this.pnlActions.visible = !((_b = this.executionProperties) === null || _b === void 0 ? void 0 : _b.isCreate);
             await this.resetRpcWallet();
             await this.initializeWidgetConfig();
         }
@@ -4810,22 +4813,22 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
             }
         }
         updateActionButton() {
-            const buttons = [this.btnCreate, this.btnAdd, this.btnRemove];
-            const index = this.action === 'create' ? 0 : this.action === 'add' ? 1 : 2;
-            const target = buttons.splice(index, 1)[0];
-            target.background.color = Theme.colors.primary.main;
-            target.font = { color: Theme.colors.primary.contrastText };
-            target.icon.name = 'check-circle';
-            buttons.forEach(button => {
-                button.background.color = Theme.colors.primary.contrastText;
-                button.font = { color: Theme.colors.primary.main };
-                button.icon = undefined;
-            });
-        }
-        async handleClickCreate() {
-            this.action = 'create';
-            this.updateActionButton();
-            this.pnlAdditional.visible = false;
+            if (this.action === 'add') {
+                this.btnAdd.background.color = Theme.colors.primary.main;
+                this.btnAdd.font = { color: Theme.colors.primary.contrastText };
+                this.btnAdd.icon.name = 'check-circle';
+                this.btnRemove.background.color = Theme.colors.primary.contrastText;
+                this.btnRemove.font = { color: Theme.colors.primary.main };
+                this.btnRemove.icon = undefined;
+            }
+            else if (this.action === 'remove') {
+                this.btnRemove.background.color = Theme.colors.primary.main;
+                this.btnRemove.font = { color: Theme.colors.primary.contrastText };
+                this.btnRemove.icon.name = 'check-circle';
+                this.btnAdd.background.color = Theme.colors.primary.contrastText;
+                this.btnAdd.font = { color: Theme.colors.primary.main };
+                this.btnAdd.icon = undefined;
+            }
         }
         async handleClickAdd() {
             this.action = 'add';
@@ -4839,16 +4842,16 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
         }
         render() {
             return (this.$render("i-vstack", { gap: "1rem", padding: { top: 10, bottom: 10, left: 20, right: 20 } },
-                this.$render("i-label", { caption: "Get Ready to Provide Liquidity" }),
+                this.$render("i-label", { id: "lblTitle", caption: "Get Ready to Provide Liquidity" }),
                 this.$render("i-vstack", { gap: "1rem" },
                     this.$render("i-label", { id: "lblConnectedStatus" }),
                     this.$render("i-hstack", null,
                         this.$render("i-button", { id: "btnConnectWallet", caption: "Connect Wallet", padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, onClick: this.connectWallet.bind(this) }))),
-                this.$render("i-label", { caption: "What would you like to do?" }),
-                this.$render("i-hstack", { verticalAlignment: "center", gap: "0.5rem" },
-                    this.$render("i-button", { id: "btnCreate", caption: "Create New Offer", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickCreate.bind(this) }),
-                    this.$render("i-button", { id: "btnAdd", caption: "Add Liquidity", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickAdd.bind(this) }),
-                    this.$render("i-button", { id: "btnRemove", caption: "Remove Liquidity", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickRemove.bind(this) })),
+                this.$render("i-vstack", { id: "pnlActions", gap: "1rem" },
+                    this.$render("i-label", { caption: "What would you like to do?" }),
+                    this.$render("i-hstack", { verticalAlignment: "center", gap: "0.5rem" },
+                        this.$render("i-button", { id: "btnAdd", caption: "Add Liquidity", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickAdd.bind(this) }),
+                        this.$render("i-button", { id: "btnRemove", caption: "Remove Liquidity", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickRemove.bind(this) }))),
                 this.$render("i-label", { caption: "Select a Pair" }),
                 this.$render("i-hstack", { horizontalAlignment: "center", verticalAlignment: "center", wrap: "wrap", gap: 10 },
                     this.$render("i-scom-token-input", { id: "tokenInInput", type: "combobox", isBalanceShown: false, isBtnMaxShown: false, isInputShown: false, border: { radius: 12 }, onSelectToken: this.handleSelectToken.bind(this) }),

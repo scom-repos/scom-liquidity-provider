@@ -34,9 +34,10 @@ declare global {
 
 @customElements('i-scom-liquidity-provider-flow-initial-setup')
 export default class ScomLiquidityProviderFlowInitialSetup extends Module {
+    private lblTitle: Label;
     private lblConnectedStatus: Label;
     private btnConnectWallet: Button;
-    private btnCreate: Button;
+    private pnlActions: VStack;
     private btnAdd: Button;
     private btnRemove: Button;
     private tokenInInput: ScomTokenInput;
@@ -68,6 +69,8 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
     async setData(value: any) {
         this.executionProperties = value.executionProperties;
         this.tokenRequirements = value.tokenRequirements;
+        this.lblTitle.caption = this.executionProperties.isCreate ? "Get Ready to Create Offer" : "Get Ready to Provide Liquidity";
+        this.pnlActions.visible = !this.executionProperties.isCreate;
         await this.resetRpcWallet();
         await this.initializeWidgetConfig();
     }
@@ -179,22 +182,21 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
         }
     }
     private updateActionButton() {
-        const buttons: Button[] = [this.btnCreate, this.btnAdd, this.btnRemove];
-        const index = this.action === 'create' ? 0 : this.action === 'add' ? 1 : 2;
-        const target: Button = buttons.splice(index, 1)[0];
-        target.background.color = Theme.colors.primary.main;
-        target.font = { color: Theme.colors.primary.contrastText };
-        target.icon.name = 'check-circle';
-        buttons.forEach(button => {
-            button.background.color = Theme.colors.primary.contrastText;
-            button.font = { color: Theme.colors.primary.main };
-            button.icon = undefined;
-        })
-    }
-    private async handleClickCreate() {
-        this.action = 'create';
-        this.updateActionButton();
-        this.pnlAdditional.visible = false;
+        if (this.action === 'add') {
+            this.btnAdd.background.color = Theme.colors.primary.main;
+            this.btnAdd.font = { color: Theme.colors.primary.contrastText };
+            this.btnAdd.icon.name = 'check-circle';
+            this.btnRemove.background.color = Theme.colors.primary.contrastText;
+            this.btnRemove.font = { color: Theme.colors.primary.main };
+            this.btnRemove.icon = undefined;
+        } else if (this.action === 'remove') {
+            this.btnRemove.background.color = Theme.colors.primary.main;
+            this.btnRemove.font = { color: Theme.colors.primary.contrastText };
+            this.btnRemove.icon.name = 'check-circle';
+            this.btnAdd.background.color = Theme.colors.primary.contrastText;
+            this.btnAdd.font = { color: Theme.colors.primary.main };
+            this.btnAdd.icon = undefined;
+        }
     }
     private async handleClickAdd() {
         this.action = 'add';
@@ -209,7 +211,7 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
     render() {
         return (
             <i-vstack gap="1rem" padding={{ top: 10, bottom: 10, left: 20, right: 20 }}>
-                <i-label caption="Get Ready to Provide Liquidity"></i-label>
+                <i-label id="lblTitle" caption="Get Ready to Provide Liquidity"></i-label>
 
                 <i-vstack gap="1rem">
                     <i-label id="lblConnectedStatus"></i-label>
@@ -223,36 +225,29 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
                         ></i-button>
                     </i-hstack>
                 </i-vstack>
-                <i-label caption="What would you like to do?"></i-label>
-                <i-hstack verticalAlignment="center" gap="0.5rem">
-                    <i-button
-                        id="btnCreate"
-                        caption="Create New Offer"
-                        font={{ color: Theme.colors.primary.main }}
-                        padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-                        border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
-                        background={{ color: Theme.colors.primary.contrastText }}
-                        onClick={this.handleClickCreate.bind(this)}
-                    ></i-button>
-                    <i-button
-                        id="btnAdd"
-                        caption="Add Liquidity"
-                        font={{ color: Theme.colors.primary.main }}
-                        padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-                        border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
-                        background={{ color: Theme.colors.primary.contrastText }}
-                        onClick={this.handleClickAdd.bind(this)}
-                    ></i-button>
-                    <i-button
-                        id="btnRemove"
-                        caption="Remove Liquidity"
-                        font={{ color: Theme.colors.primary.main }}
-                        padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-                        border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
-                        background={{ color: Theme.colors.primary.contrastText }}
-                        onClick={this.handleClickRemove.bind(this)}
-                    ></i-button>
-                </i-hstack>
+                <i-vstack id="pnlActions" gap="1rem">
+                    <i-label caption="What would you like to do?"></i-label>
+                    <i-hstack verticalAlignment="center" gap="0.5rem">
+                        <i-button
+                            id="btnAdd"
+                            caption="Add Liquidity"
+                            font={{ color: Theme.colors.primary.main }}
+                            padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+                            border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
+                            background={{ color: Theme.colors.primary.contrastText }}
+                            onClick={this.handleClickAdd.bind(this)}
+                        ></i-button>
+                        <i-button
+                            id="btnRemove"
+                            caption="Remove Liquidity"
+                            font={{ color: Theme.colors.primary.main }}
+                            padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+                            border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
+                            background={{ color: Theme.colors.primary.contrastText }}
+                            onClick={this.handleClickRemove.bind(this)}
+                        ></i-button>
+                    </i-hstack>
+                </i-vstack>
                 <i-label caption="Select a Pair"></i-label>
                 <i-hstack horizontalAlignment="center" verticalAlignment="center" wrap="wrap" gap={10}>
                     <i-scom-token-input
