@@ -1,17 +1,22 @@
 import {
     application,
     Button,
+    ComboBox,
     ControlElement,
     customElements,
+    IComboItem,
     Label,
     Module,
-    Styles
+    Styles,
+    VStack
 } from "@ijstech/components";
 import { isClientWalletConnected, State } from "../store/index";
 import ScomWalletModal from "@scom/scom-wallet-modal";
 import { Constants, IEventBusRegistry, Wallet } from "@ijstech/eth-wallet";
 import ScomTokenInput from "@scom/scom-token-input";
 import { tokenStore } from "@scom/scom-token-list";
+import { getOfferIndexes, getPair } from "../liquidity-utils/index";
+import { ActionType } from "../global";
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -31,13 +36,19 @@ declare global {
 export default class ScomLiquidityProviderFlowInitialSetup extends Module {
     private lblConnectedStatus: Label;
     private btnConnectWallet: Button;
+    private btnCreate: Button;
+    private btnAdd: Button;
+    private btnRemove: Button;
     private tokenInInput: ScomTokenInput;
     private tokenOutInput: ScomTokenInput;
+    private pnlAdditional: VStack;
+    private comboOfferIndex: ComboBox;
     private mdWallet: ScomWalletModal;
     private _state: State;
     private tokenRequirements: any;
     private executionProperties: any;
     private walletEvents: IEventBusRegistry[] = [];
+    private action: ActionType;
 
     get state(): State {
         return this._state;
@@ -126,12 +137,74 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
         this.executionProperties.chainId = this.chainId;
         this.executionProperties.tokenIn = this.tokenInInput.token?.address || this.tokenInInput.token?.symbol;
         this.executionProperties.tokenOut = this.tokenOutInput.token?.address || this.tokenOutInput.token?.symbol;
+        if (this.action !== 'create' && this.comboOfferIndex.selectedItem) {
+            this.executionProperties.offerIndex = (this.comboOfferIndex.selectedItem as IComboItem).value;
+        }
+        if (this.action) {
+            this.executionProperties.action = this.action;
+        }
         if (this.state.handleNextFlowStep)
             this.state.handleNextFlowStep({
                 isInitialSetup: true,
                 tokenRequirements: this.tokenRequirements,
                 executionProperties: this.executionProperties
             });
+    }
+    private async handleSelectToken() {
+        this.comboOfferIndex.clear();
+        try {
+            if (this.tokenInInput.token && this.tokenOutInput.token) {
+                const wallet = this.state.getRpcWallet();
+                const chainId = this.chainId;
+                this.comboOfferIndex.icon.name = 'spinner';
+                this.comboOfferIndex.icon.spin = true;
+                this.comboOfferIndex.enabled = false;
+                if (chainId && chainId != wallet.chainId) {
+                    await wallet.switchNetwork(chainId);
+                }
+                const pairAddress = await getPair(this.state, this.tokenInInput.token, this.tokenOutInput.token);
+                const fromTokenAddress = this.tokenInInput.token.address?.toLowerCase() || this.tokenInInput.token.symbol;
+                const toTokenAddress = this.tokenOutInput.token.address?.toLowerCase() || this.tokenOutInput.token.symbol;
+                const offerIndexes = await getOfferIndexes(this.state, pairAddress, fromTokenAddress, toTokenAddress);
+                this.comboOfferIndex.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() } });
+            } else {
+                this.comboOfferIndex.items = [];
+            }
+        } catch {
+            this.comboOfferIndex.items = [];
+        } finally {
+            this.comboOfferIndex.icon.name = 'angle-down';
+            this.comboOfferIndex.icon.spin = false;
+            this.comboOfferIndex.enabled = true;
+        }
+    }
+    private updateActionButton() {
+        const buttons: Button[] = [this.btnCreate, this.btnAdd, this.btnRemove];
+        const index = this.action === 'create' ? 0 : this.action === 'add' ? 1 : 2;
+        const target: Button = buttons.splice(index, 1)[0];
+        target.background.color = Theme.colors.primary.main;
+        target.font = { color: Theme.colors.primary.contrastText };
+        target.icon.name = 'check-circle';
+        buttons.forEach(button => {
+            button.background.color = Theme.colors.primary.contrastText;
+            button.font = { color: Theme.colors.primary.main };
+            button.icon = undefined;
+        })
+    }
+    private async handleClickCreate() {
+        this.action = 'create';
+        this.updateActionButton();
+        this.pnlAdditional.visible = false;
+    }
+    private async handleClickAdd() {
+        this.action = 'add';
+        this.updateActionButton();
+        this.pnlAdditional.visible = true;
+    }
+    private async handleClickRemove() {
+        this.action = 'remove';
+        this.updateActionButton();
+        this.pnlAdditional.visible = true;
     }
     render() {
         return (
@@ -150,6 +223,36 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
                         ></i-button>
                     </i-hstack>
                 </i-vstack>
+                <i-label caption="What would you like to do?"></i-label>
+                <i-hstack verticalAlignment="center" gap="0.5rem">
+                    <i-button
+                        id="btnCreate"
+                        caption="Create New Offer"
+                        font={{ color: Theme.colors.primary.main }}
+                        padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+                        border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
+                        background={{ color: Theme.colors.primary.contrastText }}
+                        onClick={this.handleClickCreate.bind(this)}
+                    ></i-button>
+                    <i-button
+                        id="btnAdd"
+                        caption="Add Liquidity"
+                        font={{ color: Theme.colors.primary.main }}
+                        padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+                        border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
+                        background={{ color: Theme.colors.primary.contrastText }}
+                        onClick={this.handleClickAdd.bind(this)}
+                    ></i-button>
+                    <i-button
+                        id="btnRemove"
+                        caption="Remove Liquidity"
+                        font={{ color: Theme.colors.primary.main }}
+                        padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+                        border={{ width: 1, style: 'solid', color: Theme.colors.primary.main }}
+                        background={{ color: Theme.colors.primary.contrastText }}
+                        onClick={this.handleClickRemove.bind(this)}
+                    ></i-button>
+                </i-hstack>
                 <i-label caption="Select a Pair"></i-label>
                 <i-hstack horizontalAlignment="center" verticalAlignment="center" wrap="wrap" gap={10}>
                     <i-scom-token-input
@@ -159,6 +262,7 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
                         isBtnMaxShown={false}
                         isInputShown={false}
                         border={{ radius: 12 }}
+                        onSelectToken={this.handleSelectToken.bind(this)}
                     ></i-scom-token-input>
                     <i-label caption="to" font={{ size: "1rem" }}></i-label>
                     <i-scom-token-input
@@ -168,8 +272,15 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
                         isBtnMaxShown={false}
                         isInputShown={false}
                         border={{ radius: 12 }}
+                        onSelectToken={this.handleSelectToken.bind(this)}
                     ></i-scom-token-input>
                 </i-hstack>
+                <i-vstack id="pnlAdditional" gap="1rem" visible={false}>
+                    <i-label caption="Select Offer Index"></i-label>
+                    <i-hstack width="50%" verticalAlignment="center">
+                        <i-combo-box id="comboOfferIndex" height={43} items={[]}></i-combo-box>
+                    </i-hstack>
+                </i-vstack>
                 <i-hstack horizontalAlignment="center">
                     <i-button
                         id="btnStart"

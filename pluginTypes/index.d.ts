@@ -122,6 +122,7 @@ declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
     import { BigNumber } from "@ijstech/eth-contract";
     import { INetworkConfig } from "@scom/scom-network-picker";
     import { IWalletPlugin } from "@scom/scom-wallet-modal";
+    export type ActionType = 'create' | 'add' | 'remove';
     export interface ICommissionInfo {
         chainId: number;
         walletAddress: string;
@@ -133,6 +134,7 @@ declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
         tokenOut: string;
         isCreate?: boolean;
         offerIndex?: number;
+        action?: ActionType;
         wallets: IWalletPlugin[];
         networks: INetworkConfig[];
         showHeader?: boolean;
@@ -972,13 +974,19 @@ declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
     export default class ScomLiquidityProviderFlowInitialSetup extends Module {
         private lblConnectedStatus;
         private btnConnectWallet;
+        private btnCreate;
+        private btnAdd;
+        private btnRemove;
         private tokenInInput;
         private tokenOutInput;
+        private pnlAdditional;
+        private comboOfferIndex;
         private mdWallet;
         private _state;
         private tokenRequirements;
         private executionProperties;
         private walletEvents;
+        private action;
         get state(): State;
         set state(value: State);
         private get rpcWallet();
@@ -993,6 +1001,11 @@ declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
         onHide(): void;
         init(): void;
         private handleClickStart;
+        private handleSelectToken;
+        private updateActionButton;
+        private handleClickCreate;
+        private handleClickAdd;
+        private handleClickRemove;
         render(): any;
     }
 }
@@ -1079,6 +1092,7 @@ declare module "@scom/scom-liquidity-provider" {
                 tokenOut: string;
                 isCreate?: boolean;
                 offerIndex?: number;
+                action?: import("@scom/scom-liquidity-provider/global/index.ts").ActionType;
                 wallets: IWalletPlugin[];
                 networks: INetworkConfig[];
                 showHeader?: boolean;

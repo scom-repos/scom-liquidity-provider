@@ -4667,7 +4667,7 @@ define("@scom/scom-liquidity-provider/detail/index.tsx", ["require", "exports", 
     Object.defineProperty(exports, "LiquidityHelp", { enumerable: true, get: function () { return help_1.LiquidityHelp; } });
     Object.defineProperty(exports, "LiquidityProgress", { enumerable: true, get: function () { return progress_1.LiquidityProgress; } });
 });
-define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/store/index.ts", "@ijstech/eth-wallet", "@scom/scom-token-list"], function (require, exports, components_14, index_12, eth_wallet_10, scom_token_list_7) {
+define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/store/index.ts", "@ijstech/eth-wallet", "@scom/scom-token-list", "@scom/scom-liquidity-provider/liquidity-utils/index.ts"], function (require, exports, components_14, index_12, eth_wallet_10, scom_token_list_7, index_13) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_14.Styles.Theme.ThemeVars;
@@ -4764,12 +4764,78 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
             this.executionProperties.chainId = this.chainId;
             this.executionProperties.tokenIn = ((_a = this.tokenInInput.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = this.tokenInInput.token) === null || _b === void 0 ? void 0 : _b.symbol);
             this.executionProperties.tokenOut = ((_c = this.tokenOutInput.token) === null || _c === void 0 ? void 0 : _c.address) || ((_d = this.tokenOutInput.token) === null || _d === void 0 ? void 0 : _d.symbol);
+            if (this.action !== 'create' && this.comboOfferIndex.selectedItem) {
+                this.executionProperties.offerIndex = this.comboOfferIndex.selectedItem.value;
+            }
+            if (this.action) {
+                this.executionProperties.action = this.action;
+            }
             if (this.state.handleNextFlowStep)
                 this.state.handleNextFlowStep({
                     isInitialSetup: true,
                     tokenRequirements: this.tokenRequirements,
                     executionProperties: this.executionProperties
                 });
+        }
+        async handleSelectToken() {
+            var _a, _b;
+            this.comboOfferIndex.clear();
+            try {
+                if (this.tokenInInput.token && this.tokenOutInput.token) {
+                    const wallet = this.state.getRpcWallet();
+                    const chainId = this.chainId;
+                    this.comboOfferIndex.icon.name = 'spinner';
+                    this.comboOfferIndex.icon.spin = true;
+                    this.comboOfferIndex.enabled = false;
+                    if (chainId && chainId != wallet.chainId) {
+                        await wallet.switchNetwork(chainId);
+                    }
+                    const pairAddress = await (0, index_13.getPair)(this.state, this.tokenInInput.token, this.tokenOutInput.token);
+                    const fromTokenAddress = ((_a = this.tokenInInput.token.address) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || this.tokenInInput.token.symbol;
+                    const toTokenAddress = ((_b = this.tokenOutInput.token.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || this.tokenOutInput.token.symbol;
+                    const offerIndexes = await (0, index_13.getOfferIndexes)(this.state, pairAddress, fromTokenAddress, toTokenAddress);
+                    this.comboOfferIndex.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
+                }
+                else {
+                    this.comboOfferIndex.items = [];
+                }
+            }
+            catch (_c) {
+                this.comboOfferIndex.items = [];
+            }
+            finally {
+                this.comboOfferIndex.icon.name = 'angle-down';
+                this.comboOfferIndex.icon.spin = false;
+                this.comboOfferIndex.enabled = true;
+            }
+        }
+        updateActionButton() {
+            const buttons = [this.btnCreate, this.btnAdd, this.btnRemove];
+            const index = this.action === 'create' ? 0 : this.action === 'add' ? 1 : 2;
+            const target = buttons.splice(index, 1)[0];
+            target.background.color = Theme.colors.primary.main;
+            target.font = { color: Theme.colors.primary.contrastText };
+            target.icon.name = 'check-circle';
+            buttons.forEach(button => {
+                button.background.color = Theme.colors.primary.contrastText;
+                button.font = { color: Theme.colors.primary.main };
+                button.icon = undefined;
+            });
+        }
+        async handleClickCreate() {
+            this.action = 'create';
+            this.updateActionButton();
+            this.pnlAdditional.visible = false;
+        }
+        async handleClickAdd() {
+            this.action = 'add';
+            this.updateActionButton();
+            this.pnlAdditional.visible = true;
+        }
+        async handleClickRemove() {
+            this.action = 'remove';
+            this.updateActionButton();
+            this.pnlAdditional.visible = true;
         }
         render() {
             return (this.$render("i-vstack", { gap: "1rem", padding: { top: 10, bottom: 10, left: 20, right: 20 } },
@@ -4778,11 +4844,20 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                     this.$render("i-label", { id: "lblConnectedStatus" }),
                     this.$render("i-hstack", null,
                         this.$render("i-button", { id: "btnConnectWallet", caption: "Connect Wallet", padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, onClick: this.connectWallet.bind(this) }))),
+                this.$render("i-label", { caption: "What would you like to do?" }),
+                this.$render("i-hstack", { verticalAlignment: "center", gap: "0.5rem" },
+                    this.$render("i-button", { id: "btnCreate", caption: "Create New Offer", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickCreate.bind(this) }),
+                    this.$render("i-button", { id: "btnAdd", caption: "Add Liquidity", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickAdd.bind(this) }),
+                    this.$render("i-button", { id: "btnRemove", caption: "Remove Liquidity", font: { color: Theme.colors.primary.main }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, border: { width: 1, style: 'solid', color: Theme.colors.primary.main }, background: { color: Theme.colors.primary.contrastText }, onClick: this.handleClickRemove.bind(this) })),
                 this.$render("i-label", { caption: "Select a Pair" }),
                 this.$render("i-hstack", { horizontalAlignment: "center", verticalAlignment: "center", wrap: "wrap", gap: 10 },
-                    this.$render("i-scom-token-input", { id: "tokenInInput", type: "combobox", isBalanceShown: false, isBtnMaxShown: false, isInputShown: false, border: { radius: 12 } }),
+                    this.$render("i-scom-token-input", { id: "tokenInInput", type: "combobox", isBalanceShown: false, isBtnMaxShown: false, isInputShown: false, border: { radius: 12 }, onSelectToken: this.handleSelectToken.bind(this) }),
                     this.$render("i-label", { caption: "to", font: { size: "1rem" } }),
-                    this.$render("i-scom-token-input", { id: "tokenOutInput", type: "combobox", isBalanceShown: false, isBtnMaxShown: false, isInputShown: false, border: { radius: 12 } })),
+                    this.$render("i-scom-token-input", { id: "tokenOutInput", type: "combobox", isBalanceShown: false, isBtnMaxShown: false, isInputShown: false, border: { radius: 12 }, onSelectToken: this.handleSelectToken.bind(this) })),
+                this.$render("i-vstack", { id: "pnlAdditional", gap: "1rem", visible: false },
+                    this.$render("i-label", { caption: "Select Offer Index" }),
+                    this.$render("i-hstack", { width: "50%", verticalAlignment: "center" },
+                        this.$render("i-combo-box", { id: "comboOfferIndex", height: 43, items: [] }))),
                 this.$render("i-hstack", { horizontalAlignment: "center" },
                     this.$render("i-button", { id: "btnStart", caption: "Start", padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText, size: '1.5rem' }, onClick: this.handleClickStart.bind(this) })),
                 this.$render("i-scom-wallet-modal", { id: "mdWallet", wallets: [] })));
@@ -4793,7 +4868,7 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
     ], ScomLiquidityProviderFlowInitialSetup);
     exports.default = ScomLiquidityProviderFlowInitialSetup;
 });
-define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-token-list", "@scom/scom-liquidity-provider/data.json.ts", "@scom/scom-liquidity-provider/index.css.ts", "@scom/scom-liquidity-provider/formSchema.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/flow/initialSetup.tsx"], function (require, exports, components_15, eth_wallet_11, assets_5, index_13, scom_token_list_8, data_json_1, index_css_1, formSchema_1, index_14, index_15, initialSetup_1) {
+define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-token-list", "@scom/scom-liquidity-provider/data.json.ts", "@scom/scom-liquidity-provider/index.css.ts", "@scom/scom-liquidity-provider/formSchema.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/flow/initialSetup.tsx"], function (require, exports, components_15, eth_wallet_11, assets_5, index_14, scom_token_list_8, data_json_1, index_css_1, formSchema_1, index_15, index_16, initialSetup_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_15.Styles.Theme.ThemeVars;
@@ -4836,7 +4911,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                     this._data.offerIndex = generalSettings.offerIndex || 0;
                                 }
                                 if (!this._data.offerIndex) {
-                                    this.actionType = index_14.Action.CREATE;
+                                    this.actionType = index_15.Action.CREATE;
                                 }
                                 await this.resetRpcWallet();
                                 this.refreshUI();
@@ -4928,7 +5003,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                             this._data.offerIndex = 0;
                         }
                         if (!this._data.offerIndex) {
-                            this.actionType = index_14.Action.CREATE;
+                            this.actionType = index_15.Action.CREATE;
                         }
                         await this.setData(resultingData);
                     },
@@ -5070,7 +5145,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     if (!hideLoading && this.loadingElm) {
                         this.loadingElm.visible = true;
                     }
-                    if (!(0, index_13.isClientWalletConnected)() || !this._data || !this.checkValidation()) {
+                    if (!(0, index_14.isClientWalletConnected)() || !this._data || !this.checkValidation()) {
                         await this.renderHome();
                         return;
                     }
@@ -5078,7 +5153,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     const chainId = this.state.getChainId();
                     const tokenA = this.fromTokenAddress.startsWith('0x') ? this.fromTokenAddress : scom_token_list_8.WETHByChainId[chainId].address || this.fromTokenAddress;
                     const tokenB = this.toTokenAddress.startsWith('0x') ? this.toTokenAddress : scom_token_list_8.WETHByChainId[chainId].address || this.toTokenAddress;
-                    const isRegistered = await (0, index_14.isPairRegistered)(this.state, tokenA, tokenB);
+                    const isRegistered = await (0, index_15.isPairRegistered)(this.state, tokenA, tokenB);
                     if (!isRegistered) {
                         await this.renderHome(undefined, 'Pair is not registered, please register the pair first!');
                         return;
@@ -5088,11 +5163,19 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     if (rpcWallet.address) {
                         await scom_token_list_8.tokenStore.updateAllTokenBalances(rpcWallet);
                     }
-                    this.pairAddress = await (0, index_14.getPair)(this.state, this.fromTokenObject, this.toTokenObject);
+                    this.pairAddress = await (0, index_15.getPair)(this.state, this.fromTokenObject, this.toTokenObject);
                     if (this.offerIndex) {
-                        const offerIndexes = await (0, index_14.getOfferIndexes)(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
+                        const offerIndexes = await (0, index_15.getOfferIndexes)(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
                         if (offerIndexes.some(v => v.eq(this.offerIndex))) {
-                            await this.renderHome(this.pairAddress);
+                            if (this._data.action === 'add') {
+                                this.handleAdd();
+                            }
+                            else if (this._data.action === 'remove') {
+                                this.handleRemove();
+                            }
+                            else {
+                                await this.renderHome(this.pairAddress);
+                            }
                         }
                         else {
                             await this.renderForm();
@@ -5118,7 +5201,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 }
             };
             this.renderForm = async () => {
-                this.model = new index_14.Model(this.state, this.pairAddress, this.fromTokenAddress, this.offerIndex, this.actionType);
+                this.model = new index_15.Model(this.state, this.pairAddress, this.fromTokenAddress, this.offerIndex, this.actionType);
                 this.model.onBack = () => this.onBack();
                 this.model.onShowTxStatus = (status, content) => {
                     this.showMessage(status, content);
@@ -5158,7 +5241,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.detailSummary.summaryData = this.modelState.summaryData();
                     this.panelHome.visible = false;
                     this.panelLiquidity.visible = true;
-                    this.hStackBack.visible = this.actionType === index_14.Action.ADD || this.actionType === index_14.Action.REMOVE;
+                    this.hStackBack.visible = this.actionType === index_15.Action.ADD || this.actionType === index_15.Action.REMOVE;
                 }
                 catch (err) {
                     this.lbMsg.caption = 'Cannot fetch data!';
@@ -5170,7 +5253,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.detailForm.model = this.modelState;
             };
             this.connectWallet = async () => {
-                if (!(0, index_13.isClientWalletConnected)()) {
+                if (!(0, index_14.isClientWalletConnected)()) {
                     if (this.mdWallet) {
                         await components_15.application.loadPackage('@scom/scom-wallet-modal', '*');
                         this.mdWallet.networks = this.networks;
@@ -5186,14 +5269,14 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 }
             };
             this.renderHome = async (pairAddress, msg) => {
-                const walletConnected = (0, index_13.isClientWalletConnected)();
+                const walletConnected = (0, index_14.isClientWalletConnected)();
                 const isRpcWalletConnected = this.state.isRpcWalletConnected();
                 this.renderQueueItem(pairAddress);
                 if (pairAddress) {
                     this.panelHome.background.color = "hsla(0,0%,100%,0.10196078431372549)";
                     this.lbMsg.visible = false;
                     this.hStackActions.visible = true;
-                    const info = await (0, index_14.getPairInfo)(this.state, pairAddress, this.fromTokenAddress, this.offerIndex);
+                    const info = await (0, index_15.getPairInfo)(this.state, pairAddress, this.fromTokenAddress, this.offerIndex);
                     const { startDate, expire, locked } = info;
                     const expired = (0, components_15.moment)(Date.now()).isAfter(expire);
                     this.btnAdd.visible = !expired;
@@ -5224,7 +5307,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.panelHome.visible = true;
             };
             this.onActions = async () => {
-                if (this.actionType === index_14.Action.LOCK) {
+                if (this.actionType === index_15.Action.LOCK) {
                     this.showLockModal();
                 }
                 else {
@@ -5244,11 +5327,11 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.lockOrderBtn.enabled = false;
                 this.lockModalTitle.clearInnerHTML();
                 this.lockModalTitle.appendChild(this.$render("i-hstack", { gap: 4, verticalAlignment: "center" },
-                    this.$render("i-image", { width: 28, height: 28, url: scom_token_list_8.assets.tokenPath(this.fromTokenObject, chainId), fallbackUrl: index_13.fallbackUrl }),
-                    this.$render("i-image", { width: 28, height: 28, url: scom_token_list_8.assets.tokenPath(this.toTokenObject, chainId), fallbackUrl: index_13.fallbackUrl }),
-                    this.$render("i-label", { caption: (0, index_13.tokenSymbol)(chainId, this.fromTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
+                    this.$render("i-image", { width: 28, height: 28, url: scom_token_list_8.assets.tokenPath(this.fromTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }),
+                    this.$render("i-image", { width: 28, height: 28, url: scom_token_list_8.assets.tokenPath(this.toTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }),
+                    this.$render("i-label", { caption: (0, index_14.tokenSymbol)(chainId, this.fromTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
                     this.$render("i-icon", { name: "arrow-right", fill: Theme.colors.primary.main, width: "14", height: "14" }),
-                    this.$render("i-label", { class: "hightlight-yellow", caption: (0, index_13.tokenSymbol)(chainId, this.toTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
+                    this.$render("i-label", { class: "hightlight-yellow", caption: (0, index_14.tokenSymbol)(chainId, this.toTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
                     this.$render("i-label", { class: "hightlight-yellow", caption: `#${this.offerIndex}`, font: { size: '24px', bold: true, color: Theme.colors.primary.main } })));
                 this.lockModal.visible = true;
             };
@@ -5295,11 +5378,11 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.btnLock.rightIcon.visible = false;
                     this.btnLock.caption = 'Locked';
                 };
-                (0, index_15.registerSendTxEvents)({
+                (0, index_16.registerSendTxEvents)({
                     transactionHash: callback,
                     confirmation: confirmationCallback
                 });
-                (0, index_14.lockGroupQueueOffer)(chainId, this.pairAddress, fromToken, toToken, this.offerIndex);
+                (0, index_15.lockGroupQueueOffer)(chainId, this.pairAddress, fromToken, toToken, this.offerIndex);
             };
             this.initWallet = async () => {
                 try {
@@ -5332,7 +5415,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     return false;
                 return true;
             };
-            this.state = new index_13.State(data_json_1.default);
+            this.state = new index_14.State(data_json_1.default);
         }
         removeRpcWalletEvents() {
             const rpcWallet = this.rpcWallet;
@@ -5347,7 +5430,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
         }
         onViewContract(address) {
             const chainId = this.state.getChainId();
-            (0, index_13.viewOnExplorerByAddress)(chainId, address);
+            (0, index_14.viewOnExplorerByAddress)(chainId, address);
         }
         async renderQueueItem(pairAddress) {
             this.pnlQueueItem.clearInnerHTML();
@@ -5355,14 +5438,14 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 if (pairAddress) {
                     const chainId = this.state.getChainId();
                     const fromToken = this.fromTokenObject;
-                    const fromTokenSymbol = (0, index_13.tokenSymbol)(chainId, this.fromTokenAddress);
+                    const fromTokenSymbol = (0, index_14.tokenSymbol)(chainId, this.fromTokenAddress);
                     const toToken = this.toTokenObject;
-                    const toTokenSymbol = (0, index_13.tokenSymbol)(chainId, this.toTokenAddress);
-                    const info = await (0, index_14.getGroupQueueInfo)(this.state, pairAddress, fromToken, toToken, this.offerIndex);
+                    const toTokenSymbol = (0, index_14.tokenSymbol)(chainId, this.toTokenAddress);
+                    const info = await (0, index_15.getGroupQueueInfo)(this.state, pairAddress, fromToken, toToken, this.offerIndex);
                     const amount = `${components_15.FormatUtils.formatNumber(info.amount, { decimalFigures: 4, minValue: 0.0001 })} ${fromTokenSymbol}`;
                     const offerPrice = `1 ${fromTokenSymbol} = ${components_15.FormatUtils.formatNumber(info.offerPrice, { decimalFigures: 4, minValue: 0.0001 })} ${toTokenSymbol}`;
-                    const startDate = (0, index_15.formatDate)(info.startDate, index_15.DefaultDateTimeFormat, true);
-                    const endDate = (0, index_15.formatDate)(info.endDate, index_15.DefaultDateTimeFormat, true);
+                    const startDate = (0, index_16.formatDate)(info.startDate, index_16.DefaultDateTimeFormat, true);
+                    const endDate = (0, index_16.formatDate)(info.endDate, index_16.DefaultDateTimeFormat, true);
                     const whitelistedAddress = info.allowAll ? 'Everyone' : `${info.addresses.length} Address${info.addresses.length > 1 ? "es" : ""}`;
                     const totalAllocation = `${info.allowAll ? info.amount : info.allocation} ${fromTokenSymbol}`;
                     const youWillGet = `${info.willGet} ${toTokenSymbol}`;
@@ -5377,8 +5460,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                     this.$render("i-label", { font: { size: '20px', bold: true }, caption: `#${this.offerIndex}`, margin: { right: 4 } }),
                                     this.$render("i-icon", { name: "question-circle", fill: "#fff", width: "18", height: "18", tooltip: { content: 'The offer index helps identifying your group queues.' } }))),
                             this.$render("i-hstack", { horizontalAlignment: "end", verticalAlignment: "center" },
-                                this.$render("i-image", { class: "icon-left", width: 35, height: 35, position: "initial", url: scom_token_list_8.assets.tokenPath(this.fromTokenObject, chainId), fallbackUrl: index_13.fallbackUrl }),
-                                this.$render("i-image", { width: 50, height: 50, position: "initial", url: scom_token_list_8.assets.tokenPath(this.toTokenObject, chainId), fallbackUrl: index_13.fallbackUrl }))),
+                                this.$render("i-image", { class: "icon-left", width: 35, height: 35, position: "initial", url: scom_token_list_8.assets.tokenPath(this.fromTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }),
+                                this.$render("i-image", { width: 50, height: 50, position: "initial", url: scom_token_list_8.assets.tokenPath(this.toTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }))),
                         this.$render("i-vstack", { width: "100%", margin: { top: '1rem' }, horizontalAlignment: "center", verticalAlignment: "center", gap: "1rem" },
                             this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
                                 this.$render("i-label", { caption: "Amount" }),
@@ -5416,15 +5499,15 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             }
         }
         handleAdd() {
-            this.actionType = index_14.Action.ADD;
+            this.actionType = index_15.Action.ADD;
             this.onActions();
         }
         handleRemove() {
-            this.actionType = index_14.Action.REMOVE;
+            this.actionType = index_15.Action.REMOVE;
             this.onActions();
         }
         handleLock() {
-            this.actionType = index_14.Action.LOCK;
+            this.actionType = index_15.Action.LOCK;
             this.onActions();
         }
         onChangeFirstChecked(source, event) {
@@ -5469,7 +5552,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this._data.offerIndex = data.offerIndex || 0;
             }
             if (!data.offerIndex) {
-                this.actionType = index_14.Action.CREATE;
+                this.actionType = index_15.Action.CREATE;
             }
             this.mdSettings.visible = false;
             this.refreshUI();

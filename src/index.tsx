@@ -403,7 +403,13 @@ export default class ScomLiquidityProvider extends Module {
 			if (this.offerIndex) {
 				const offerIndexes = await getOfferIndexes(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
 				if (offerIndexes.some(v => v.eq(this.offerIndex))) {
-					await this.renderHome(this.pairAddress);
+					if (this._data.action === 'add') {
+						this.handleAdd();
+					} else if (this._data.action === 'remove') {
+						this.handleRemove();
+					} else {
+						await this.renderHome(this.pairAddress);
+					}
 				} else {
 					await this.renderForm();
 				}
