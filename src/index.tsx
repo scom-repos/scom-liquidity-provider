@@ -15,7 +15,7 @@ import ScomDappContainer from '@scom/scom-dapp-container';
 import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 import { INetworkConfig } from '@scom/scom-network-picker';
-import formSchema, { getFormSchema } from './formSchema';
+import formSchema, { getFormSchema, getProjectOwnerSchema } from './formSchema';
 import { LiquidityForm, LiquidityHelp, LiquiditySummary } from './detail/index';
 import { Action, Model, Stage, getOfferIndexes, getPair, getPairInfo, isPairRegistered, lockGroupQueueOffer, getGroupQueueInfo } from './liquidity-utils/index';
 import { DefaultDateTimeFormat, formatDate, ILiquidityProvider, ProviderGroupQueue, registerSendTxEvents } from './global/index';
@@ -156,6 +156,7 @@ export default class ScomLiquidityProvider extends Module {
 	}
 
 	private getProjectOwnerActions() {
+		const formSchema = getProjectOwnerSchema();
 		const actions: any[] = [
 			{
 				name: 'Settings',

@@ -130,8 +130,8 @@ declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
     }
     export interface ILiquidityProvider {
         chainId: number;
-        tokenIn: string;
-        tokenOut: string;
+        tokenIn?: string;
+        tokenOut?: string;
         isCreate?: boolean;
         offerIndex?: number;
         action?: ActionType;
@@ -523,6 +523,73 @@ declare module "@scom/scom-liquidity-provider/formSchema.ts" {
         };
     };
     export default _default_2;
+    export function getProjectOwnerSchema(): {
+        dataSchema: {
+            type: string;
+            properties: {
+                chainId: {
+                    type: string;
+                    required: boolean;
+                };
+                tokenIn: {
+                    type: string;
+                };
+                tokenOut: {
+                    type: string;
+                };
+                isCreate: {
+                    type: string;
+                    title: string;
+                    default: boolean;
+                };
+                offerIndex: {
+                    type: string;
+                };
+            };
+        };
+        uiSchema: {
+            type: string;
+            elements: ({
+                type: string;
+                scope: string;
+                rule?: undefined;
+            } | {
+                type: string;
+                scope: string;
+                rule: {
+                    effect: string;
+                    condition: {
+                        scope: string;
+                        schema: {
+                            const: boolean;
+                        };
+                    };
+                };
+            })[];
+        };
+        customControls(state: State): {
+            "#/properties/chainId": {
+                render: () => ScomNetworkPicker;
+                getData: (control: ScomNetworkPicker) => number;
+                setData: (control: ScomNetworkPicker, value: number) => void;
+            };
+            "#/properties/tokenIn": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/tokenOut": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/offerIndex": {
+                render: () => ComboBox;
+                getData: (control: ComboBox) => string;
+                setData: (control: ComboBox, value: string) => Promise<void>;
+            };
+        };
+    };
     export function getFormSchema(): {
         dataSchema: {
             type: string;
@@ -1088,8 +1155,8 @@ declare module "@scom/scom-liquidity-provider" {
             target: string;
             getData: () => Promise<{
                 chainId: number;
-                tokenIn: string;
-                tokenOut: string;
+                tokenIn?: string;
+                tokenOut?: string;
                 isCreate?: boolean;
                 offerIndex?: number;
                 action?: import("@scom/scom-liquidity-provider/global/index.ts").ActionType;

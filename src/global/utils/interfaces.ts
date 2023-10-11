@@ -12,8 +12,8 @@ export interface ICommissionInfo {
 
 export interface ILiquidityProvider {
   chainId: number;
-  tokenIn: string;
-  tokenOut: string;
+  tokenIn?: string;
+  tokenOut?: string;
   isCreate?: boolean;
   offerIndex?: number;
   action?: ActionType;
