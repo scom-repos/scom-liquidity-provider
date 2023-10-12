@@ -164,7 +164,7 @@ export default {
                 render: () => {
                     networkPicker = new ScomNetworkPicker(undefined, {
                         type: 'combobox',
-                        networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v } }),
+                        networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v } }),
                         onCustomNetworkSelected: () => {
                             const chainId = networkPicker.selectedNetwork?.chainId;
                             if (firstTokenInput.chainId != chainId) {
@@ -367,7 +367,7 @@ export function getProjectOwnerSchema() {
                     render: () => {
                         networkPicker = new ScomNetworkPicker(undefined, {
                             type: 'combobox',
-                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v } }),
+                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v } }),
                             onCustomNetworkSelected: () => {
                                 const chainId = networkPicker.selectedNetwork?.chainId;
                                 if (firstTokenInput.chainId != chainId) {
@@ -571,7 +571,7 @@ export function getFormSchema() {
                     render: () => {
                         networkPicker = new ScomNetworkPicker(undefined, {
                             type: 'combobox',
-                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v } }),
+                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v } }),
                             onCustomNetworkSelected: () => {
                                 const chainId = networkPicker.selectedNetwork?.chainId;
                                 if (firstTokenInput.chainId != chainId) {

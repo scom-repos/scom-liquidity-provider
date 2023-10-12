@@ -3,6 +3,7 @@ import { whiteListStyle } from './whitelist.css';
 import { BigNumber } from '@ijstech/eth-wallet';
 import { IAllocation, formatNumber, isAddressValid, limitInputNumber, renderBalanceTooltip } from '../global/index';
 import { tokenStore } from '@scom/scom-token-list';
+import { State } from '../store/index';
 const Theme = Styles.Theme.ThemeVars;
 
 declare global {
@@ -38,6 +39,7 @@ export interface IData {
 
 @customElements('manage-whitelist')
 export class ManageWhitelist extends Module {
+  private _state: State;
   private _props: IData;
   private balance: string | number | undefined = 0;
   private tokenSymbol: string = '';
@@ -71,8 +73,20 @@ export class ManageWhitelist extends Module {
   private itemEnd = pageSize;
   private paginationElm: Pagination;
 
+  set state(value: State) {
+    this._state = value;
+  }
+
+  get state() {
+    return this._state;
+  }
+
   get props() {
     return this._props;
+  }
+
+  get chainId() {
+    return this.state?.getChainId();
   }
 
   set props(value: IData) {
@@ -153,7 +167,7 @@ export class ManageWhitelist extends Module {
       this.cancelBtn.classList.add('btn-submit');
     } else {
       this.cancelBtn.classList.add('btn-cancel');
-      const tokenMap = tokenStore.tokenMap;
+      const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
       this.balanceLabel.caption = renderBalanceTooltip({ title: 'Balance', value: this.balance, symbol: 'OSWAP' }, tokenMap);
       this.totalFee.caption = renderBalanceTooltip({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
     }
@@ -191,9 +205,10 @@ export class ManageWhitelist extends Module {
   };
 
   updateTotalValues = () => {
+    const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
     this.totalAddressLabel.caption = `${this.totalAddress}` || '0';
-    this.totalAllocationLabel.caption = renderBalanceTooltip({ value: this.totalAllocation, symbol: this.tokenSymbol }, tokenStore.tokenMap);
-    this.totalFee.caption = renderBalanceTooltip({ value: this.fee, symbol: 'OSWAP' }, tokenStore.tokenMap);
+    this.totalAllocationLabel.caption = renderBalanceTooltip({ value: this.totalAllocation, symbol: this.tokenSymbol }, tokenMap);
+    this.totalFee.caption = renderBalanceTooltip({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
     this.saveBtn.enabled = !this.isDisabled;
   }
 

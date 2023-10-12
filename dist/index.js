@@ -164,6 +164,18 @@ define("@scom/scom-liquidity-provider/store/core.ts", ["require", "exports"], fu
             OSWAP_RestrictedLiquidityProvider: "0xdBE2111327D60DbB5376db10dD0F484E98b7d40e",
             OSWAP_RestrictedFactory: "0xa158FB71cA5EF59f707c6F8D0b9CC5765F97Fd60"
         },
+        137: {
+            WETH9: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+            OSWAP_ConfigStore: "0x408aAf94BD851eb991dA146dFc7C290aA42BA70f",
+            OSWAP_RestrictedFactory: "0xF879576c2D674C5D22f256083DC8fD019a3f33A1",
+            OSWAP_RestrictedLiquidityProvider: "0x2d7BB250595db7D588D32A0f3582BB73CD902060",
+        },
+        80001: {
+            WETH9: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
+            OSWAP_ConfigStore: "0xDd990869da18631a583F8c4503866d23406F79D8",
+            OSWAP_RestrictedFactory: "0x6D2b196aBf09CF97612a5c062bF14EC278F6D677",
+            OSWAP_RestrictedLiquidityProvider: "0xa1254f0bE9e90ad23ED96CA3623b29465C5c3106",
+        },
         43113: {
             WETH9: "0xd00ae08403B9bbb9124bB305C09058E32C39A48c",
             OSWAP_ConfigStore: "0x258A5309486310398Ee078217729db2f65367a92",
@@ -175,6 +187,18 @@ define("@scom/scom-liquidity-provider/store/core.ts", ["require", "exports"], fu
             OSWAP_ConfigStore: "0x8Ae51f1A62c4Bc0715C367bFe812c53e583aEE2f",
             OSWAP_RestrictedFactory: "0x739f0BBcdAd415127FE8d5d6ED053e9D817BdAdb",
             OSWAP_RestrictedLiquidityProvider: "0x629cF4235c0f6b9954698EF0aF779b9502e4853E"
+        },
+        42161: {
+            WETH9: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+            OSWAP_ConfigStore: "0x5A9C508ee45d417d176CddADFb151DDC1Fcd21D9",
+            OSWAP_RestrictedFactory: "0x408aAf94BD851eb991dA146dFc7C290aA42BA70f",
+            OSWAP_RestrictedLiquidityProvider: "0x3B7a91F387C42CA040bf96B734bc20DC3d43cC2A"
+        },
+        421613: {
+            WETH9: "0xEe01c0CD76354C383B8c7B4e65EA88D00B06f36f",
+            OSWAP_ConfigStore: "0x689200913Ca40C8c89102A3441D62d51282eAA3f",
+            OSWAP_RestrictedFactory: "0x6f641f4F5948954F7cd675f3D874Ac60b193bA0d",
+            OSWAP_RestrictedLiquidityProvider: "0x93baA37dA23d507dF3F075F660584969e68ec5eb"
         }
     };
 });
@@ -1662,7 +1686,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             return this.offerPriceText && new eth_wallet_6.BigNumber(this.offerPriceText).gt(0);
         }
         get fromTokenBalanceExact() {
-            const tokenBalances = scom_token_list_3.tokenStore.tokenBalances || {};
+            const tokenBalances = scom_token_list_3.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
             if ([Action.CREATE, Action.ADD].some(n => n === this.actionType)) {
                 return tokenBalances[this.fromTokenAddress]
                     ? new eth_wallet_6.BigNumber(tokenBalances[this.fromTokenAddress])
@@ -1673,10 +1697,11 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             }
         }
         get govTokenBalanceExact() {
-            let stakeToken = (0, API_1.getQueueStakeToken)(this.state.getChainId());
+            const chainId = this.state.getChainId();
+            let stakeToken = (0, API_1.getQueueStakeToken)(chainId);
             if (!stakeToken)
                 return new eth_wallet_6.BigNumber(0);
-            const tokenBalances = scom_token_list_3.tokenStore.tokenBalances || {};
+            const tokenBalances = scom_token_list_3.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
             return tokenBalances[stakeToken.address]
                 ? new eth_wallet_6.BigNumber(tokenBalances[stakeToken.address])
                 : new eth_wallet_6.BigNumber(0);
@@ -2173,7 +2198,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             else {
                 this.currentStage = Stage.NONE;
             }
-            scom_token_list_3.tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
+            scom_token_list_3.tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
             this.initApprovalModelAction();
         }
         showTxStatus(status, content) {
@@ -2232,7 +2257,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     this.setSubmitBtnStatus(true);
                 },
                 onPaid: async (receipt) => {
-                    scom_token_list_3.tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
+                    scom_token_list_3.tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
                     if (this.actionType === Action.CREATE) {
                         const offerIndexes = await (0, API_1.getOfferIndexes)(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
                         console.log(offerIndexes);
@@ -2511,7 +2536,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     render: () => {
                         networkPicker = new scom_network_picker_1.default(undefined, {
                             type: 'combobox',
-                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
                             onCustomNetworkSelected: () => {
                                 var _a;
                                 const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
@@ -2726,7 +2751,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         render: () => {
                             networkPicker = new scom_network_picker_1.default(undefined, {
                                 type: 'combobox',
-                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
                                 onCustomNetworkSelected: () => {
                                     var _a;
                                     const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
@@ -2943,7 +2968,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         render: () => {
                             networkPicker = new scom_network_picker_1.default(undefined, {
                                 type: 'combobox',
-                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
                                 onCustomNetworkSelected: () => {
                                     var _a;
                                     const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
@@ -3312,8 +3337,18 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
     ];
     const pageSize = 5;
     let ManageWhitelist = class ManageWhitelist extends components_9.Module {
+        set state(value) {
+            this._state = value;
+        }
+        get state() {
+            return this._state;
+        }
         get props() {
             return this._props;
+        }
+        get chainId() {
+            var _a;
+            return (_a = this.state) === null || _a === void 0 ? void 0 : _a.getChainId();
         }
         set props(value) {
             this._props = value;
@@ -3402,7 +3437,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                 }
                 else {
                     this.cancelBtn.classList.add('btn-cancel');
-                    const tokenMap = scom_token_list_4.tokenStore.tokenMap;
+                    const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(this.chainId);
                     this.balanceLabel.caption = (0, index_6.renderBalanceTooltip)({ title: 'Balance', value: this.balance, symbol: 'OSWAP' }, tokenMap);
                     this.totalFee.caption = (0, index_6.renderBalanceTooltip)({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
                 }
@@ -3437,9 +3472,10 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                 this.renderAddresses();
             };
             this.updateTotalValues = () => {
+                const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(this.chainId);
                 this.totalAddressLabel.caption = `${this.totalAddress}` || '0';
-                this.totalAllocationLabel.caption = (0, index_6.renderBalanceTooltip)({ value: this.totalAllocation, symbol: this.tokenSymbol }, scom_token_list_4.tokenStore.tokenMap);
-                this.totalFee.caption = (0, index_6.renderBalanceTooltip)({ value: this.fee, symbol: 'OSWAP' }, scom_token_list_4.tokenStore.tokenMap);
+                this.totalAllocationLabel.caption = (0, index_6.renderBalanceTooltip)({ value: this.totalAllocation, symbol: this.tokenSymbol }, tokenMap);
+                this.totalFee.caption = (0, index_6.renderBalanceTooltip)({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
                 this.saveBtn.enabled = !this.isDisabled;
             };
             this.renderAddresses = () => {
@@ -5381,7 +5417,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     scom_token_list_8.tokenStore.updateTokenMapData(chainId);
                     const rpcWallet = this.rpcWallet;
                     if (rpcWallet.address) {
-                        await scom_token_list_8.tokenStore.updateAllTokenBalances(rpcWallet);
+                        await scom_token_list_8.tokenStore.updateTokenBalancesByChainId(chainId);
                     }
                     this.pairAddress = await (0, index_15.getPair)(this.state, this.fromTokenObject, this.toTokenObject);
                     if (this.offerIndex) {

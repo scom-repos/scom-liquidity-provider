@@ -51,15 +51,21 @@ export default class Module1 extends Module {
         return <i-panel>
             <i-hstack id="mainStack" margin={{ top: '1rem', left: '1rem' }} gap="2rem">
                 <i-scom-liquidity-provider
-                    chainId={43113}
-                    tokenIn="0xb9C31Ea1D475c25E58a1bE1a46221db55E5A7C6e"
-                    tokenOut="0x78d9D80E67bC80A11efbf84B7c8A65Da51a8EF3C"
+                    chainId={421613}
+                    tokenIn="0x2203Eb25D9a8A107fB6F86b4B8A08F75cbD012F1"
+                    tokenOut="0x096a13C9FaaEED2E7b62eC0435Ea5ce0a020e362"
                     networks={[
                         {
                             "chainId": 43113
                         },
                         {
                             "chainId": 97
+                        },
+                        {
+                            "chainId": 42161
+                        },
+                        {
+                            "chainId": 421613
                         }
                     ]}
                     wallets={[

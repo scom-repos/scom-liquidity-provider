@@ -135,7 +135,7 @@ export class Model {
   }
 
   private get fromTokenBalanceExact() {
-    const tokenBalances = tokenStore.tokenBalances || {};
+    const tokenBalances = tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
     if ([Action.CREATE, Action.ADD].some(n => n === this.actionType)) {
       return tokenBalances[this.fromTokenAddress]
         ? new BigNumber(tokenBalances[this.fromTokenAddress])
@@ -147,9 +147,10 @@ export class Model {
   }
 
   private get govTokenBalanceExact() {
-    let stakeToken = getQueueStakeToken(this.state.getChainId());
+    const chainId = this.state.getChainId();
+    let stakeToken = getQueueStakeToken(chainId);
     if (!stakeToken) return new BigNumber(0);
-    const tokenBalances = tokenStore.tokenBalances || {};
+    const tokenBalances = tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
     return tokenBalances[stakeToken.address!]
       ? new BigNumber(tokenBalances[stakeToken!.address!])
       : new BigNumber(0);
@@ -572,7 +573,7 @@ export class Model {
     } else {
       this.currentStage = Stage.NONE;
     }
-    tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
+    tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
     this.initApprovalModelAction();
   }
 
@@ -632,7 +633,7 @@ export class Model {
         this.setSubmitBtnStatus(true);
       },
       onPaid: async (receipt?: any) => {
-        tokenStore.updateAllTokenBalances(this.state.getRpcWallet());
+        tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
         if (this.actionType === Action.CREATE) {
           const offerIndexes = await getOfferIndexes(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
           console.log(offerIndexes);

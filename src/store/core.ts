@@ -17,6 +17,18 @@ export const coreAddress: { [chainId: number]: CoreAddress } = {
         OSWAP_RestrictedLiquidityProvider: "0xdBE2111327D60DbB5376db10dD0F484E98b7d40e",
         OSWAP_RestrictedFactory: "0xa158FB71cA5EF59f707c6F8D0b9CC5765F97Fd60"
     },
+    137: { // Polygon
+        WETH9: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+        OSWAP_ConfigStore: "0x408aAf94BD851eb991dA146dFc7C290aA42BA70f",
+        OSWAP_RestrictedFactory: "0xF879576c2D674C5D22f256083DC8fD019a3f33A1",
+        OSWAP_RestrictedLiquidityProvider: "0x2d7BB250595db7D588D32A0f3582BB73CD902060",
+    },
+    80001: {// Polygon testnet
+        WETH9: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
+        OSWAP_ConfigStore: "0xDd990869da18631a583F8c4503866d23406F79D8",
+        OSWAP_RestrictedFactory: "0x6D2b196aBf09CF97612a5c062bF14EC278F6D677",
+        OSWAP_RestrictedLiquidityProvider: "0xa1254f0bE9e90ad23ED96CA3623b29465C5c3106",
+    },
     43113: { // AVAX Testnet
         WETH9: "0xd00ae08403B9bbb9124bB305C09058E32C39A48c",
         OSWAP_ConfigStore: "0x258A5309486310398Ee078217729db2f65367a92",

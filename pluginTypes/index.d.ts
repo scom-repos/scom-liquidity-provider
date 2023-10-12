@@ -1,7 +1,5 @@
 /// <reference path="@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
-/// <reference path="@scom/scom-token-input/@ijstech/eth-wallet/index.d.ts" />
-/// <reference path="@scom/scom-token-input/@scom/scom-token-modal/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@ijstech/eth-contract/index.d.ts" />
 /// <amd-module name="@scom/scom-liquidity-provider/assets.ts" />
 declare module "@scom/scom-liquidity-provider/assets.ts" {
@@ -667,6 +665,7 @@ declare module "@scom/scom-liquidity-provider/detail/whitelist.tsx" {
     import { Module, ControlElement, Input, Container } from '@ijstech/components';
     import { BigNumber } from '@ijstech/eth-wallet';
     import { IAllocation } from "@scom/scom-liquidity-provider/global/index.ts";
+    import { State } from "@scom/scom-liquidity-provider/store/index.ts";
     global {
         namespace JSX {
             interface IntrinsicElements {
@@ -683,6 +682,7 @@ declare module "@scom/scom-liquidity-provider/detail/whitelist.tsx" {
         pairCustomParams?: any;
     }
     export class ManageWhitelist extends Module {
+        private _state;
         private _props;
         private balance;
         private tokenSymbol;
@@ -713,7 +713,10 @@ declare module "@scom/scom-liquidity-provider/detail/whitelist.tsx" {
         private itemStart;
         private itemEnd;
         private paginationElm;
+        set state(value: State);
+        get state(): State;
         get props(): IData;
+        get chainId(): number;
         set props(value: IData);
         get totalAddress(): number;
         get totalAllocation(): string;

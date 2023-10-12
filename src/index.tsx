@@ -398,7 +398,7 @@ export default class ScomLiquidityProvider extends Module {
 			tokenStore.updateTokenMapData(chainId);
 			const rpcWallet = this.rpcWallet;
 			if (rpcWallet.address) {
-				await tokenStore.updateAllTokenBalances(rpcWallet);
+				await tokenStore.updateTokenBalancesByChainId(chainId);
 			}
 			this.pairAddress = await getPair(this.state, this.fromTokenObject, this.toTokenObject);
 			if (this.offerIndex) {
