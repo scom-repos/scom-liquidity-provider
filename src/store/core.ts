@@ -28,5 +28,17 @@ export const coreAddress: { [chainId: number]: CoreAddress } = {
         OSWAP_ConfigStore: "0x8Ae51f1A62c4Bc0715C367bFe812c53e583aEE2f",
         OSWAP_RestrictedFactory: "0x739f0BBcdAd415127FE8d5d6ED053e9D817BdAdb",
         OSWAP_RestrictedLiquidityProvider: "0x629cF4235c0f6b9954698EF0aF779b9502e4853E"
+    },
+    42161: { // Arbitrum One
+        WETH9: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        OSWAP_ConfigStore: "0x5A9C508ee45d417d176CddADFb151DDC1Fcd21D9",
+        OSWAP_RestrictedFactory: "0x408aAf94BD851eb991dA146dFc7C290aA42BA70f",
+        OSWAP_RestrictedLiquidityProvider: "0x3B7a91F387C42CA040bf96B734bc20DC3d43cC2A"
+    },
+    421613: { // Arbitrum Goerli Testnet
+        WETH9: "0xEe01c0CD76354C383B8c7B4e65EA88D00B06f36f",
+        OSWAP_ConfigStore: "0x689200913Ca40C8c89102A3441D62d51282eAA3f",
+        OSWAP_RestrictedFactory: "0x6f641f4F5948954F7cd675f3D874Ac60b193bA0d",
+        OSWAP_RestrictedLiquidityProvider: "0x93baA37dA23d507dF3F075F660584969e68ec5eb"
     }
 }
