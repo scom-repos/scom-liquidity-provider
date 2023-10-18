@@ -5129,6 +5129,21 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                     this.$render("i-button", { id: "btnStart", caption: "Start", padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText, size: '1.5rem' }, onClick: this.handleClickStart.bind(this) })),
                 this.$render("i-scom-wallet-modal", { id: "mdWallet", wallets: [] })));
         }
+        async handleFlowStage(target, stage, options) {
+            let widget = this;
+            if (!options.isWidgetConnected) {
+                let properties = options.properties;
+                let tokenRequirements = options.tokenRequirements;
+                this.state.handleNextFlowStep = options.onNextStep;
+                this.state.handleAddTransactions = options.onAddTransactions;
+                this.state.handleJumpToStep = options.onJumpToStep;
+                await widget.setData({
+                    executionProperties: properties,
+                    tokenRequirements
+                });
+            }
+            return { widget };
+        }
     };
     ScomLiquidityProviderFlowInitialSetup = __decorate([
         (0, components_14.customElements)('i-scom-liquidity-provider-flow-initial-setup')
@@ -5915,23 +5930,19 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 target.appendChild(widget);
                 await widget.ready();
                 widget.state = this.state;
-                let properties = options.properties;
-                let tokenRequirements = options.tokenRequirements;
-                this.state.handleNextFlowStep = options.onNextStep;
-                this.state.handleAddTransactions = options.onAddTransactions;
-                await widget.setData({
-                    executionProperties: properties,
-                    tokenRequirements
-                });
+                await widget.handleFlowStage(target, stage, options);
             }
             else {
                 widget = this;
-                target.appendChild(widget);
-                await widget.ready();
+                if (!options.isWidgetConnected) {
+                    target.appendChild(widget);
+                    await widget.ready();
+                }
                 let properties = options.properties;
                 let tag = options.tag;
                 this.state.handleNextFlowStep = options.onNextStep;
                 this.state.handleAddTransactions = options.onAddTransactions;
+                this.state.handleJumpToStep = options.onJumpToStep;
                 await this.setData(properties);
                 if (tag) {
                     this.setTag(tag);

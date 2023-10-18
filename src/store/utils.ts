@@ -14,6 +14,7 @@ export class State {
   approvalModel: ERC20ApprovalModel;
   handleNextFlowStep:  (data: any) => Promise<void>;
   handleAddTransactions: (data: any) => Promise<void>;
+  handleJumpToStep: (data: any) => Promise<void>;
 
   constructor(options: any) {
     this.networkMap = getNetworkList();

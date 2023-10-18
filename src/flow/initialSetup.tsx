@@ -2,6 +2,7 @@ import {
     application,
     Button,
     ComboBox,
+    Control,
     ControlElement,
     customElements,
     IComboItem,
@@ -288,5 +289,20 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
                 <i-scom-wallet-modal id="mdWallet" wallets={[]}></i-scom-wallet-modal>
             </i-vstack>
         )
+    }
+    async handleFlowStage(target: Control, stage: string, options: any) {
+        let widget: ScomLiquidityProviderFlowInitialSetup = this;
+        if (!options.isWidgetConnected) {
+			let properties = options.properties;
+			let tokenRequirements = options.tokenRequirements;
+			this.state.handleNextFlowStep = options.onNextStep;
+			this.state.handleAddTransactions = options.onAddTransactions;
+            this.state.handleJumpToStep = options.onJumpToStep;
+			await widget.setData({
+				executionProperties: properties,
+				tokenRequirements
+			});
+        }
+        return { widget }
     }
 }

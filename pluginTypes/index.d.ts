@@ -28,6 +28,7 @@ declare module "@scom/scom-liquidity-provider/store/utils.ts" {
         approvalModel: ERC20ApprovalModel;
         handleNextFlowStep: (data: any) => Promise<void>;
         handleAddTransactions: (data: any) => Promise<void>;
+        handleJumpToStep: (data: any) => Promise<void>;
         constructor(options: any);
         initRpcWallet(chainId: number): string;
         private initData;
@@ -1029,7 +1030,7 @@ declare module "@scom/scom-liquidity-provider/detail/index.tsx" {
 }
 /// <amd-module name="@scom/scom-liquidity-provider/flow/initialSetup.tsx" />
 declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
-    import { ControlElement, Module } from "@ijstech/components";
+    import { Control, ControlElement, Module } from "@ijstech/components";
     import { State } from "@scom/scom-liquidity-provider/store/index.ts";
     interface ScomLiquidityProviderFlowInitialSetupElement extends ControlElement {
         data?: any;
@@ -1077,6 +1078,9 @@ declare module "@scom/scom-liquidity-provider/flow/initialSetup.tsx" {
         private handleClickAdd;
         private handleClickRemove;
         render(): any;
+        handleFlowStage(target: Control, stage: string, options: any): Promise<{
+            widget: ScomLiquidityProviderFlowInitialSetup;
+        }>;
     }
 }
 /// <amd-module name="@scom/scom-liquidity-provider" />
