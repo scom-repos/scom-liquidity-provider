@@ -1,5 +1,5 @@
 import { IAllocation, ProviderGroupQueue, toWeiInv } from '../global/index';
-import { BigNumber, Wallet, Utils } from '@ijstech/eth-wallet';
+import { BigNumber, Wallet, Utils, IMulticallContractCall } from '@ijstech/eth-wallet';
 import {
   State,
   coreAddress,
@@ -501,26 +501,31 @@ const convertWhitelistedAddresses = (inputText: string): IAllocation[] => {
 
 async function getTradersAllocation(pair: Contracts.OSWAP_RestrictedPair, direction: boolean, offerIndex: number | BigNumber, allocationTokenDecimals: number, callbackPerRecord?: (address: string, allocation: string) => void) {
   let traderLength = (await pair.getApprovedTraderLength({ direction, offerIndex })).toNumber();
-  let tasks: Promise<void>[] = [];
-  let allo: IAllocation[] = [];
-
-  for (let i = 0; i < traderLength; i += 100) {//get trader allocation
-    tasks.push(
-      (async () => {
-        try {
-          let approvedTrader = await pair.getApprovedTrader({ direction, offerIndex, start: i, length: 100 });
-          allo.push(...approvedTrader.trader.map((address, i) => {
-            let allocation = new BigNumber(approvedTrader.allocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
-            if (callbackPerRecord) callbackPerRecord(address, allocation);
-            return { address, allocation };
-          }));
-        } catch (error) {
-          console.log("getTradersAllocation", error);
-          return;
-        }
-      })());
+  let tasks:Promise<void>[] = [];
+  let allo:IAllocation[] = [];
+  if (traderLength > 0) {
+    const wallet = Wallet.getClientInstance();
+    let calls: IMulticallContractCall[] = [];
+    for (let i = 0; i < traderLength; i += 100) {
+      calls.push({
+        contract: pair,
+        methodName: 'getApprovedTrader',
+        params: [direction ? 'true': 'false', offerIndex.toString(), i.toString(), '100'],
+        to: pair.address
+      })
+    }
+    const multicallResult = await wallet.doMulticall(calls);
+    for (let i = 0; i < multicallResult.length; i++) {
+      let approvedTrader = multicallResult[i];
+      let approvedTraderTrader = approvedTrader[0];
+      let approvedTraderAllocation = approvedTrader[1];
+      allo.push(...approvedTraderTrader.map((address, i) => {
+        let allocation = new BigNumber(approvedTraderAllocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
+        if (callbackPerRecord) callbackPerRecord(address, allocation);
+        return {address, allocation};
+      }));
+    }
   }
-  await Promise.all(tasks);
   return allo;
 }
 

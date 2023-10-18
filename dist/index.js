@@ -18,17 +18,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 define("@scom/scom-liquidity-provider/assets.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -59,17 +48,16 @@ define("@scom/scom-liquidity-provider/store/utils.ts", ["require", "exports", "@
             this.initData(options);
         }
         initRpcWallet(chainId) {
-            var _a, _b, _c;
             if (this.rpcWalletId) {
                 return this.rpcWalletId;
             }
             const clientWallet = eth_wallet_1.Wallet.getClientInstance();
-            const networkList = Object.values(((_a = components_2.application.store) === null || _a === void 0 ? void 0 : _a.networkMap) || []);
+            const networkList = Object.values(components_2.application.store?.networkMap || []);
             const instanceId = clientWallet.initRpcWallet({
                 networks: networkList,
                 defaultChainId: chainId,
-                infuraId: (_b = components_2.application.store) === null || _b === void 0 ? void 0 : _b.infuraId,
-                multicalls: (_c = components_2.application.store) === null || _c === void 0 ? void 0 : _c.multicalls
+                infuraId: components_2.application.store?.infuraId,
+                multicalls: components_2.application.store?.multicalls
             });
             this.rpcWalletId = instanceId;
             if (clientWallet.address) {
@@ -109,7 +97,10 @@ define("@scom/scom-liquidity-provider/store/utils.ts", ["require", "exports", "@
                         network.rpcUrls[i] = network.rpcUrls[i].replace(/{InfuraId}/g, infuraId);
                     }
                 }
-                this.networkMap[network.chainId] = Object.assign(Object.assign({}, networkInfo), network);
+                this.networkMap[network.chainId] = {
+                    ...networkInfo,
+                    ...network
+                };
                 wallet.setNetworkInfo(this.networkMap[network.chainId]);
             }
         }
@@ -126,14 +117,17 @@ define("@scom/scom-liquidity-provider/store/utils.ts", ["require", "exports", "@
         }
         isRpcWalletConnected() {
             const wallet = this.getRpcWallet();
-            return wallet === null || wallet === void 0 ? void 0 : wallet.isConnected;
+            return wallet?.isConnected;
         }
         getChainId() {
             const rpcWallet = this.getRpcWallet();
-            return rpcWallet === null || rpcWallet === void 0 ? void 0 : rpcWallet.chainId;
+            return rpcWallet?.chainId;
         }
         async setApprovalModelAction(options) {
-            const approvalOptions = Object.assign(Object.assign({}, options), { spenderAddress: '' });
+            const approvalOptions = {
+                ...options,
+                spenderAddress: ''
+            };
             let wallet = this.getRpcWallet();
             this.approvalModel = new eth_wallet_1.ERC20ApprovalModel(wallet, approvalOptions);
             let approvalModelAction = this.approvalModel.getAction();
@@ -1030,7 +1024,7 @@ define("@scom/scom-liquidity-provider/global/utils/helper.ts", ["require", "expo
             }
             return { result, tooltip };
         }
-        catch (_a) {
+        catch {
             return '-';
         }
     };
@@ -1154,15 +1148,14 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         if (!scom_token_list_2.DefaultERC20Tokens[chainId])
             return null;
         let stakeToken = scom_token_list_2.DefaultERC20Tokens[chainId].find(v => v.symbol == 'OSWAP');
-        return stakeToken ? Object.assign(Object.assign({}, stakeToken), { address: stakeToken.address.toLowerCase() }) : null;
+        return stakeToken ? { ...stakeToken, address: stakeToken.address.toLowerCase() } : null;
     };
     exports.getQueueStakeToken = getQueueStakeToken;
     const mapTokenObjectSet = (chainId, obj) => {
-        var _a;
         const WETH9 = getWETH(chainId);
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
-                if (!((_a = obj[key]) === null || _a === void 0 ? void 0 : _a.address))
+                if (!obj[key]?.address)
                     obj[key] = WETH9;
             }
         }
@@ -1201,7 +1194,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
             let factoryAddress = getFactoryAddress(chainId);
             let groupQ = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
-            pairAddress = await groupQ.getPair(Object.assign(Object.assign({}, params), { param3: 0 }));
+            pairAddress = await groupQ.getPair({ ...params, param3: 0 });
         }
         catch (err) { }
         return pairAddress;
@@ -1247,7 +1240,6 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         };
     };
     const getPairInfo = async (state, pairAddress, tokenAddress, offerIndex) => {
-        var _a, _b, _c, _d;
         const wallet = state.getRpcWallet();
         const chainId = state.getChainId();
         const nativeToken = (0, index_3.getChainNativeToken)(chainId);
@@ -1281,7 +1273,13 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             totalAmount = totalAmount.plus(amounts[i]);
         }
         let customParams = await getRestrictedPairCustomParams(state);
-        let returnObj = Object.assign({ pairAddress: pairAddress.toLowerCase(), fromTokenAddress: ((_a = token.address) === null || _a === void 0 ? void 0 : _a.toLowerCase()) == WETH9Address.toLowerCase() ? nativeToken.symbol : (_b = token.address) === null || _b === void 0 ? void 0 : _b.toLowerCase(), toTokenAddress: ((_c = againstToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) == WETH9Address.toLowerCase() ? nativeToken.symbol : (_d = againstToken.address) === null || _d === void 0 ? void 0 : _d.toLowerCase(), pairIndex: pairIndex }, customParams);
+        let returnObj = {
+            pairAddress: pairAddress.toLowerCase(),
+            fromTokenAddress: token.address?.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : token.address?.toLowerCase(),
+            toTokenAddress: againstToken.address?.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : againstToken.address?.toLowerCase(),
+            pairIndex: pairIndex,
+            ...customParams
+        };
         if (offerIndex) {
             const getProviderQueuePairInfo = async function () {
                 let againstTokenDecimals = againstToken.decimals;
@@ -1302,7 +1300,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
                 };
             };
             let providerQueuePairInfo = await getProviderQueuePairInfo();
-            returnObj = Object.assign(Object.assign({}, returnObj), providerQueuePairInfo);
+            returnObj = { ...returnObj, ...providerQueuePairInfo };
         }
         return returnObj;
     };
@@ -1320,12 +1318,14 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         let addresses = await getTradersAllocation(groupPair, direction, offerIndex, token0.decimals, (address, allocation) => {
             totalAllocation = totalAllocation.plus(allocation);
         });
-        let price = (0, index_2.toWeiInv)(new eth_wallet_5.BigNumber(offer.restrictedPrice).shiftedBy(-18).toFixed()).shiftedBy(-18).toFixed();
+        const restrictedPrice = new eth_wallet_5.BigNumber(offer.restrictedPrice).shiftedBy(-18).toFixed();
+        let price = (0, index_2.toWeiInv)(restrictedPrice).shiftedBy(-18).toFixed();
+        let amount = new eth_wallet_5.BigNumber(offer.amount).shiftedBy(-token0.decimals).toFixed();
         let data = {
             pairAddress: pairAddress.toLowerCase(),
             fromTokenAddress: token0.address.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : token0.address.toLowerCase(),
             toTokenAddress: token1.address.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : token1.address.toLowerCase(),
-            amount: new eth_wallet_5.BigNumber(offer.amount).shiftedBy(-token0.decimals).toFixed(),
+            amount: amount,
             offerPrice: price,
             startDate: offer.startDate.toNumber() * 1000,
             endDate: offer.expire.toNumber() * 1000,
@@ -1335,7 +1335,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             offerIndex: offerIndex,
             addresses,
             allocation: totalAllocation.toFixed(),
-            willGet: new eth_wallet_5.BigNumber(offer.amount).times(new eth_wallet_5.BigNumber(price)).shiftedBy(-Number(token0.decimals)).toFixed()
+            willGet: new eth_wallet_5.BigNumber(amount).times(price).toFixed()
         };
         return data;
     }
@@ -1534,12 +1534,11 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
     };
     exports.removeLiquidity = removeLiquidity;
     const lockGroupQueueOffer = async (chainId, pairAddress, tokenA, tokenB, offerIndex) => {
-        var _a, _b;
         const wallet = eth_wallet_5.Wallet.getClientInstance();
         const WETH9Address = getAddressByKey(chainId, 'WETH9');
         // BigNumber constructor, only string values in hexadecimal literal form, e.g. '0xff' or '0xFF' (but not '0xfF') are valid
-        const tokenInAddress = ((_a = tokenA === null || tokenA === void 0 ? void 0 : tokenA.address) !== null && _a !== void 0 ? _a : WETH9Address).toLowerCase();
-        const tokenOutAddress = ((_b = tokenB === null || tokenB === void 0 ? void 0 : tokenB.address) !== null && _b !== void 0 ? _b : WETH9Address).toLowerCase();
+        const tokenInAddress = (tokenA?.address ?? WETH9Address).toLowerCase();
+        const tokenOutAddress = (tokenB?.address ?? WETH9Address).toLowerCase();
         const direction = (new eth_wallet_5.BigNumber(tokenInAddress).lt(tokenOutAddress)) ? false : true;
         const oraclePairContract = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
         const receipt = await oraclePairContract.lockOffer({ direction, index: offerIndex });
@@ -1570,24 +1569,30 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         let traderLength = (await pair.getApprovedTraderLength({ direction, offerIndex })).toNumber();
         let tasks = [];
         let allo = [];
-        for (let i = 0; i < traderLength; i += 100) { //get trader allocation
-            tasks.push((async () => {
-                try {
-                    let approvedTrader = await pair.getApprovedTrader({ direction, offerIndex, start: i, length: 100 });
-                    allo.push(...approvedTrader.trader.map((address, i) => {
-                        let allocation = new eth_wallet_5.BigNumber(approvedTrader.allocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
-                        if (callbackPerRecord)
-                            callbackPerRecord(address, allocation);
-                        return { address, allocation };
-                    }));
-                }
-                catch (error) {
-                    console.log("getTradersAllocation", error);
-                    return;
-                }
-            })());
+        if (traderLength > 0) {
+            const wallet = eth_wallet_5.Wallet.getClientInstance();
+            let calls = [];
+            for (let i = 0; i < traderLength; i += 100) {
+                calls.push({
+                    contract: pair,
+                    methodName: 'getApprovedTrader',
+                    params: [direction ? 'true' : 'false', offerIndex.toString(), i.toString(), '100'],
+                    to: pair.address
+                });
+            }
+            const multicallResult = await wallet.doMulticall(calls);
+            for (let i = 0; i < multicallResult.length; i++) {
+                let approvedTrader = multicallResult[i];
+                let approvedTraderTrader = approvedTrader[0];
+                let approvedTraderAllocation = approvedTrader[1];
+                allo.push(...approvedTraderTrader.map((address, i) => {
+                    let allocation = new eth_wallet_5.BigNumber(approvedTraderAllocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
+                    if (callbackPerRecord)
+                        callbackPerRecord(address, allocation);
+                    return { address, allocation };
+                }));
+            }
         }
-        await Promise.all(tasks);
         return allo;
     }
     async function isPairRegistered(state, tokenA, tokenB) {
@@ -2508,16 +2513,15 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
             let secondTokenInput;
             let combobox;
             const initCombobox = async () => {
-                var _a, _b, _c;
                 if (!combobox)
                     return;
                 combobox.clear();
-                const fromToken = firstTokenInput === null || firstTokenInput === void 0 ? void 0 : firstTokenInput.token;
-                const toToken = secondTokenInput === null || secondTokenInput === void 0 ? void 0 : secondTokenInput.token;
+                const fromToken = firstTokenInput?.token;
+                const toToken = secondTokenInput?.token;
                 try {
                     if (fromToken && toToken) {
                         const wallet = state.getRpcWallet();
-                        const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        const chainId = networkPicker.selectedNetwork?.chainId;
                         combobox.icon.name = 'spinner';
                         combobox.icon.spin = true;
                         combobox.enabled = false;
@@ -2525,8 +2529,8 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             await wallet.switchNetwork(chainId);
                         }
                         const pairAddress = await (0, liquidity_utils_1.getPair)(state, fromToken, toToken);
-                        const fromTokenAddress = ((_b = fromToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || fromToken.symbol;
-                        const toTokenAddress = ((_c = toToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || toToken.symbol;
+                        const fromTokenAddress = fromToken.address?.toLowerCase() || fromToken.symbol;
+                        const toTokenAddress = toToken.address?.toLowerCase() || toToken.symbol;
                         const offerIndexes = await (0, liquidity_utils_1.getOfferIndexes)(state, pairAddress, fromTokenAddress, toTokenAddress);
                         combobox.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
                     }
@@ -2534,7 +2538,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         combobox.items = [];
                     }
                 }
-                catch (_d) {
+                catch {
                     combobox.items = [];
                 }
                 finally {
@@ -2550,8 +2554,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             type: 'combobox',
                             networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
                             onCustomNetworkSelected: () => {
-                                var _a;
-                                const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                const chainId = networkPicker.selectedNetwork?.chainId;
                                 if (firstTokenInput.chainId != chainId) {
                                     firstTokenInput.token = null;
                                     secondTokenInput.token = null;
@@ -2565,8 +2568,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         return networkPicker;
                     },
                     getData: (control) => {
-                        var _a;
-                        return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        return control.selectedNetwork?.chainId;
                     },
                     setData: (control, value) => {
                         control.setNetworkByChainId(value);
@@ -2578,7 +2580,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                 },
                 "#/properties/tokenIn": {
                     render: () => {
-                        var _a;
                         firstTokenInput = new scom_token_input_1.default(undefined, {
                             type: 'combobox',
                             isBalanceShown: false,
@@ -2586,7 +2587,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             isInputShown: false,
                             maxWidth: 300
                         });
-                        const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && firstTokenInput.chainId !== chainId) {
                             firstTokenInput.chainId = chainId;
                         }
@@ -2596,8 +2597,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         return firstTokenInput;
                     },
                     getData: (control) => {
-                        var _a, _b;
-                        return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                        return control.token?.address || control.token?.symbol;
                     },
                     setData: (control, value) => {
                         control.address = value;
@@ -2605,7 +2605,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                 },
                 "#/properties/tokenOut": {
                     render: () => {
-                        var _a;
                         secondTokenInput = new scom_token_input_1.default(undefined, {
                             type: 'combobox',
                             isBalanceShown: false,
@@ -2613,7 +2612,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             isInputShown: false,
                             maxWidth: 300
                         });
-                        const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && secondTokenInput.chainId !== chainId) {
                             secondTokenInput.chainId = chainId;
                         }
@@ -2623,8 +2622,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         return secondTokenInput;
                     },
                     getData: (control) => {
-                        var _a, _b;
-                        return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                        return control.token?.address || control.token?.symbol;
                     },
                     setData: (control, value) => {
                         control.address = value;
@@ -2640,8 +2638,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                         return combobox;
                     },
                     getData: (control) => {
-                        var _a;
-                        return ((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value) || '';
+                        return control.selectedItem?.value || '';
                     },
                     setData: async (control, value) => {
                         if (value) {
@@ -2723,16 +2720,15 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                 let secondTokenInput;
                 let combobox;
                 const initCombobox = async () => {
-                    var _a, _b, _c;
                     if (!combobox)
                         return;
                     combobox.clear();
-                    const fromToken = firstTokenInput === null || firstTokenInput === void 0 ? void 0 : firstTokenInput.token;
-                    const toToken = secondTokenInput === null || secondTokenInput === void 0 ? void 0 : secondTokenInput.token;
+                    const fromToken = firstTokenInput?.token;
+                    const toToken = secondTokenInput?.token;
                     try {
                         if (fromToken && toToken) {
                             const wallet = state.getRpcWallet();
-                            const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            const chainId = networkPicker.selectedNetwork?.chainId;
                             combobox.icon.name = 'spinner';
                             combobox.icon.spin = true;
                             combobox.enabled = false;
@@ -2740,8 +2736,8 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 await wallet.switchNetwork(chainId);
                             }
                             const pairAddress = await (0, liquidity_utils_1.getPair)(state, fromToken, toToken);
-                            const fromTokenAddress = ((_b = fromToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || fromToken.symbol;
-                            const toTokenAddress = ((_c = toToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || toToken.symbol;
+                            const fromTokenAddress = fromToken.address?.toLowerCase() || fromToken.symbol;
+                            const toTokenAddress = toToken.address?.toLowerCase() || toToken.symbol;
                             const offerIndexes = await (0, liquidity_utils_1.getOfferIndexes)(state, pairAddress, fromTokenAddress, toTokenAddress);
                             combobox.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
                         }
@@ -2749,7 +2745,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             combobox.items = [];
                         }
                     }
-                    catch (_d) {
+                    catch {
                         combobox.items = [];
                     }
                     finally {
@@ -2765,8 +2761,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 type: 'combobox',
                                 networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
                                 onCustomNetworkSelected: () => {
-                                    var _a;
-                                    const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                    const chainId = networkPicker.selectedNetwork?.chainId;
                                     if (firstTokenInput.chainId != chainId) {
                                         firstTokenInput.token = null;
                                         secondTokenInput.token = null;
@@ -2780,8 +2775,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return networkPicker;
                         },
                         getData: (control) => {
-                            var _a;
-                            return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            return control.selectedNetwork?.chainId;
                         },
                         setData: (control, value) => {
                             control.setNetworkByChainId(value);
@@ -2793,7 +2787,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     },
                     "#/properties/tokenIn": {
                         render: () => {
-                            var _a;
                             firstTokenInput = new scom_token_input_1.default(undefined, {
                                 type: 'combobox',
                                 isBalanceShown: false,
@@ -2801,7 +2794,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 isInputShown: false,
                                 maxWidth: 300
                             });
-                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            const chainId = networkPicker?.selectedNetwork?.chainId;
                             if (chainId && firstTokenInput.chainId !== chainId) {
                                 firstTokenInput.chainId = chainId;
                             }
@@ -2811,8 +2804,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return firstTokenInput;
                         },
                         getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                            return control.token?.address || control.token?.symbol;
                         },
                         setData: (control, value) => {
                             control.address = value;
@@ -2820,7 +2812,6 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     },
                     "#/properties/tokenOut": {
                         render: () => {
-                            var _a;
                             secondTokenInput = new scom_token_input_1.default(undefined, {
                                 type: 'combobox',
                                 isBalanceShown: false,
@@ -2828,7 +2819,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 isInputShown: false,
                                 maxWidth: 300
                             });
-                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            const chainId = networkPicker?.selectedNetwork?.chainId;
                             if (chainId && secondTokenInput.chainId !== chainId) {
                                 secondTokenInput.chainId = chainId;
                             }
@@ -2838,8 +2829,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return secondTokenInput;
                         },
                         getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                            return control.token?.address || control.token?.symbol;
                         },
                         setData: (control, value) => {
                             control.address = value;
@@ -2855,8 +2845,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return combobox;
                         },
                         getData: (control) => {
-                            var _a;
-                            return ((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value) || '';
+                            return control.selectedItem?.value || '';
                         },
                         setData: async (control, value) => {
                             if (value) {
@@ -2940,16 +2929,15 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                 let secondTokenInput;
                 let combobox;
                 const initCombobox = async () => {
-                    var _a, _b, _c;
                     if (!combobox)
                         return;
                     combobox.clear();
-                    const fromToken = firstTokenInput === null || firstTokenInput === void 0 ? void 0 : firstTokenInput.token;
-                    const toToken = secondTokenInput === null || secondTokenInput === void 0 ? void 0 : secondTokenInput.token;
+                    const fromToken = firstTokenInput?.token;
+                    const toToken = secondTokenInput?.token;
                     try {
                         if (fromToken && toToken) {
                             const wallet = state.getRpcWallet();
-                            const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            const chainId = networkPicker.selectedNetwork?.chainId;
                             combobox.icon.name = 'spinner';
                             combobox.icon.spin = true;
                             combobox.enabled = false;
@@ -2957,8 +2945,8 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 await wallet.switchNetwork(chainId);
                             }
                             const pairAddress = await (0, liquidity_utils_1.getPair)(state, fromToken, toToken);
-                            const fromTokenAddress = ((_b = fromToken.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || fromToken.symbol;
-                            const toTokenAddress = ((_c = toToken.address) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || toToken.symbol;
+                            const fromTokenAddress = fromToken.address?.toLowerCase() || fromToken.symbol;
+                            const toTokenAddress = toToken.address?.toLowerCase() || toToken.symbol;
                             const offerIndexes = await (0, liquidity_utils_1.getOfferIndexes)(state, pairAddress, fromTokenAddress, toTokenAddress);
                             combobox.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
                         }
@@ -2966,7 +2954,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             combobox.items = [];
                         }
                     }
-                    catch (_d) {
+                    catch {
                         combobox.items = [];
                     }
                     finally {
@@ -2982,8 +2970,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                                 type: 'combobox',
                                 networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
                                 onCustomNetworkSelected: () => {
-                                    var _a;
-                                    const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                    const chainId = networkPicker.selectedNetwork?.chainId;
                                     if (firstTokenInput.chainId != chainId) {
                                         firstTokenInput.token = null;
                                         secondTokenInput.token = null;
@@ -2997,8 +2984,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return networkPicker;
                         },
                         getData: (control) => {
-                            var _a;
-                            return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            return control.selectedNetwork?.chainId;
                         },
                         setData: (control, value) => {
                             control.setNetworkByChainId(value);
@@ -3010,14 +2996,13 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     },
                     '#/properties/tokenIn': {
                         render: () => {
-                            var _a;
                             firstTokenInput = new scom_token_input_1.default(undefined, {
                                 type: 'combobox',
                                 isBalanceShown: false,
                                 isBtnMaxShown: false,
                                 isInputShown: false
                             });
-                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            const chainId = networkPicker?.selectedNetwork?.chainId;
                             if (chainId && firstTokenInput.chainId !== chainId) {
                                 firstTokenInput.chainId = chainId;
                             }
@@ -3027,8 +3012,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return firstTokenInput;
                         },
                         getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                            return control.token?.address || control.token?.symbol;
                         },
                         setData: (control, value) => {
                             control.address = value;
@@ -3036,14 +3020,13 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                     },
                     "#/properties/tokenOut": {
                         render: () => {
-                            var _a;
                             secondTokenInput = new scom_token_input_1.default(undefined, {
                                 type: 'combobox',
                                 isBalanceShown: false,
                                 isBtnMaxShown: false,
                                 isInputShown: false
                             });
-                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            const chainId = networkPicker?.selectedNetwork?.chainId;
                             if (chainId && secondTokenInput.chainId !== chainId) {
                                 secondTokenInput.chainId = chainId;
                             }
@@ -3053,8 +3036,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return secondTokenInput;
                         },
                         getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                            return control.token?.address || control.token?.symbol;
                         },
                         setData: (control, value) => {
                             control.address = value;
@@ -3069,8 +3051,7 @@ define("@scom/scom-liquidity-provider/formSchema.ts", ["require", "exports", "@i
                             return combobox;
                         },
                         getData: (control) => {
-                            var _a;
-                            return ((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value) || '';
+                            return control.selectedItem?.value || '';
                         },
                         setData: async (control, value) => {
                             if (value) {
@@ -3359,8 +3340,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
             return this._props;
         }
         get chainId() {
-            var _a;
-            return (_a = this.state) === null || _a === void 0 ? void 0 : _a.getChainId();
+            return this.state?.getChainId();
         }
         set props(value) {
             this._props = value;
@@ -3461,7 +3441,11 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
             this.setDefaultAddresses = () => {
                 if (this.isReadOnly) {
                     this.listAddress = this.addresses.map((address) => {
-                        return Object.assign(Object.assign({}, address), { allocation: (0, index_6.formatNumber)(address.allocation), allocationVal: address.allocation });
+                        return {
+                            ...address,
+                            allocation: (0, index_6.formatNumber)(address.allocation),
+                            allocationVal: address.allocation,
+                        };
                     });
                 }
                 else {
@@ -3475,7 +3459,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                     ;
                     const list = [];
                     this.addresses.forEach((item) => {
-                        list.push(Object.assign({}, item));
+                        list.push({ ...item });
                     });
                     this.listAddress = list;
                 }
@@ -3538,7 +3522,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                     this.listAddress.forEach((item) => {
                         const { address, allocation } = item;
                         if (address && (allocation || allocation == 0)) {
-                            finalList.push(Object.assign({}, item));
+                            finalList.push({ ...item });
                         }
                     });
                     if (this.updateAddress) {
@@ -3564,13 +3548,19 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                     e.value = item.address;
                     return;
                 }
-                this.listAddress[idx] = Object.assign(Object.assign({}, item), { address: e.value });
+                this.listAddress[idx] = {
+                    ...item,
+                    address: e.value
+                };
                 this.validateForm();
             };
             this.onInputAllocation = (e, idx) => {
                 const item = this.listAddress[idx];
                 (0, index_6.limitInputNumber)(e, this.decimals);
-                this.listAddress[idx] = Object.assign(Object.assign({}, item), { allocation: e.value });
+                this.listAddress[idx] = {
+                    ...item,
+                    allocation: e.value
+                };
                 this.updateTotalValues();
             };
             this.onInputBatch = () => {
@@ -3968,7 +3958,11 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 this.offerTo = this.model.offerTo();
                 if (this.model.addresses()) {
                     this.addresses = this.model.addresses().map((v) => {
-                        return Object.assign(Object.assign({}, v), { isOld: true, oldAllocation: v.allocation });
+                        return {
+                            ...v,
+                            isOld: true,
+                            oldAllocation: v.allocation,
+                        };
                     });
                     this.model.addressChange(this.addresses);
                 }
@@ -4226,8 +4220,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             return this.actionType === liquidity_utils_2.Action.REMOVE;
         }
         get chainId() {
-            var _a;
-            return (_a = this.state) === null || _a === void 0 ? void 0 : _a.getChainId();
+            return this.state?.getChainId();
         }
         get balanceTitle() {
             return this.isCreate || this.isAdd ? 'You Are Selling' : 'You Are Collecting';
@@ -4316,8 +4309,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             return this.model.fromTokenInputText();
         }
         get fromTokenDecimals() {
-            var _a;
-            return ((_a = this.model.fromTokenObject()) === null || _a === void 0 ? void 0 : _a.decimals) || 18;
+            return this.model.fromTokenObject()?.decimals || 18;
         }
         get offerPriceText() {
             return this.model.offerPriceText();
@@ -4343,8 +4335,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             return this.oswapToken && this.oswapToken.address ? scom_token_list_5.assets.tokenPath(this.oswapToken, this.chainId) : '';
         }
         get oswapSymbol() {
-            var _a;
-            return this.oswapToken && this.oswapToken.address ? (0, index_7.tokenSymbol)(this.chainId, this.oswapToken.address) : (_a = this.oswapToken.symbol) !== null && _a !== void 0 ? _a : '';
+            return this.oswapToken && this.oswapToken.address ? (0, index_7.tokenSymbol)(this.chainId, this.oswapToken.address) : this.oswapToken.symbol ?? '';
         }
         handleNext1() {
             this.onProceed(this.secondInput);
@@ -4511,8 +4502,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
             return this._state;
         }
         get chainId() {
-            var _a;
-            return (_a = this.state) === null || _a === void 0 ? void 0 : _a.getChainId();
+            return this.state?.getChainId();
         }
         get fromTokenAddress() {
             return this._fromTokenAddress;
@@ -4832,39 +4822,37 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
             }
         }
         resetHighlight() {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-            (_a = this.amountRow) === null || _a === void 0 ? void 0 : _a.classList.remove("highlight-row");
-            (_b = this.offerPriceRow) === null || _b === void 0 ? void 0 : _b.classList.remove("highlight-row");
-            (_c = this.startDateRow) === null || _c === void 0 ? void 0 : _c.classList.remove("highlight-row");
-            (_d = this.endDateRow) === null || _d === void 0 ? void 0 : _d.classList.remove("highlight-row");
-            (_e = this.statusRow) === null || _e === void 0 ? void 0 : _e.classList.remove("highlight-row");
-            (_f = this.allocationRow) === null || _f === void 0 ? void 0 : _f.classList.remove("highlight-row");
-            (_g = this.whitelistRow) === null || _g === void 0 ? void 0 : _g.classList.remove("highlight-row");
-            (_h = this.receiveRow) === null || _h === void 0 ? void 0 : _h.classList.remove("highlight-row");
-            (_j = this.feeRow) === null || _j === void 0 ? void 0 : _j.classList.remove("highlight-row");
+            this.amountRow?.classList.remove("highlight-row");
+            this.offerPriceRow?.classList.remove("highlight-row");
+            this.startDateRow?.classList.remove("highlight-row");
+            this.endDateRow?.classList.remove("highlight-row");
+            this.statusRow?.classList.remove("highlight-row");
+            this.allocationRow?.classList.remove("highlight-row");
+            this.whitelistRow?.classList.remove("highlight-row");
+            this.receiveRow?.classList.remove("highlight-row");
+            this.feeRow?.classList.remove("highlight-row");
         }
         onHighlight(stage) {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
             this.resetHighlight();
             switch (stage) {
                 case index_11.Stage.SET_AMOUNT:
-                    (_a = this.amountRow) === null || _a === void 0 ? void 0 : _a.classList.add("highlight-row");
-                    (_b = this.receiveRow) === null || _b === void 0 ? void 0 : _b.classList.add("highlight-row");
+                    this.amountRow?.classList.add("highlight-row");
+                    this.receiveRow?.classList.add("highlight-row");
                     break;
                 case index_11.Stage.SET_OFFER_PRICE:
-                    (_c = this.offerPriceRow) === null || _c === void 0 ? void 0 : _c.classList.add("highlight-row");
-                    (_d = this.receiveRow) === null || _d === void 0 ? void 0 : _d.classList.add("highlight-row");
+                    this.offerPriceRow?.classList.add("highlight-row");
+                    this.receiveRow?.classList.add("highlight-row");
                     break;
                 case index_11.Stage.SET_START_DATE:
-                    (_e = this.startDateRow) === null || _e === void 0 ? void 0 : _e.classList.add("highlight-row");
+                    this.startDateRow?.classList.add("highlight-row");
                     break;
                 case index_11.Stage.SET_END_DATE:
-                    (_f = this.endDateRow) === null || _f === void 0 ? void 0 : _f.classList.add("highlight-row");
+                    this.endDateRow?.classList.add("highlight-row");
                     break;
                 case index_11.Stage.SET_OFFER_TO:
                 case index_11.Stage.SET_ADDRESS:
-                    (_g = this.whitelistRow) === null || _g === void 0 ? void 0 : _g.classList.add("highlight-row");
-                    (_h = this.allocationRow) === null || _h === void 0 ? void 0 : _h.classList.add("highlight-row");
+                    this.whitelistRow?.classList.add("highlight-row");
+                    this.allocationRow?.classList.add("highlight-row");
                     break;
             }
         }
@@ -5027,10 +5015,9 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
             this.registerEvents();
         }
         async handleClickStart() {
-            var _a, _b, _c, _d;
             this.executionProperties.chainId = this.chainId;
-            this.executionProperties.tokenIn = ((_a = this.tokenInInput.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = this.tokenInInput.token) === null || _b === void 0 ? void 0 : _b.symbol);
-            this.executionProperties.tokenOut = ((_c = this.tokenOutInput.token) === null || _c === void 0 ? void 0 : _c.address) || ((_d = this.tokenOutInput.token) === null || _d === void 0 ? void 0 : _d.symbol);
+            this.executionProperties.tokenIn = this.tokenInInput.token?.address || this.tokenInInput.token?.symbol;
+            this.executionProperties.tokenOut = this.tokenOutInput.token?.address || this.tokenOutInput.token?.symbol;
             if (this.action !== 'create' && this.comboOfferIndex.selectedItem) {
                 this.executionProperties.offerIndex = this.comboOfferIndex.selectedItem.value;
             }
@@ -5045,7 +5032,6 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                 });
         }
         async handleSelectToken() {
-            var _a, _b;
             this.comboOfferIndex.clear();
             try {
                 if (this.tokenInInput.token && this.tokenOutInput.token) {
@@ -5058,8 +5044,8 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                         await wallet.switchNetwork(chainId);
                     }
                     const pairAddress = await (0, index_13.getPair)(this.state, this.tokenInInput.token, this.tokenOutInput.token);
-                    const fromTokenAddress = ((_a = this.tokenInInput.token.address) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || this.tokenInInput.token.symbol;
-                    const toTokenAddress = ((_b = this.tokenOutInput.token.address) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || this.tokenOutInput.token.symbol;
+                    const fromTokenAddress = this.tokenInInput.token.address?.toLowerCase() || this.tokenInInput.token.symbol;
+                    const toTokenAddress = this.tokenOutInput.token.address?.toLowerCase() || this.tokenOutInput.token.symbol;
                     const offerIndexes = await (0, index_13.getOfferIndexes)(this.state, pairAddress, fromTokenAddress, toTokenAddress);
                     this.comboOfferIndex.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
                 }
@@ -5067,7 +5053,7 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                     this.comboOfferIndex.items = [];
                 }
             }
-            catch (_c) {
+            catch {
                 this.comboOfferIndex.items = [];
             }
             finally {
@@ -5173,7 +5159,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                         return {
                             execute: async () => {
                                 oldData = JSON.parse(JSON.stringify(this._data));
-                                const { chainId, tokenIn, tokenOut, isCreate, offerIndex } = userInputData, themeSettings = __rest(userInputData, ["chainId", "tokenIn", "tokenOut", "isCreate", "offerIndex"]);
+                                const { chainId, tokenIn, tokenOut, isCreate, offerIndex, ...themeSettings } = userInputData;
                                 const generalSettings = {
                                     chainId,
                                     tokenIn,
@@ -5197,7 +5183,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                 }
                                 await this.resetRpcWallet();
                                 this.refreshUI();
-                                if (builder === null || builder === void 0 ? void 0 : builder.setData)
+                                if (builder?.setData)
                                     builder.setData(this._data);
                                 oldTag = JSON.parse(JSON.stringify(this.tag));
                                 if (builder)
@@ -5210,7 +5196,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                             undo: async () => {
                                 this._data = JSON.parse(JSON.stringify(oldData));
                                 this.refreshUI();
-                                if (builder === null || builder === void 0 ? void 0 : builder.setData)
+                                if (builder?.setData)
                                     builder.setData(this._data);
                                 this.tag = JSON.parse(JSON.stringify(oldTag));
                                 if (builder)
@@ -5269,7 +5255,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     getData: this.getData.bind(this),
                     setData: async (data) => {
                         const defaultData = data_json_1.default.defaultBuilderData;
-                        await this.setData(Object.assign(Object.assign({}, defaultData), data));
+                        await this.setData({ ...defaultData, ...data });
                     },
                     getTag: this.getTag.bind(this),
                     setTag: this.setTag.bind(this)
@@ -5278,10 +5264,10 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     name: 'Embedder Configurator',
                     target: 'Embedders',
                     getData: async () => {
-                        return Object.assign({}, this._data);
+                        return { ...this._data };
                     },
                     setData: async (properties, linkParams) => {
-                        const { isCreate } = properties, resultingData = __rest(properties, ["isCreate"]);
+                        const { isCreate, ...resultingData } = properties;
                         if (isCreate) {
                             this._data.offerIndex = 0;
                         }
@@ -5299,7 +5285,6 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             return this._data;
         }
         async resetRpcWallet() {
-            var _a;
             this.removeRpcWalletEvents();
             const rpcWalletId = await this.state.initRpcWallet(this.chainId);
             const rpcWallet = this.rpcWallet;
@@ -5317,7 +5302,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 showHeader: this.showHeader,
                 rpcWalletId: rpcWallet.instanceId
             };
-            if ((_a = this.dappContainer) === null || _a === void 0 ? void 0 : _a.setData)
+            if (this.dappContainer?.setData)
                 this.dappContainer.setData(data);
         }
         async setData(value) {
@@ -5329,8 +5314,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             return this.tag;
         }
         updateTag(type, value) {
-            var _a;
-            this.tag[type] = (_a = this.tag[type]) !== null && _a !== void 0 ? _a : {};
+            this.tag[type] = this.tag[type] ?? {};
             for (let prop in value) {
                 if (value.hasOwnProperty(prop))
                     this.tag[type][prop] = value[prop];
@@ -5356,32 +5340,28 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.style.removeProperty(name);
         }
         updateTheme() {
-            var _a, _b, _c, _d, _e, _f, _g;
-            const themeVar = ((_a = this.dappContainer) === null || _a === void 0 ? void 0 : _a.theme) || 'light';
-            this.updateStyle('--text-primary', (_b = this.tag[themeVar]) === null || _b === void 0 ? void 0 : _b.fontColor);
-            this.updateStyle('--background-main', (_c = this.tag[themeVar]) === null || _c === void 0 ? void 0 : _c.backgroundColor);
-            this.updateStyle('--colors-secondary-main', (_d = this.tag[themeVar]) === null || _d === void 0 ? void 0 : _d.secondaryColor);
-            this.updateStyle('--colors-secondary-contrast_text', (_e = this.tag[themeVar]) === null || _e === void 0 ? void 0 : _e.secondaryFontColor);
-            this.updateStyle('--input-font_color', (_f = this.tag[themeVar]) === null || _f === void 0 ? void 0 : _f.inputFontColor);
-            this.updateStyle('--input-background', (_g = this.tag[themeVar]) === null || _g === void 0 ? void 0 : _g.inputBackgroundColor);
+            const themeVar = this.dappContainer?.theme || 'light';
+            this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
+            this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
+            this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryColor);
+            this.updateStyle('--colors-secondary-contrast_text', this.tag[themeVar]?.secondaryFontColor);
+            this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
+            this.updateStyle('--input-background', this.tag[themeVar]?.inputBackgroundColor);
         }
         get wallets() {
-            var _a;
-            return (_a = this._data.wallets) !== null && _a !== void 0 ? _a : [];
+            return this._data.wallets ?? [];
         }
         set wallets(value) {
             this._data.wallets = value;
         }
         get networks() {
-            var _a;
-            return (_a = this._data.networks) !== null && _a !== void 0 ? _a : [];
+            return this._data.networks ?? [];
         }
         set networks(value) {
             this._data.networks = value;
         }
         get showHeader() {
-            var _a;
-            return (_a = this._data.showHeader) !== null && _a !== void 0 ? _a : true;
+            return this._data.showHeader ?? true;
         }
         set showHeader(value) {
             this._data.showHeader = value;
@@ -5571,7 +5551,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 else {
                     this.panelHome.background.color = "";
                     this.hStackActions.visible = false;
-                    this.lbMsg.caption = msg !== null && msg !== void 0 ? msg : (!walletConnected ? 'Please connect with your wallet' : 'Invalid configurator data');
+                    this.lbMsg.caption = msg ?? (!walletConnected ? 'Please connect with your wallet' : 'Invalid configurator data');
                     this.lbMsg.visible = true;
                 }
                 this.hStackSettings.visible = isRpcWalletConnected;
@@ -5687,7 +5667,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 else {
                     params.content = content;
                 }
-                this.txStatusModal.message = Object.assign({}, params);
+                this.txStatusModal.message = { ...params };
                 this.txStatusModal.showModal();
             };
             this.checkValidation = () => {
