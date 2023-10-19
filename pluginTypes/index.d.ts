@@ -48,6 +48,7 @@ declare module "@scom/scom-liquidity-provider/store/core.ts" {
         OSWAP_ConfigStore: string;
         OSWAP_RestrictedLiquidityProvider: string;
         OSWAP_RestrictedFactory: string;
+        OSWAP_HybridRouterRegistry: string;
     }
     export const coreAddress: {
         [chainId: number]: CoreAddress;
