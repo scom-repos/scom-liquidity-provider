@@ -751,6 +751,7 @@ export default class ScomLiquidityProvider extends Module {
 			}
 			this.btnLock.rightIcon.visible = false;
 			this.btnLock.caption = 'Locked';
+			registerSendTxEvents({});
 		};
 
 		registerSendTxEvents({

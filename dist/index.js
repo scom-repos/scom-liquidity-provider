@@ -5661,6 +5661,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     }
                     this.btnLock.rightIcon.visible = false;
                     this.btnLock.caption = 'Locked';
+                    (0, index_16.registerSendTxEvents)({});
                 };
                 (0, index_16.registerSendTxEvents)({
                     transactionHash: callback,
