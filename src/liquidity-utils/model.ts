@@ -15,9 +15,11 @@ import {
   getOfferIndexes
 } from './API';
 import { State, getTokenDecimals } from '../store/index';
-import { application, moment } from '@ijstech/components';
+import { application, moment, Styles } from '@ijstech/components';
 import { ITokenObject, tokenStore } from "@scom/scom-token-list";
 import { Contracts } from "@scom/oswap-openswap-contract";
+
+const Theme = Styles.Theme.ThemeVars;
 
 export enum Stage {
   NONE,
@@ -642,6 +644,12 @@ export class Model {
           this.setSubmitBtnStatus(false, false);
           if (this.onBack) this.onBack();
         }
+        if (this.state.handleUpdateStepStatus) {
+          this.state.handleUpdateStepStatus({
+            caption: "Completed",
+            color: Theme.colors.success.main
+          });
+        }
       },
       onPayingError: async (err: Error) => {
         this.showTxStatus('error', err);
@@ -723,6 +731,13 @@ export class Model {
       }
     } else {
       this.currentStage = Stage.SUBMIT;
+    }
+    if (this.state.handleUpdateStepStatus) {
+      const msg = "Pending " + (this.currentStage === Stage.SUBMIT ? "Submission" : "Approval");
+      this.state.handleUpdateStepStatus({
+        caption: msg,
+        color: Theme.colors.warning.main
+      });
     }
   }
 

@@ -1634,6 +1634,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Model = exports.toLastSecond = exports.setOnApproved = exports.setOnApproving = exports.LockState = exports.OfferState = exports.Action = exports.Stage = void 0;
+    const Theme = components_6.Styles.Theme.ThemeVars;
     var Stage;
     (function (Stage) {
         Stage[Stage["NONE"] = 0] = "NONE";
@@ -2291,6 +2292,12 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                         if (this.onBack)
                             this.onBack();
                     }
+                    if (this.state.handleUpdateStepStatus) {
+                        this.state.handleUpdateStepStatus({
+                            caption: "Completed",
+                            color: Theme.colors.success.main
+                        });
+                    }
                 },
                 onPayingError: async (err) => {
                     this.showTxStatus('error', err);
@@ -2315,6 +2322,13 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             }
             else {
                 this.currentStage = Stage.SUBMIT;
+            }
+            if (this.state.handleUpdateStepStatus) {
+                const msg = "Pending " + (this.currentStage === Stage.SUBMIT ? "Submission" : "Approval");
+                this.state.handleUpdateStepStatus({
+                    caption: msg,
+                    color: Theme.colors.warning.main
+                });
             }
         }
         async approveToken(tokenObj) {
@@ -5129,6 +5143,7 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                 this.state.handleNextFlowStep = options.onNextStep;
                 this.state.handleAddTransactions = options.onAddTransactions;
                 this.state.handleJumpToStep = options.onJumpToStep;
+                this.state.handleUpdateStepStatus = options.onUpdateStepStatus;
                 await widget.setData({
                     executionProperties: properties,
                     tokenRequirements
@@ -5929,6 +5944,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.state.handleNextFlowStep = options.onNextStep;
                 this.state.handleAddTransactions = options.onAddTransactions;
                 this.state.handleJumpToStep = options.onJumpToStep;
+                this.state.handleUpdateStepStatus = options.onUpdateStepStatus;
                 await this.setData(properties);
                 if (tag) {
                     this.setTag(tag);

@@ -1053,6 +1053,7 @@ export default class ScomLiquidityProvider extends Module {
 			this.state.handleNextFlowStep = options.onNextStep;
 			this.state.handleAddTransactions = options.onAddTransactions;
             this.state.handleJumpToStep = options.onJumpToStep;
+			this.state.handleUpdateStepStatus = options.onUpdateStepStatus;
 			await this.setData(properties);
 			if (tag) {
 				this.setTag(tag);

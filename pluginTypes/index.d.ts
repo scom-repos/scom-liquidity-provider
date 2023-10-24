@@ -29,6 +29,7 @@ declare module "@scom/scom-liquidity-provider/store/utils.ts" {
         handleNextFlowStep: (data: any) => Promise<void>;
         handleAddTransactions: (data: any) => Promise<void>;
         handleJumpToStep: (data: any) => Promise<void>;
+        handleUpdateStepStatus: (data: any) => Promise<void>;
         constructor(options: any);
         initRpcWallet(chainId: number): string;
         private initData;

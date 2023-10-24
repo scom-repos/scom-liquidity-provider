@@ -298,6 +298,7 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
 			this.state.handleNextFlowStep = options.onNextStep;
 			this.state.handleAddTransactions = options.onAddTransactions;
             this.state.handleJumpToStep = options.onJumpToStep;
+			this.state.handleUpdateStepStatus = options.onUpdateStepStatus;
 			await widget.setData({
 				executionProperties: properties,
 				tokenRequirements
