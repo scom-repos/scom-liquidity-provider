@@ -650,6 +650,28 @@ export class Model {
             color: Theme.colors.success.main
           });
         }
+        if (this.state.handleAddTransactions && receipt) {
+          const action = this.actionType === Action.CREATE ? "Create" : this.actionType === Action.ADD ? "Add" : "Remove";
+          const chainId = this.state.getChainId();
+          const fromToken = this.fromTokenObject;
+          const toToken = this.toTokenObject;
+          const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
+          const transactionsInfoArr = [
+            {
+              desc: `${action} Group Queue ${fromToken.symbol}/${toToken.symbol}`,
+              chainId: chainId,
+              fromToken: null,
+              toToken: null,
+              fromTokenAmount: '',
+              toTokenAmount: '-',
+              hash: receipt.transactionHash,
+              timestamp
+            }
+          ];
+          this.state.handleAddTransactions({
+              list: transactionsInfoArr
+          });
+        }
       },
       onPayingError: async (err: Error) => {
         this.showTxStatus('error', err);
@@ -755,8 +777,7 @@ export class Model {
     const chainId = this.state.getChainId();
     const fromToken = this.fromTokenObject;
     const toToken = this.toTokenObject;
-    const action = this.actionType === Action.CREATE ? "Create" : "Add";
-    const receipt = await addLiquidity(
+    await addLiquidity(
       chainId,
       fromToken,
       toToken,
@@ -771,24 +792,6 @@ export class Model {
       deadline,
       arrWhitelist
     );
-    if (this.state.handleAddTransactions && receipt) {
-        const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
-        const transactionsInfoArr = [
-            {
-                desc: `${action} Group Queue ${fromToken.symbol}/${toToken.symbol}`,
-                chainId: chainId,
-                fromToken: null,
-                toToken: null,
-                fromTokenAmount: '',
-                toTokenAmount: '-',
-                hash: receipt.transactionHash,
-                timestamp
-            }
-        ];
-        this.state.handleAddTransactions({
-            list: transactionsInfoArr
-        });
-    }
   }
 
   private async removeLiquidityAction(deadline: number, collectFromProceeds: boolean) {
@@ -800,10 +803,9 @@ export class Model {
     } else {
       amountOut = this.fromTokenInput.toString();
     }
-    const chainId = this.state.getChainId();
     const fromToken = this.fromTokenObject;
     const toToken = this.toTokenObject;
-    const receipt = await removeLiquidity(
+    await removeLiquidity(
       this.state.getChainId(),
       fromToken,
       toToken,
@@ -813,23 +815,5 @@ export class Model {
       this.offerIndex,
       deadline
     );
-    if (this.state.handleAddTransactions && receipt) {
-        const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
-        const transactionsInfoArr = [
-            {
-                desc: `Remove Group Queue ${fromToken.symbol}/${toToken.symbol}`,
-                chainId: chainId,
-                fromToken: null,
-                toToken: null,
-                fromTokenAmount: '',
-                toTokenAmount: '-',
-                hash: receipt.transactionHash,
-                timestamp
-            }
-        ];
-        this.state.handleAddTransactions({
-            list: transactionsInfoArr
-        });
-    }
   }
 }
