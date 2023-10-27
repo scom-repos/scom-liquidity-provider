@@ -636,18 +636,22 @@ export class Model {
       },
       onPaid: async (receipt?: any) => {
         tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
+        let offerIndex;
         if (this.actionType === Action.CREATE) {
           const offerIndexes = await getOfferIndexes(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
           console.log(offerIndexes);
-          this.setSubmitBtnStatus(false, false, Number(offerIndexes[offerIndexes.length - 1]));
+          offerIndex = offerIndexes[offerIndexes.length - 1].toNumber();
+          this.setSubmitBtnStatus(false, false, offerIndex);
         } else {
           this.setSubmitBtnStatus(false, false);
           if (this.onBack) this.onBack();
         }
+        let message = this.actionType === Action.CREATE ? "Offer Index: " + offerIndex : undefined;
         if (this.state.handleUpdateStepStatus) {
           this.state.handleUpdateStepStatus({
             status: "Completed",
-            color: Theme.colors.success.main
+            color: Theme.colors.success.main,
+            message
           });
         }
         if (this.state.handleAddTransactions && receipt) {
