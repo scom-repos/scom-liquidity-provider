@@ -2294,7 +2294,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     }
                     if (this.state.handleUpdateStepStatus) {
                         this.state.handleUpdateStepStatus({
-                            caption: "Completed",
+                            status: "Completed",
                             color: Theme.colors.success.main
                         });
                     }
@@ -2348,7 +2348,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             if (this.state.handleUpdateStepStatus) {
                 const msg = "Pending " + (this.currentStage === Stage.SUBMIT ? "Submission" : "Approval");
                 this.state.handleUpdateStepStatus({
-                    caption: msg,
+                    status: msg,
                     color: Theme.colors.warning.main
                 });
             }
