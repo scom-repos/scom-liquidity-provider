@@ -147,6 +147,7 @@ export default class ScomLiquidityProviderFlowInitialSetup extends Module {
         if (this.action) {
             this.executionProperties.action = this.action;
         }
+        this.executionProperties.isFlow = true;
         if (this.state.handleNextFlowStep)
             this.state.handleNextFlowStep({
                 isInitialSetup: true,

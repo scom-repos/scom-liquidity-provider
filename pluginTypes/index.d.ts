@@ -142,6 +142,7 @@ declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
         wallets: IWalletPlugin[];
         networks: INetworkConfig[];
         showHeader?: boolean;
+        isFlow?: boolean;
     }
     export interface IAllocation {
         address: string;
@@ -814,6 +815,7 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         private offerTo;
         private _model;
         private _actionType;
+        private _isFlow;
         private currentFocus?;
         updateHelpContent: () => void;
         updateSummary: () => void;
@@ -827,6 +829,8 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         set model(value: any);
         get actionType(): number;
         set actionType(value: number);
+        get isFlow(): boolean;
+        set isFlow(value: boolean);
         get isCreate(): boolean;
         get isAdd(): boolean;
         get isRemove(): boolean;
@@ -1176,6 +1180,7 @@ declare module "@scom/scom-liquidity-provider" {
                 wallets: IWalletPlugin[];
                 networks: INetworkConfig[];
                 showHeader?: boolean;
+                isFlow?: boolean;
             }>;
             setData: (properties: ILiquidityProvider, linkParams?: Record<string, any>) => Promise<void>;
             getTag: any;

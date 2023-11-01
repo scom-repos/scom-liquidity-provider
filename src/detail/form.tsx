@@ -70,6 +70,7 @@ export class LiquidityForm extends Module {
   private offerTo: OfferState;
   private _model: any;
   private _actionType: number;
+  private _isFlow: boolean;
   private currentFocus?: Element;
   updateHelpContent: () => void;
   updateSummary: () => void;
@@ -105,6 +106,14 @@ export class LiquidityForm extends Module {
 
   set actionType(value: number) {
     this._actionType = value;
+  }
+
+  get isFlow(): boolean {
+    return this._isFlow;
+  }
+
+  set isFlow(value: boolean) {
+    this._isFlow = value;
   }
 
   get isCreate() {
@@ -305,7 +314,7 @@ export class LiquidityForm extends Module {
   showConfirmation = () => {
     this.confirmationModal.visible = true;
   }
-  
+
   hideConfirmation = () => {
     this.confirmationModal.visible = false;
   }
@@ -432,11 +441,11 @@ export class LiquidityForm extends Module {
     this.handleTokenInputState();
     this.updateProgress();
   }
-  
+
   handleFirstFocusInput(source: Control) {
     this.handleFocusInput(source, Stage.SET_AMOUNT);
   }
-  
+
   handleSecondFocusInput(source: Control) {
     this.handleFocusInput(source, Stage.SET_OFFER_PRICE);
   }
@@ -623,14 +632,17 @@ export class LiquidityForm extends Module {
     this.headerSection.innerHTML = '';
     const fromToken = this.model.fromTokenObject();
     const toToken = this.model.toTokenObject();
+    const iconCog = !this.isFlow ?
+      <i-icon class="pointer" name="cog" width={20} height={20} fill={Theme.text.primary} margin={{ left: 'auto' }} onClick={this.handleCogClick.bind(this)}></i-icon> :
+      [];
     const elm = (
       <i-hstack verticalAlignment="center">
-        <i-image width="20px" class="inline-block" url={fromToken.logoURI || tokenAssets.tokenPath(fromToken, this.chainId)} fallbackUrl={fallbackUrl} />
-        <i-image width="20px" class="icon-right inline-block" url={toToken.logoURI || tokenAssets.tokenPath(toToken, this.chainId)} fallbackUrl={fallbackUrl} />
+        <i-image width="20px" class="inline-block" url={fromToken?.logoURI || tokenAssets.tokenPath(fromToken, this.chainId)} fallbackUrl={fallbackUrl} />
+        <i-image width="20px" class="icon-right inline-block" url={toToken?.logoURI || tokenAssets.tokenPath(toToken, this.chainId)} fallbackUrl={fallbackUrl} />
         <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label" margin={{ right: 8 }} />
         <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} margin={{ right: 8 }} />
         <i-label caption={tokenSymbol(this.chainId, this.toTokenAddress)} class="small-label" />
-        <i-icon class="pointer" name="cog" width={20} height={20} fill={Theme.text.primary} margin={{ left: 'auto' }} onClick={this.handleCogClick.bind(this)}></i-icon>
+        {iconCog}
       </i-hstack>
     )
     this.headerSection.appendChild(elm);
@@ -656,6 +668,7 @@ export class LiquidityForm extends Module {
         this.inputEndDate.value = this.model.endDate();
       }
     }
+    const fromToken = this.model.fromTokenObject();
     let newElm = (
       <i-panel>
         <i-panel class="token-box">
@@ -683,7 +696,7 @@ export class LiquidityForm extends Module {
                     onFocus={this.handleFirstFocusInput.bind(this)}
                   />
                 </i-vstack>
-                <i-vstack width="155px">
+                <i-vstack maxWidth="155px">
                   <i-scom-token-input
                     id="firstTokenInput"
                     class="float-right"
@@ -735,7 +748,7 @@ export class LiquidityForm extends Module {
                         onFocus={this.handleSecondFocusInput.bind(this)}
                       />
                     </i-vstack>
-                    <i-vstack width="155px">
+                    <i-vstack maxWidth="155px">
                       <i-scom-token-input
                         class="float-right"
                         width="100%"
@@ -906,7 +919,7 @@ export class LiquidityForm extends Module {
                 <i-panel class="bg-box" width="100%">
                   <i-hstack class="input--token-box" verticalAlignment="center" horizontalAlignment="center" width="100%" gap="15px" height={60}>
                     <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} font={{ bold: true }} />
-                    <i-image url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} width="30" class="inline-block" />
+                    <i-image url={fromToken?.logoURI || tokenAssets.tokenPath(fromToken, this.chainId)} fallbackUrl={fallbackUrl} width="30" class="inline-block" />
                     <i-label caption="-" class="inline-block" margin={{ right: 8, left: 8 }} font={{ bold: true }} />
                     <i-image url={this.oswapIcon} width="30" class="inline-block" />
                     <i-label caption={this.oswapSymbol} font={{ bold: true }} />

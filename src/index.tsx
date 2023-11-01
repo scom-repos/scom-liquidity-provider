@@ -8,7 +8,7 @@ import {
 	tokenSymbol,
 	viewOnExplorerByAddress
 } from './store/index';
-import { tokenStore, WETHByChainId, assets as tokenAssets, setUserTokens } from '@scom/scom-token-list';
+import { tokenStore, WETHByChainId, assets as tokenAssets, setUserTokens, hasUserToken } from '@scom/scom-token-list';
 import configData from './data.json';
 import { liquidityProviderComponent, liquidityProviderContainer, liquidityProviderForm, modalStyle } from './index.css';
 import ScomDappContainer from '@scom/scom-dapp-container';
@@ -398,7 +398,8 @@ export default class ScomLiquidityProvider extends Module {
             const customTokens = this._data.customTokens?.[chainId] ?? [];
 			if (customTokens?.length) {
 				for (let i = 0; i < customTokens.length; i++) {
-					setUserTokens(customTokens[i], chainId);
+					if (customTokens[i].address && !hasUserToken(customTokens[i].address, chainId))
+						setUserTokens(customTokens[i], chainId);
 				}
 			}
 			tokenStore.updateTokenMapData(chainId);
@@ -474,6 +475,7 @@ export default class ScomLiquidityProvider extends Module {
 			this.detailSummary.onHighlight(stage);
 		}
 		this.detailHelp.adviceTexts = this.modelState.adviceTexts();
+		this.detailForm.isFlow = this._data.isFlow ?? false;
 
 		try {
 			await this.modelState.fetchData();
@@ -533,7 +535,7 @@ export default class ScomLiquidityProvider extends Module {
 			this.lbMsg.visible = true;
 		}
 		this.hStackSettings.visible = isRpcWalletConnected;
-		this.btnSetting.visible = isRpcWalletConnected;
+		this.btnSetting.visible = isRpcWalletConnected && !this._data.isFlow;
 		this.btnRefresh.visible = isRpcWalletConnected && !pairAddress;
 		this.btnWallet.visible = !walletConnected || !isRpcWalletConnected;
 		this.btnWallet.caption = !walletConnected ? 'Connect Wallet' : 'Switch Wallet';
@@ -597,8 +599,8 @@ export default class ScomLiquidityProvider extends Module {
 								</i-hstack>
 							</i-hstack>
 							<i-hstack horizontalAlignment="end" verticalAlignment="center">
-								<i-image class="icon-left" width={35} height={35} position="initial" url={tokenAssets.tokenPath(this.fromTokenObject, chainId)} fallbackUrl={fallbackUrl} />
-								<i-image width={50} height={50} position="initial" url={tokenAssets.tokenPath(this.toTokenObject, chainId)} fallbackUrl={fallbackUrl} />
+								<i-image class="icon-left" width={35} height={35} position="initial" url={fromToken?.logoURI || tokenAssets.tokenPath(fromToken, chainId)} fallbackUrl={fallbackUrl} />
+								<i-image width={50} height={50} position="initial" url={toToken?.logoURI || tokenAssets.tokenPath(toToken, chainId)} fallbackUrl={fallbackUrl} />
 							</i-hstack>
 						</i-hstack>
 						<i-vstack width="100%" margin={{ top: '1rem' }} horizontalAlignment="center" verticalAlignment="center" gap="1rem">
@@ -685,6 +687,8 @@ export default class ScomLiquidityProvider extends Module {
 
 	private showLockModal = () => {
 		const chainId = this.state.getChainId();
+		const fromToken = this.fromTokenObject;
+		const toToken = this.toTokenObject;
 		this.firstCheckbox.value = false;
 		this.secondCheckbox.value = false;
 		this.firstCheckbox.checked = false;
@@ -693,8 +697,8 @@ export default class ScomLiquidityProvider extends Module {
 		this.lockModalTitle.clearInnerHTML();
 		this.lockModalTitle.appendChild(
 			<i-hstack gap={4} verticalAlignment="center">
-				<i-image width={28} height={28} url={tokenAssets.tokenPath(this.fromTokenObject, chainId)} fallbackUrl={fallbackUrl} />
-				<i-image width={28} height={28} url={tokenAssets.tokenPath(this.toTokenObject, chainId)} fallbackUrl={fallbackUrl} />
+				<i-image width={28} height={28} url={fromToken?.logoURI || tokenAssets.tokenPath(fromToken, chainId)} fallbackUrl={fallbackUrl} />
+				<i-image width={28} height={28} url={toToken?.logoURI || tokenAssets.tokenPath(toToken, chainId)} fallbackUrl={fallbackUrl} />
 				<i-label caption={tokenSymbol(chainId, this.fromTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
 				<i-icon name="arrow-right" fill={Theme.colors.primary.main} width="14" height="14" />
 				<i-label class="hightlight-yellow" caption={tokenSymbol(chainId, this.toTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />

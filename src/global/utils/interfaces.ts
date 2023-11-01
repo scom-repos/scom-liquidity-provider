@@ -22,6 +22,7 @@ export interface ILiquidityProvider {
   wallets: IWalletPlugin[];
   networks: INetworkConfig[];
   showHeader?: boolean;
+  isFlow?: boolean;
 }
 
 export interface IAllocation {

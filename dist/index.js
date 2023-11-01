@@ -4024,13 +4024,16 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 this.headerSection.innerHTML = '';
                 const fromToken = this.model.fromTokenObject();
                 const toToken = this.model.toTokenObject();
+                const iconCog = !this.isFlow ?
+                    this.$render("i-icon", { class: "pointer", name: "cog", width: 20, height: 20, fill: Theme.text.primary, margin: { left: 'auto' }, onClick: this.handleCogClick.bind(this) }) :
+                    [];
                 const elm = (this.$render("i-hstack", { verticalAlignment: "center" },
-                    this.$render("i-image", { width: "20px", class: "inline-block", url: fromToken.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
-                    this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: toToken.logoURI || scom_token_list_5.assets.tokenPath(toToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
+                    this.$render("i-image", { width: "20px", class: "inline-block", url: fromToken?.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
+                    this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: toToken?.logoURI || scom_token_list_5.assets.tokenPath(toToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
                     this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), class: "small-label", margin: { right: 8 } }),
                     this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: Theme.text.primary, margin: { right: 8 } }),
                     this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress), class: "small-label" }),
-                    this.$render("i-icon", { class: "pointer", name: "cog", width: 20, height: 20, fill: Theme.text.primary, margin: { left: 'auto' }, onClick: this.handleCogClick.bind(this) })));
+                    iconCog));
                 this.headerSection.appendChild(elm);
             };
             this.renderUI = async () => {
@@ -4049,6 +4052,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                         this.inputEndDate.value = this.model.endDate();
                     }
                 }
+                const fromToken = this.model.fromTokenObject();
                 let newElm = (this.$render("i-panel", null,
                     this.$render("i-panel", { class: "token-box" },
                         this.$render("i-vstack", { class: "input--token-container" },
@@ -4061,7 +4065,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                                 this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
                                     this.$render("i-vstack", { width: "calc(100% - 160px)", height: 48 },
                                         this.$render("i-input", { id: "firstInput", value: this.fromTokenInputText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", onChanged: this.fromTokenInputTextChange.bind(this), onFocus: this.handleFirstFocusInput.bind(this) })),
-                                    this.$render("i-vstack", { width: "155px" },
+                                    this.$render("i-vstack", { maxWidth: "155px" },
                                         this.$render("i-scom-token-input", { id: "firstTokenInput", class: "float-right", width: "100%", background: { color: Theme.input.background }, tokenReadOnly: true, isInputShown: false, isBalanceShown: false }))))),
                         this.$render("i-button", { id: "nextBtn1", class: "btn-os btn-next", visible: this.isCreate && this.isSetOrderAmountStage, caption: this.nextButtonText, onClick: this.handleNext1.bind(this), enabled: !this.isProceedButtonDisabled })),
                     this.isCreate ? (this.$render("i-panel", { id: "secondTokenPanel", class: "token-box", enabled: !this.isOfferPriceDisabled },
@@ -4077,7 +4081,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                                 this.$render("i-hstack", { class: `input--token-box ${this.isOfferPriceStage && 'bordered'}`, verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
                                     this.$render("i-vstack", { width: "calc(100% - 160px)", height: 48 },
                                         this.$render("i-input", { id: "secondInput", value: this.offerPriceText, inputType: "number", placeholder: "0.0", margin: { right: 4 }, class: "token-input w-100", width: "100%", enabled: !this.isOfferPriceDisabled, onChanged: this.changeOfferPrice.bind(this), onFocus: this.handleSecondFocusInput.bind(this) })),
-                                    this.$render("i-vstack", { width: "155px" },
+                                    this.$render("i-vstack", { maxWidth: "155px" },
                                         this.$render("i-scom-token-input", { class: "float-right", width: "100%", id: "secondTokenInput", background: { color: 'transparent' }, tokenReadOnly: true, isInputShown: false, isBtnMaxShown: false, isBalanceShown: false }))))),
                         this.$render("i-button", { id: "nextBtn2", class: "btn-os btn-next", visible: this.isOfferPriceStage, caption: this.nextButtonText, onClick: this.handleNext2.bind(this), enabled: !this.isProceedButtonDisabled }))) : [],
                     this.isCreate ? (this.$render("i-panel", { id: "datePanel", class: "token-box" },
@@ -4136,7 +4140,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "center", width: "100%", gap: "15px", height: 60 },
                                     this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), font: { bold: true } }),
-                                    this.$render("i-image", { url: scom_token_list_5.assets.tokenPath(this.model.fromTokenObject(), this.chainId), fallbackUrl: index_7.fallbackUrl, width: "30", class: "inline-block" }),
+                                    this.$render("i-image", { url: fromToken?.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_7.fallbackUrl, width: "30", class: "inline-block" }),
                                     this.$render("i-label", { caption: "-", class: "inline-block", margin: { right: 8, left: 8 }, font: { bold: true } }),
                                     this.$render("i-image", { url: this.oswapIcon, width: "30", class: "inline-block" }),
                                     this.$render("i-label", { caption: this.oswapSymbol, font: { bold: true } })))))) : [],
@@ -4219,6 +4223,12 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
         }
         set actionType(value) {
             this._actionType = value;
+        }
+        get isFlow() {
+            return this._isFlow;
+        }
+        set isFlow(value) {
+            this._isFlow = value;
         }
         get isCreate() {
             return this.actionType === liquidity_utils_2.Action.CREATE;
@@ -5034,6 +5044,7 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
             if (this.action) {
                 this.executionProperties.action = this.action;
             }
+            this.executionProperties.isFlow = true;
             if (this.state.handleNextFlowStep)
                 this.state.handleNextFlowStep({
                     isInitialSetup: true,
@@ -5435,7 +5446,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     const customTokens = this._data.customTokens?.[chainId] ?? [];
                     if (customTokens?.length) {
                         for (let i = 0; i < customTokens.length; i++) {
-                            (0, scom_token_list_8.setUserTokens)(customTokens[i], chainId);
+                            if (customTokens[i].address && !(0, scom_token_list_8.hasUserToken)(customTokens[i].address, chainId))
+                                (0, scom_token_list_8.setUserTokens)(customTokens[i], chainId);
                         }
                     }
                     scom_token_list_8.tokenStore.updateTokenMapData(chainId);
@@ -5514,6 +5526,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.detailSummary.onHighlight(stage);
                 };
                 this.detailHelp.adviceTexts = this.modelState.adviceTexts();
+                this.detailForm.isFlow = this._data.isFlow ?? false;
                 try {
                     await this.modelState.fetchData();
                     this.detailSummary.fromTokenAddress = this.fromTokenAddress;
@@ -5572,7 +5585,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.lbMsg.visible = true;
                 }
                 this.hStackSettings.visible = isRpcWalletConnected;
-                this.btnSetting.visible = isRpcWalletConnected;
+                this.btnSetting.visible = isRpcWalletConnected && !this._data.isFlow;
                 this.btnRefresh.visible = isRpcWalletConnected && !pairAddress;
                 this.btnWallet.visible = !walletConnected || !isRpcWalletConnected;
                 this.btnWallet.caption = !walletConnected ? 'Connect Wallet' : 'Switch Wallet';
@@ -5600,6 +5613,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             };
             this.showLockModal = () => {
                 const chainId = this.state.getChainId();
+                const fromToken = this.fromTokenObject;
+                const toToken = this.toTokenObject;
                 this.firstCheckbox.value = false;
                 this.secondCheckbox.value = false;
                 this.firstCheckbox.checked = false;
@@ -5607,8 +5622,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.lockOrderBtn.enabled = false;
                 this.lockModalTitle.clearInnerHTML();
                 this.lockModalTitle.appendChild(this.$render("i-hstack", { gap: 4, verticalAlignment: "center" },
-                    this.$render("i-image", { width: 28, height: 28, url: scom_token_list_8.assets.tokenPath(this.fromTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }),
-                    this.$render("i-image", { width: 28, height: 28, url: scom_token_list_8.assets.tokenPath(this.toTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }),
+                    this.$render("i-image", { width: 28, height: 28, url: fromToken?.logoURI || scom_token_list_8.assets.tokenPath(fromToken, chainId), fallbackUrl: index_14.fallbackUrl }),
+                    this.$render("i-image", { width: 28, height: 28, url: toToken?.logoURI || scom_token_list_8.assets.tokenPath(toToken, chainId), fallbackUrl: index_14.fallbackUrl }),
                     this.$render("i-label", { caption: (0, index_14.tokenSymbol)(chainId, this.fromTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
                     this.$render("i-icon", { name: "arrow-right", fill: Theme.colors.primary.main, width: "14", height: "14" }),
                     this.$render("i-label", { class: "hightlight-yellow", caption: (0, index_14.tokenSymbol)(chainId, this.toTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
@@ -5741,8 +5756,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                     this.$render("i-label", { font: { size: '20px', bold: true }, caption: `#${this.offerIndex}`, margin: { right: 4 } }),
                                     this.$render("i-icon", { name: "question-circle", fill: "#fff", width: "18", height: "18", tooltip: { content: 'The offer index helps identifying your group queues.' } }))),
                             this.$render("i-hstack", { horizontalAlignment: "end", verticalAlignment: "center" },
-                                this.$render("i-image", { class: "icon-left", width: 35, height: 35, position: "initial", url: scom_token_list_8.assets.tokenPath(this.fromTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }),
-                                this.$render("i-image", { width: 50, height: 50, position: "initial", url: scom_token_list_8.assets.tokenPath(this.toTokenObject, chainId), fallbackUrl: index_14.fallbackUrl }))),
+                                this.$render("i-image", { class: "icon-left", width: 35, height: 35, position: "initial", url: fromToken?.logoURI || scom_token_list_8.assets.tokenPath(fromToken, chainId), fallbackUrl: index_14.fallbackUrl }),
+                                this.$render("i-image", { width: 50, height: 50, position: "initial", url: toToken?.logoURI || scom_token_list_8.assets.tokenPath(toToken, chainId), fallbackUrl: index_14.fallbackUrl }))),
                         this.$render("i-vstack", { width: "100%", margin: { top: '1rem' }, horizontalAlignment: "center", verticalAlignment: "center", gap: "1rem" },
                             this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
                                 this.$render("i-label", { caption: "Amount" }),
