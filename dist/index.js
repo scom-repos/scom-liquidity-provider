@@ -4022,9 +4022,11 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             };
             this.renderHeader = () => {
                 this.headerSection.innerHTML = '';
+                const fromToken = this.model.fromTokenObject();
+                const toToken = this.model.toTokenObject();
                 const elm = (this.$render("i-hstack", { verticalAlignment: "center" },
-                    this.$render("i-image", { width: "20px", class: "inline-block", url: scom_token_list_5.assets.tokenPath(this.model.fromTokenObject(), this.chainId), fallbackUrl: index_7.fallbackUrl }),
-                    this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: scom_token_list_5.assets.tokenPath(this.model.toTokenObject(), this.chainId), fallbackUrl: index_7.fallbackUrl }),
+                    this.$render("i-image", { width: "20px", class: "inline-block", url: fromToken.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
+                    this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: toToken.logoURI || scom_token_list_5.assets.tokenPath(toToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
                     this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), class: "small-label", margin: { right: 8 } }),
                     this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: Theme.text.primary, margin: { right: 8 } }),
                     this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress), class: "small-label" }),
@@ -5429,6 +5431,12 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     if (!isRegistered) {
                         await this.renderHome(undefined, 'Pair is not registered, please register the pair first!');
                         return;
+                    }
+                    const customTokens = this._data.customTokens?.[chainId] ?? [];
+                    if (customTokens?.length) {
+                        for (let i = 0; i < customTokens.length; i++) {
+                            (0, scom_token_list_8.setUserTokens)(customTokens[i], chainId);
+                        }
                     }
                     scom_token_list_8.tokenStore.updateTokenMapData(chainId);
                     const rpcWallet = this.rpcWallet;

@@ -8,7 +8,7 @@ import {
 	tokenSymbol,
 	viewOnExplorerByAddress
 } from './store/index';
-import { tokenStore, WETHByChainId, assets as tokenAssets } from '@scom/scom-token-list';
+import { tokenStore, WETHByChainId, assets as tokenAssets, setUserTokens } from '@scom/scom-token-list';
 import configData from './data.json';
 import { liquidityProviderComponent, liquidityProviderContainer, liquidityProviderForm, modalStyle } from './index.css';
 import ScomDappContainer from '@scom/scom-dapp-container';
@@ -394,6 +394,12 @@ export default class ScomLiquidityProvider extends Module {
 			if (!isRegistered) {
 				await this.renderHome(undefined, 'Pair is not registered, please register the pair first!');
 				return;
+			}
+            const customTokens = this._data.customTokens?.[chainId] ?? [];
+			if (customTokens?.length) {
+				for (let i = 0; i < customTokens.length; i++) {
+					setUserTokens(customTokens[i], chainId);
+				}
 			}
 			tokenStore.updateTokenMapData(chainId);
 			const rpcWallet = this.rpcWallet;

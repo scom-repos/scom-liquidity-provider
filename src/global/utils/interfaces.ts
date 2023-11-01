@@ -1,5 +1,6 @@
 import { BigNumber } from "@ijstech/eth-contract";
 import { INetworkConfig } from "@scom/scom-network-picker";
+import { ITokenObject } from "@scom/scom-token-list";
 import { IWalletPlugin } from "@scom/scom-wallet-modal";
 
 export type ActionType = 'create' | 'add' | 'remove';
@@ -14,6 +15,7 @@ export interface ILiquidityProvider {
   chainId: number;
   tokenIn?: string;
   tokenOut?: string;
+  customTokens?: Record<number, ITokenObject[]>;
   isCreate?: boolean;
   offerIndex?: number;
   action?: ActionType;

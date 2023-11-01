@@ -1,6 +1,7 @@
 /// <reference path="@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@ijstech/eth-contract/index.d.ts" />
+/// <reference path="@scom/scom-token-list/index.d.ts" />
 /// <amd-module name="@scom/scom-liquidity-provider/assets.ts" />
 declare module "@scom/scom-liquidity-provider/assets.ts" {
     function fullPath(path: string): string;
@@ -122,6 +123,7 @@ declare module "@scom/scom-liquidity-provider/global/utils/helper.ts" {
 declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
     import { BigNumber } from "@ijstech/eth-contract";
     import { INetworkConfig } from "@scom/scom-network-picker";
+    import { ITokenObject } from "@scom/scom-token-list";
     import { IWalletPlugin } from "@scom/scom-wallet-modal";
     export type ActionType = 'create' | 'add' | 'remove';
     export interface ICommissionInfo {
@@ -133,6 +135,7 @@ declare module "@scom/scom-liquidity-provider/global/utils/interfaces.ts" {
         chainId: number;
         tokenIn?: string;
         tokenOut?: string;
+        customTokens?: Record<number, ITokenObject[]>;
         isCreate?: boolean;
         offerIndex?: number;
         action?: ActionType;
@@ -1166,6 +1169,7 @@ declare module "@scom/scom-liquidity-provider" {
                 chainId: number;
                 tokenIn?: string;
                 tokenOut?: string;
+                customTokens?: Record<number, import("@scom/scom-token-list").ITokenObject[]>;
                 isCreate?: boolean;
                 offerIndex?: number;
                 action?: import("@scom/scom-liquidity-provider/global/index.ts").ActionType;

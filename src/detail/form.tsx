@@ -621,10 +621,12 @@ export class LiquidityForm extends Module {
 
   renderHeader = () => {
     this.headerSection.innerHTML = '';
+    const fromToken = this.model.fromTokenObject();
+    const toToken = this.model.toTokenObject();
     const elm = (
       <i-hstack verticalAlignment="center">
-        <i-image width="20px" class="inline-block" url={tokenAssets.tokenPath(this.model.fromTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} />
-        <i-image width="20px" class="icon-right inline-block" url={tokenAssets.tokenPath(this.model.toTokenObject(), this.chainId)} fallbackUrl={fallbackUrl} />
+        <i-image width="20px" class="inline-block" url={fromToken.logoURI || tokenAssets.tokenPath(fromToken, this.chainId)} fallbackUrl={fallbackUrl} />
+        <i-image width="20px" class="icon-right inline-block" url={toToken.logoURI || tokenAssets.tokenPath(toToken, this.chainId)} fallbackUrl={fallbackUrl} />
         <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label" margin={{ right: 8 }} />
         <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} margin={{ right: 8 }} />
         <i-label caption={tokenSymbol(this.chainId, this.toTokenAddress)} class="small-label" />
