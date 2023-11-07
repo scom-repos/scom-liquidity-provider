@@ -1,12 +1,12 @@
 import { moment, Control, Module, Label, Input, ControlElement, customElements, Panel, Button, Datepicker, VStack, Modal, Container, Styles } from '@ijstech/components';
 import { BigNumber, Wallet } from '@ijstech/eth-wallet';
-import { State, fallbackUrl, getTokenDecimals, tokenSymbol } from '../store/index';
+import { State, fallbackUrl } from '../store/index';
 import { getQueueStakeToken, convertWhitelistedAddresses, Stage, OfferState, setOnApproving, setOnApproved, Action } from '../liquidity-utils';
 import { limitInputNumber, renderBalanceTooltip, limitDecimals, IAllocation } from '../global/index';
 import { ManageWhitelist } from './whitelist';
 import Assets from '../assets';
 import ScomTokenInput from '@scom/scom-token-input';
-import { ITokenObject, assets as tokenAssets, tokenStore } from '@scom/scom-token-list';
+import { ITokenObject, assets as tokenAssets } from '@scom/scom-token-list';
 const Theme = Styles.Theme.ThemeVars;
 
 interface LiquidityFormElememt extends ControlElement {
@@ -243,7 +243,7 @@ export class LiquidityForm extends Module {
   }
 
   get offerTokenDecimals() {
-    return getTokenDecimals(this.chainId, this.toTokenAddress);
+    return this.state.getTokenDecimals(this.chainId, this.toTokenAddress);
   };
 
   get newAmount() {
@@ -268,7 +268,7 @@ export class LiquidityForm extends Module {
   }
 
   get oswapSymbol() {
-    return this.oswapToken && this.oswapToken.address ? tokenSymbol(this.chainId, this.oswapToken.address) : this.oswapToken.symbol ?? '';
+    return this.oswapToken && this.oswapToken.address ? this.state.tokenSymbol(this.chainId, this.oswapToken.address) : this.oswapToken.symbol ?? '';
   }
 
   onUpdateHelpContent = () => {
@@ -555,8 +555,8 @@ export class LiquidityForm extends Module {
 
   updateTextValues = () => {
     if (!(this.isCreate || this.isAdd)) return;
-    const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
-    this.lbWillGet.caption = renderBalanceTooltip({ value: this.newAmount.multipliedBy(this.offerPriceText || 0).toNumber(), symbol: tokenSymbol(this.chainId, this.toTokenAddress) }, tokenMap);
+    const tokenMap = this.state.getTokenMapByChainId(this.chainId);
+    this.lbWillGet.caption = renderBalanceTooltip({ value: this.newAmount.multipliedBy(this.offerPriceText || 0).toNumber(), symbol: this.state.tokenSymbol(this.chainId, this.toTokenAddress) }, tokenMap);
     this.lbFee.caption = renderBalanceTooltip({ value: this.fee, symbol: this.oswapSymbol }, tokenMap);
   }
 
@@ -595,7 +595,7 @@ export class LiquidityForm extends Module {
     this.updateSummaryField();
     if (this.manageWhitelist) {
       this.manageWhitelist.props = {
-        tokenSymbol: tokenSymbol(this.chainId, this.fromTokenAddress),
+        tokenSymbol: this.state.tokenSymbol(this.chainId, this.fromTokenAddress),
         decimals: this.fromTokenDecimals,
         addresses: this.addresses,
         balance: this.model.govTokenBalance(),
@@ -619,8 +619,8 @@ export class LiquidityForm extends Module {
     this.isReverse = !this.isReverse;
     const token = this.isReverse ? this.model.fromTokenObject() : this.model.toTokenObject()
     this.secondTokenInput.token = token;
-    const firstSymbol = tokenSymbol(this.chainId, this.fromTokenAddress);
-    const secondSymbol = tokenSymbol(this.chainId, this.toTokenAddress);
+    const firstSymbol = this.state.tokenSymbol(this.chainId, this.fromTokenAddress);
+    const secondSymbol = this.state.tokenSymbol(this.chainId, this.toTokenAddress);
     this.lbOfferPrice1.caption = `(${this.isReverse ? firstSymbol : secondSymbol}`;
     this.lbOfferPrice2.caption = `${this.isReverse ? secondSymbol : firstSymbol})`;
     if (Number(this.secondInput.value) > 0) {
@@ -639,9 +639,9 @@ export class LiquidityForm extends Module {
       <i-hstack verticalAlignment="center">
         <i-image width="20px" class="inline-block" url={fromToken?.logoURI || tokenAssets.tokenPath(fromToken, this.chainId)} fallbackUrl={fallbackUrl} />
         <i-image width="20px" class="icon-right inline-block" url={toToken?.logoURI || tokenAssets.tokenPath(toToken, this.chainId)} fallbackUrl={fallbackUrl} />
-        <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label" margin={{ right: 8 }} />
+        <i-label caption={this.state.tokenSymbol(this.chainId, this.fromTokenAddress)} class="small-label" margin={{ right: 8 }} />
         <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} margin={{ right: 8 }} />
-        <i-label caption={tokenSymbol(this.chainId, this.toTokenAddress)} class="small-label" />
+        <i-label caption={this.state.tokenSymbol(this.chainId, this.toTokenAddress)} class="small-label" />
         {iconCog}
       </i-hstack>
     )
@@ -655,7 +655,7 @@ export class LiquidityForm extends Module {
   renderUI = async () => {
     this.pnlForm.clearInnerHTML();
     this.currentFocus = undefined;
-    const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
+    const tokenMap = this.state.getTokenMapByChainId(this.chainId);
     if (this.isCreate) {
       this.inputStartDate = await Datepicker.create({ type: 'dateTime', enabled: !this.isStartDateDisabled, width: '100%', height: '60px' });
       this.inputStartDate.classList.add('custom-datepicker');
@@ -726,9 +726,9 @@ export class LiquidityForm extends Module {
                 <i-hstack class="balance-info" horizontalAlignment="space-between" verticalAlignment="center" width="100%">
                   <i-hstack gap={4} verticalAlignment="center">
                     <i-label font={{ bold: true }} caption="Offer Price" />
-                    <i-label id="lbOfferPrice1" font={{ bold: true }} caption={`(${tokenSymbol(this.chainId, this.toTokenAddress)}`} />
+                    <i-label id="lbOfferPrice1" font={{ bold: true }} caption={`(${this.state.tokenSymbol(this.chainId, this.toTokenAddress)}`} />
                     <i-icon name="arrow-right" width="16" height="16" fill={Theme.text.primary} />
-                    <i-label id="lbOfferPrice2" font={{ bold: true }} caption={`${tokenSymbol(this.chainId, this.fromTokenAddress)})`} />
+                    <i-label id="lbOfferPrice2" font={{ bold: true }} caption={`${this.state.tokenSymbol(this.chainId, this.fromTokenAddress)})`} />
                   </i-hstack>
                   <i-icon tooltip={{ content: 'Switch Price' }} width={32} height={32} class="toggle-icon" name="arrows-alt-v" fill={Theme.input.fontColor} background={{ color: Theme.input.background }} onClick={this.onSwitchPrice} />
                 </i-hstack>
@@ -918,7 +918,7 @@ export class LiquidityForm extends Module {
                 <i-label caption="Approve Allowance" font={{ bold: true }} />
                 <i-panel class="bg-box" width="100%">
                   <i-hstack class="input--token-box" verticalAlignment="center" horizontalAlignment="center" width="100%" gap="15px" height={60}>
-                    <i-label caption={tokenSymbol(this.chainId, this.fromTokenAddress)} font={{ bold: true }} />
+                    <i-label caption={this.state.tokenSymbol(this.chainId, this.fromTokenAddress)} font={{ bold: true }} />
                     <i-image url={fromToken?.logoURI || tokenAssets.tokenPath(fromToken, this.chainId)} fallbackUrl={fallbackUrl} width="30" class="inline-block" />
                     <i-label caption="-" class="inline-block" margin={{ right: 8, left: 8 }} font={{ bold: true }} />
                     <i-image url={this.oswapIcon} width="30" class="inline-block" />

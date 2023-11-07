@@ -1,6 +1,7 @@
 import { ERC20ApprovalModel, IERC20ApprovalEventOptions, INetwork, Wallet } from '@ijstech/eth-wallet';
 import getNetworkList from '@scom/scom-network-list';
 import { application } from '@ijstech/components';
+import { ChainNativeTokenByChainId, ITokenObject, tokenStore, WETHByChainId } from '@scom/scom-token-list';
 
 export type ProxyAddresses = { [key: number]: string };
 export class State {
@@ -12,6 +13,7 @@ export class State {
   embedderCommissionFee: string = '0';
   rpcWalletId: string = '';
   approvalModel: ERC20ApprovalModel;
+  customTokens?: Record<number, ITokenObject[]>;
   handleNextFlowStep:  (data: any) => Promise<void>;
   handleAddTransactions: (data: any) => Promise<void>;
   handleJumpToStep: (data: any) => Promise<void>;
@@ -113,6 +115,36 @@ export class State {
     this.approvalModel = new ERC20ApprovalModel(wallet, approvalOptions);
     let approvalModelAction = this.approvalModel.getAction();
     return approvalModelAction;
+  }
+
+  setCustomTokens(tokens?: Record<number, ITokenObject[]>) {
+    this.customTokens = tokens;
+  }
+  
+  getTokenMapByChainId(chainId: number) {
+    let tokenMap = tokenStore.getTokenMapByChainId(chainId);
+    const customTokens = this.customTokens?.[chainId];
+    if (customTokens) {
+      customTokens.forEach(v => tokenMap[v.address.toLowerCase()] = { ...v });
+    }
+    return tokenMap;
+  }
+
+  getTokenDecimals(chainId: number, address: string) {
+    const ChainNativeToken = ChainNativeTokenByChainId[chainId];
+    const tokenMap = this.getTokenMapByChainId(chainId);
+    const tokenObject = (!address || address.toLowerCase() === WETHByChainId[chainId].address.toLowerCase()) ? ChainNativeToken : tokenMap[address.toLowerCase()];
+    return tokenObject ? tokenObject.decimals : 18;
+  }
+  
+  tokenSymbol(chainId: number, address: string) {
+    if (!address) return '';
+    const tokenMap = this.getTokenMapByChainId(chainId);
+    let tokenObject = tokenMap[address.toLowerCase()];
+    if (!tokenObject) {
+      tokenObject = tokenMap[address];
+    }
+    return tokenObject ? tokenObject.symbol : '';
   }
 }
 

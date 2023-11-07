@@ -2,7 +2,6 @@ import { Module, customElements, ControlElement, Modal, Label, Pagination, obser
 import { whiteListStyle } from './whitelist.css';
 import { BigNumber } from '@ijstech/eth-wallet';
 import { IAllocation, formatNumber, isAddressValid, limitInputNumber, renderBalanceTooltip } from '../global/index';
-import { tokenStore } from '@scom/scom-token-list';
 import { State } from '../store/index';
 const Theme = Styles.Theme.ThemeVars;
 
@@ -167,7 +166,7 @@ export class ManageWhitelist extends Module {
       this.cancelBtn.classList.add('btn-submit');
     } else {
       this.cancelBtn.classList.add('btn-cancel');
-      const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
+      const tokenMap = this.state.getTokenMapByChainId(this.chainId);
       this.balanceLabel.caption = renderBalanceTooltip({ title: 'Balance', value: this.balance, symbol: 'OSWAP' }, tokenMap);
       this.totalFee.caption = renderBalanceTooltip({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
     }
@@ -205,7 +204,7 @@ export class ManageWhitelist extends Module {
   };
 
   updateTotalValues = () => {
-    const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
+    const tokenMap = this.state.getTokenMapByChainId(this.chainId);
     this.totalAddressLabel.caption = `${this.totalAddress}` || '0';
     this.totalAllocationLabel.caption = renderBalanceTooltip({ value: this.totalAllocation, symbol: this.tokenSymbol }, tokenMap);
     this.totalFee.caption = renderBalanceTooltip({ value: this.fee, symbol: 'OSWAP' }, tokenMap);

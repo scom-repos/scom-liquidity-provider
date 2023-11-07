@@ -21,22 +21,5 @@ export const viewOnExplorerByAddress = (chainId: number, address: string) => {
   }
 }
 
-export const getTokenDecimals = (chainId: number, address: string) => {
-  const ChainNativeToken = getChainNativeToken(chainId);
-  const tokenMap = tokenStore.getTokenMapByChainId(chainId);
-  const tokenObject = (!address || address.toLowerCase() === WETHByChainId[chainId].address.toLowerCase()) ? ChainNativeToken : tokenMap[address.toLowerCase()];
-  return tokenObject ? tokenObject.decimals : 18;
-}
-
-export const tokenSymbol = (chainId: number, address: string) => {
-  if (!address) return '';
-  const tokenMap = tokenStore.getTokenMapByChainId(chainId);
-  let tokenObject = tokenMap[address.toLowerCase()];
-  if (!tokenObject) {
-    tokenObject = tokenMap[address];
-  }
-  return tokenObject ? tokenObject.symbol : '';
-}
-
 export * from './utils';
 export * from './core';

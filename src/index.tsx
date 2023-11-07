@@ -5,10 +5,9 @@ import {
 	State,
 	fallbackUrl,
 	isClientWalletConnected,
-	tokenSymbol,
 	viewOnExplorerByAddress
 } from './store/index';
-import { tokenStore, WETHByChainId, assets as tokenAssets, setUserTokens, hasUserToken } from '@scom/scom-token-list';
+import { tokenStore, WETHByChainId, assets as tokenAssets } from '@scom/scom-token-list';
 import configData from './data.json';
 import { liquidityProviderComponent, liquidityProviderContainer, liquidityProviderForm, modalStyle } from './index.css';
 import ScomDappContainer from '@scom/scom-dapp-container';
@@ -344,11 +343,11 @@ export default class ScomLiquidityProvider extends Module {
 	}
 
 	private get fromTokenObject() {
-		return tokenStore.getTokenMapByChainId(this.state.getChainId())[this.fromTokenAddress];
+		return this.state.getTokenMapByChainId(this.state.getChainId())[this.fromTokenAddress];
 	}
 
 	private get toTokenObject() {
-		return tokenStore.getTokenMapByChainId(this.state.getChainId())[this.toTokenAddress];
+		return this.state.getTokenMapByChainId(this.state.getChainId())[this.toTokenAddress];
 	}
 
 	constructor(parent?: Container, options?: ControlElement) {
@@ -387,6 +386,7 @@ export default class ScomLiquidityProvider extends Module {
 				return;
 			}
 			await this.initWallet();
+            this.state.setCustomTokens(this._data.customTokens);
 			const chainId = this.state.getChainId();
 			const tokenA = this.fromTokenAddress.startsWith('0x') ? this.fromTokenAddress : WETHByChainId[chainId].address || this.fromTokenAddress;
 			const tokenB = this.toTokenAddress.startsWith('0x') ? this.toTokenAddress : WETHByChainId[chainId].address || this.toTokenAddress;
@@ -394,13 +394,6 @@ export default class ScomLiquidityProvider extends Module {
 			if (!isRegistered) {
 				await this.renderHome(undefined, 'Pair is not registered, please register the pair first!');
 				return;
-			}
-            const customTokens = this._data.customTokens?.[chainId] ?? [];
-			if (customTokens?.length) {
-				for (let i = 0; i < customTokens.length; i++) {
-					if (customTokens[i].address && !hasUserToken(customTokens[i].address, chainId))
-						setUserTokens(customTokens[i], chainId);
-				}
 			}
 			tokenStore.updateTokenMapData(chainId);
 			const rpcWallet = this.rpcWallet;
@@ -557,9 +550,9 @@ export default class ScomLiquidityProvider extends Module {
 			if (pairAddress) {
 				const chainId = this.state.getChainId();
 				const fromToken = this.fromTokenObject;
-				const fromTokenSymbol = tokenSymbol(chainId, this.fromTokenAddress);
+				const fromTokenSymbol = this.state.tokenSymbol(chainId, this.fromTokenAddress);
 				const toToken = this.toTokenObject;
-				const toTokenSymbol = tokenSymbol(chainId, this.toTokenAddress);
+				const toTokenSymbol = this.state.tokenSymbol(chainId, this.toTokenAddress);
 				const info = await getGroupQueueInfo(this.state, pairAddress, fromToken, toToken, this.offerIndex);
 				const amount = `${FormatUtils.formatNumber(info.amount, { decimalFigures: 4, minValue: 0.0001 })} ${fromTokenSymbol}`;
 				const offerPrice = `1 ${fromTokenSymbol} = ${FormatUtils.formatNumber(info.offerPrice, { decimalFigures: 4, minValue: 0.0001 })} ${toTokenSymbol}`;
@@ -699,9 +692,9 @@ export default class ScomLiquidityProvider extends Module {
 			<i-hstack gap={4} verticalAlignment="center">
 				<i-image width={28} height={28} url={fromToken?.logoURI || tokenAssets.tokenPath(fromToken, chainId)} fallbackUrl={fallbackUrl} />
 				<i-image width={28} height={28} url={toToken?.logoURI || tokenAssets.tokenPath(toToken, chainId)} fallbackUrl={fallbackUrl} />
-				<i-label caption={tokenSymbol(chainId, this.fromTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
+				<i-label caption={this.state.tokenSymbol(chainId, this.fromTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
 				<i-icon name="arrow-right" fill={Theme.colors.primary.main} width="14" height="14" />
-				<i-label class="hightlight-yellow" caption={tokenSymbol(chainId, this.toTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
+				<i-label class="hightlight-yellow" caption={this.state.tokenSymbol(chainId, this.toTokenAddress)} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
 				<i-label class="hightlight-yellow" caption={`#${this.offerIndex}`} font={{ size: '24px', bold: true, color: Theme.colors.primary.main }} />
 			</i-hstack>
 		)

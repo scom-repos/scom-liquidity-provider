@@ -31,7 +31,7 @@ define("@scom/scom-liquidity-provider/assets.ts", ["require", "exports", "@ijste
         fullPath
     };
 });
-define("@scom/scom-liquidity-provider/store/utils.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-network-list", "@ijstech/components"], function (require, exports, eth_wallet_1, scom_network_list_1, components_2) {
+define("@scom/scom-liquidity-provider/store/utils.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-network-list", "@ijstech/components", "@scom/scom-token-list"], function (require, exports, eth_wallet_1, scom_network_list_1, components_2, scom_token_list_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isClientWalletConnected = exports.State = void 0;
@@ -133,6 +133,33 @@ define("@scom/scom-liquidity-provider/store/utils.ts", ["require", "exports", "@
             let approvalModelAction = this.approvalModel.getAction();
             return approvalModelAction;
         }
+        setCustomTokens(tokens) {
+            this.customTokens = tokens;
+        }
+        getTokenMapByChainId(chainId) {
+            let tokenMap = scom_token_list_1.tokenStore.getTokenMapByChainId(chainId);
+            const customTokens = this.customTokens?.[chainId];
+            if (customTokens) {
+                customTokens.forEach(v => tokenMap[v.address.toLowerCase()] = { ...v });
+            }
+            return tokenMap;
+        }
+        getTokenDecimals(chainId, address) {
+            const ChainNativeToken = scom_token_list_1.ChainNativeTokenByChainId[chainId];
+            const tokenMap = this.getTokenMapByChainId(chainId);
+            const tokenObject = (!address || address.toLowerCase() === scom_token_list_1.WETHByChainId[chainId].address.toLowerCase()) ? ChainNativeToken : tokenMap[address.toLowerCase()];
+            return tokenObject ? tokenObject.decimals : 18;
+        }
+        tokenSymbol(chainId, address) {
+            if (!address)
+                return '';
+            const tokenMap = this.getTokenMapByChainId(chainId);
+            let tokenObject = tokenMap[address.toLowerCase()];
+            if (!tokenObject) {
+                tokenObject = tokenMap[address];
+            }
+            return tokenObject ? tokenObject.symbol : '';
+        }
     }
     exports.State = State;
     function isClientWalletConnected() {
@@ -204,13 +231,13 @@ define("@scom/scom-liquidity-provider/store/core.ts", ["require", "exports"], fu
         }
     };
 });
-define("@scom/scom-liquidity-provider/store/index.ts", ["require", "exports", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-token-list", "@ijstech/components", "@scom/scom-liquidity-provider/store/utils.ts", "@scom/scom-liquidity-provider/store/core.ts"], function (require, exports, assets_1, scom_token_list_1, components_3, utils_1, core_1) {
+define("@scom/scom-liquidity-provider/store/index.ts", ["require", "exports", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-token-list", "@ijstech/components", "@scom/scom-liquidity-provider/store/utils.ts", "@scom/scom-liquidity-provider/store/core.ts"], function (require, exports, assets_1, scom_token_list_2, components_3, utils_1, core_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.tokenSymbol = exports.getTokenDecimals = exports.viewOnExplorerByAddress = exports.getNetworkInfo = exports.getChainNativeToken = exports.fallbackUrl = void 0;
+    exports.viewOnExplorerByAddress = exports.getNetworkInfo = exports.getChainNativeToken = exports.fallbackUrl = void 0;
     exports.fallbackUrl = assets_1.default.fullPath('img/token-placeholder.svg');
     const getChainNativeToken = (chainId) => {
-        return scom_token_list_1.ChainNativeTokenByChainId[chainId];
+        return scom_token_list_2.ChainNativeTokenByChainId[chainId];
     };
     exports.getChainNativeToken = getChainNativeToken;
     const getNetworkInfo = (chainId) => {
@@ -226,24 +253,6 @@ define("@scom/scom-liquidity-provider/store/index.ts", ["require", "exports", "@
         }
     };
     exports.viewOnExplorerByAddress = viewOnExplorerByAddress;
-    const getTokenDecimals = (chainId, address) => {
-        const ChainNativeToken = (0, exports.getChainNativeToken)(chainId);
-        const tokenMap = scom_token_list_1.tokenStore.getTokenMapByChainId(chainId);
-        const tokenObject = (!address || address.toLowerCase() === scom_token_list_1.WETHByChainId[chainId].address.toLowerCase()) ? ChainNativeToken : tokenMap[address.toLowerCase()];
-        return tokenObject ? tokenObject.decimals : 18;
-    };
-    exports.getTokenDecimals = getTokenDecimals;
-    const tokenSymbol = (chainId, address) => {
-        if (!address)
-            return '';
-        const tokenMap = scom_token_list_1.tokenStore.getTokenMapByChainId(chainId);
-        let tokenObject = tokenMap[address.toLowerCase()];
-        if (!tokenObject) {
-            tokenObject = tokenMap[address];
-        }
-        return tokenObject ? tokenObject.symbol : '';
-    };
-    exports.tokenSymbol = tokenSymbol;
     __exportStar(utils_1, exports);
     __exportStar(core_1, exports);
 });
@@ -1130,7 +1139,7 @@ define("@scom/scom-liquidity-provider/global/index.ts", ["require", "exports", "
     };
     exports.isAddressValid = isAddressValid;
 });
-define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "exports", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/oswap-openswap-contract", "@scom/scom-token-list", "@ijstech/eth-contract"], function (require, exports, index_2, eth_wallet_5, index_3, oswap_openswap_contract_1, scom_token_list_2, eth_contract_1) {
+define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "exports", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/oswap-openswap-contract", "@scom/scom-token-list", "@ijstech/eth-contract"], function (require, exports, index_2, eth_wallet_5, index_3, oswap_openswap_contract_1, scom_token_list_3, eth_contract_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getGroupQueueInfo = exports.getOfferIndexes = exports.convertWhitelistedAddresses = exports.getQueueStakeToken = exports.lockGroupQueueOffer = exports.removeLiquidity = exports.addLiquidity = exports.getLiquidityProviderAddress = exports.getToBeApprovedTokens = exports.getPairInfo = exports.isPairRegistered = exports.getPair = exports.getAddresses = void 0;
@@ -1153,9 +1162,9 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         return (eth_wallet_5.BigNumber.isBigNumber(amount) ? amount : new eth_wallet_5.BigNumber(amount.toString())).shiftedBy(18).decimalPlaces(0);
     }
     const getQueueStakeToken = (chainId) => {
-        if (!scom_token_list_2.DefaultERC20Tokens[chainId])
+        if (!scom_token_list_3.DefaultERC20Tokens[chainId])
             return null;
-        let stakeToken = scom_token_list_2.DefaultERC20Tokens[chainId].find(v => v.symbol == 'OSWAP');
+        let stakeToken = scom_token_list_3.DefaultERC20Tokens[chainId].find(v => v.symbol == 'OSWAP');
         return stakeToken ? { ...stakeToken, address: stakeToken.address.toLowerCase() } : null;
     };
     exports.getQueueStakeToken = getQueueStakeToken;
@@ -1169,15 +1178,15 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
         }
         return obj;
     };
-    const getTokenObjectByAddress = (chainId, address) => {
+    const getTokenObjectByAddress = (state, chainId, address) => {
         if (address.toLowerCase() === getAddressByKey(chainId, 'WETH9').toLowerCase()) {
             return getWETH(chainId);
         }
-        let tokenMap = scom_token_list_2.tokenStore.getTokenMapByChainId(chainId);
+        let tokenMap = state.getTokenMapByChainId(chainId);
         return tokenMap[address.toLowerCase()];
     };
     const getWETH = (chainId) => {
-        let wrappedToken = scom_token_list_2.WETHByChainId[chainId];
+        let wrappedToken = scom_token_list_3.WETHByChainId[chainId];
         return wrappedToken;
     };
     const getFactoryAddress = (chainId) => {
@@ -1263,9 +1272,9 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
             groupPair.token1(),
             factoryContract.pairIdx(pairAddress)
         ]);
-        let token0 = getTokenObjectByAddress(chainId, token0Address);
-        let token1 = getTokenObjectByAddress(chainId, token1Address);
-        let token = getTokenObjectByAddress(chainId, tokenAddress);
+        let token0 = getTokenObjectByAddress(state, chainId, token0Address);
+        let token1 = getTokenObjectByAddress(state, chainId, token1Address);
+        let token = getTokenObjectByAddress(state, chainId, tokenAddress);
         let directDirection = !(new eth_wallet_5.BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase()));
         let direction = directDirection ? token1Address.toLowerCase() != tokenAddress.toLowerCase() : token0Address.toLowerCase() != tokenAddress.toLowerCase();
         let queueSize = (await groupPair.counter(direction)).toNumber();
@@ -1630,7 +1639,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
     }
     exports.getOfferIndexes = getOfferIndexes;
 });
-define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/API.ts", "@scom/scom-liquidity-provider/store/index.ts", "@ijstech/components", "@scom/scom-token-list", "@scom/oswap-openswap-contract"], function (require, exports, eth_wallet_6, index_4, API_1, index_5, components_6, scom_token_list_3, oswap_openswap_contract_2) {
+define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/API.ts", "@ijstech/components", "@scom/scom-token-list", "@scom/oswap-openswap-contract"], function (require, exports, eth_wallet_6, index_4, API_1, components_6, scom_token_list_4, oswap_openswap_contract_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Model = exports.toLastSecond = exports.setOnApproved = exports.setOnApproving = exports.LockState = exports.OfferState = exports.Action = exports.Stage = void 0;
@@ -1684,11 +1693,11 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
     exports.toLastSecond = toLastSecond;
     class Model {
         get fromTokenObject() {
-            const tokenMap = scom_token_list_3.tokenStore.getTokenMapByChainId(this.state.getChainId());
+            const tokenMap = this.state.getTokenMapByChainId(this.state.getChainId());
             return tokenMap[this.fromTokenAddress];
         }
         get toTokenObject() {
-            const tokenMap = scom_token_list_3.tokenStore.getTokenMapByChainId(this.state.getChainId());
+            const tokenMap = this.state.getTokenMapByChainId(this.state.getChainId());
             return tokenMap[this.toTokenAddress];
         }
         get fromTokenSymbol() {
@@ -1710,7 +1719,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             return this.offerPriceText && new eth_wallet_6.BigNumber(this.offerPriceText).gt(0);
         }
         get fromTokenBalanceExact() {
-            const tokenBalances = scom_token_list_3.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
+            const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
             if ([Action.CREATE, Action.ADD].some(n => n === this.actionType)) {
                 return tokenBalances[this.fromTokenAddress]
                     ? new eth_wallet_6.BigNumber(tokenBalances[this.fromTokenAddress])
@@ -1725,7 +1734,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             let stakeToken = (0, API_1.getQueueStakeToken)(chainId);
             if (!stakeToken)
                 return new eth_wallet_6.BigNumber(0);
-            const tokenBalances = scom_token_list_3.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
+            const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
             return tokenBalances[stakeToken.address]
                 ? new eth_wallet_6.BigNumber(tokenBalances[stakeToken.address])
                 : new eth_wallet_6.BigNumber(0);
@@ -1925,7 +1934,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             return this.govTokenBalanceExact.toNumber();
         }
         get fromTokenDecimals() {
-            return (0, index_5.getTokenDecimals)(this.state.getChainId(), this.fromTokenAddress);
+            return this.state.getTokenDecimals(this.state.getChainId(), this.fromTokenAddress);
         }
         get adviceTexts() {
             let arr = [];
@@ -2222,7 +2231,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
             else {
                 this.currentStage = Stage.NONE;
             }
-            scom_token_list_3.tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
+            scom_token_list_4.tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
             this.initApprovalModelAction();
         }
         showTxStatus(status, content) {
@@ -2281,7 +2290,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     this.setSubmitBtnStatus(true);
                 },
                 onPaid: async (receipt) => {
-                    scom_token_list_3.tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
+                    scom_token_list_4.tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
                     let offerIndex;
                     if (this.actionType === Action.CREATE) {
                         const offerIndexes = await (0, API_1.getOfferIndexes)(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
@@ -2295,18 +2304,29 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                             this.onBack();
                     }
                     let message = this.actionType === Action.CREATE ? "Offer Index: " + offerIndex : undefined;
+                    const fromToken = this.fromTokenObject;
+                    const toToken = this.toTokenObject;
                     if (this.state.handleUpdateStepStatus) {
-                        this.state.handleUpdateStepStatus({
+                        let data = {
                             status: "Completed",
                             color: Theme.colors.success.main,
                             message
-                        });
+                        };
+                        if (this.actionType === Action.CREATE) {
+                            data.executionProperties = {
+                                tokenIn: fromToken.address || fromToken.symbol,
+                                tokenOut: toToken.address || toToken.symbol,
+                                customTokens: this.state.customTokens,
+                                offerIndex: offerIndex,
+                                isCreate: true,
+                                isFlow: true
+                            };
+                        }
+                        this.state.handleUpdateStepStatus(data);
                     }
                     if (this.state.handleAddTransactions && receipt) {
                         const action = this.actionType === Action.CREATE ? "Create" : this.actionType === Action.ADD ? "Add" : "Remove";
                         const chainId = this.state.getChainId();
-                        const fromToken = this.fromTokenObject;
-                        const toToken = this.toTokenObject;
                         const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
                         const transactionsInfoArr = [
                             {
@@ -3318,7 +3338,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.css.ts", ["require", "exp
         }
     });
 });
-define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/detail/whitelist.css.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-token-list"], function (require, exports, components_9, whitelist_css_1, eth_wallet_7, index_6, scom_token_list_4) {
+define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/detail/whitelist.css.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts"], function (require, exports, components_9, whitelist_css_1, eth_wallet_7, index_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ManageWhitelist = void 0;
@@ -3437,9 +3457,9 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                 }
                 else {
                     this.cancelBtn.classList.add('btn-cancel');
-                    const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(this.chainId);
-                    this.balanceLabel.caption = (0, index_6.renderBalanceTooltip)({ title: 'Balance', value: this.balance, symbol: 'OSWAP' }, tokenMap);
-                    this.totalFee.caption = (0, index_6.renderBalanceTooltip)({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
+                    const tokenMap = this.state.getTokenMapByChainId(this.chainId);
+                    this.balanceLabel.caption = (0, index_5.renderBalanceTooltip)({ title: 'Balance', value: this.balance, symbol: 'OSWAP' }, tokenMap);
+                    this.totalFee.caption = (0, index_5.renderBalanceTooltip)({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
                 }
                 this.balanceFeeContainer.visible = !this.isReadOnly;
                 this.groupBtnElm.visible = !this.isReadOnly;
@@ -3451,7 +3471,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                     this.listAddress = this.addresses.map((address) => {
                         return {
                             ...address,
-                            allocation: (0, index_6.formatNumber)(address.allocation),
+                            allocation: (0, index_5.formatNumber)(address.allocation),
                             allocationVal: address.allocation,
                         };
                     });
@@ -3476,10 +3496,10 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                 this.renderAddresses();
             };
             this.updateTotalValues = () => {
-                const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(this.chainId);
+                const tokenMap = this.state.getTokenMapByChainId(this.chainId);
                 this.totalAddressLabel.caption = `${this.totalAddress}` || '0';
-                this.totalAllocationLabel.caption = (0, index_6.renderBalanceTooltip)({ value: this.totalAllocation, symbol: this.tokenSymbol }, tokenMap);
-                this.totalFee.caption = (0, index_6.renderBalanceTooltip)({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
+                this.totalAllocationLabel.caption = (0, index_5.renderBalanceTooltip)({ value: this.totalAllocation, symbol: this.tokenSymbol }, tokenMap);
+                this.totalFee.caption = (0, index_5.renderBalanceTooltip)({ value: this.fee, symbol: 'OSWAP' }, tokenMap);
                 this.saveBtn.enabled = !this.isDisabled;
             };
             this.renderAddresses = () => {
@@ -3564,7 +3584,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
             };
             this.onInputAllocation = (e, idx) => {
                 const item = this.listAddress[idx];
-                (0, index_6.limitInputNumber)(e, this.decimals);
+                (0, index_5.limitInputNumber)(e, this.decimals);
                 this.listAddress[idx] = {
                     ...item,
                     allocation: e.value
@@ -3583,7 +3603,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
                         let isValid = true;
                         this.listAddress[i].isDuplicated = isDuplicated;
                         if (!isDuplicated) {
-                            isValid = await (0, index_6.isAddressValid)(valueArr[i]);
+                            isValid = await (0, index_5.isAddressValid)(valueArr[i]);
                             this.listAddress[i].invalid = !isValid;
                         }
                         const elm = this.listAddressContainer.querySelector(`[id="err_${i}"]`);
@@ -3723,7 +3743,7 @@ define("@scom/scom-liquidity-provider/detail/whitelist.tsx", ["require", "export
     ], ManageWhitelist);
     exports.ManageWhitelist = ManageWhitelist;
 });
-define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-token-list"], function (require, exports, components_10, eth_wallet_8, index_7, liquidity_utils_2, index_8, assets_3, scom_token_list_5) {
+define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-token-list"], function (require, exports, components_10, eth_wallet_8, index_6, liquidity_utils_2, index_7, assets_3, scom_token_list_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.LiquidityForm = void 0;
@@ -3957,9 +3977,9 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             this.updateTextValues = () => {
                 if (!(this.isCreate || this.isAdd))
                     return;
-                const tokenMap = scom_token_list_5.tokenStore.getTokenMapByChainId(this.chainId);
-                this.lbWillGet.caption = (0, index_8.renderBalanceTooltip)({ value: this.newAmount.multipliedBy(this.offerPriceText || 0).toNumber(), symbol: (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress) }, tokenMap);
-                this.lbFee.caption = (0, index_8.renderBalanceTooltip)({ value: this.fee, symbol: this.oswapSymbol }, tokenMap);
+                const tokenMap = this.state.getTokenMapByChainId(this.chainId);
+                this.lbWillGet.caption = (0, index_7.renderBalanceTooltip)({ value: this.newAmount.multipliedBy(this.offerPriceText || 0).toNumber(), symbol: this.state.tokenSymbol(this.chainId, this.toTokenAddress) }, tokenMap);
+                this.lbFee.caption = (0, index_7.renderBalanceTooltip)({ value: this.fee, symbol: this.oswapSymbol }, tokenMap);
             };
             this.setData = () => {
                 this.oswapToken = (0, liquidity_utils_2.getQueueStakeToken)(this.chainId) || null;
@@ -3995,7 +4015,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 this.updateSummaryField();
                 if (this.manageWhitelist) {
                     this.manageWhitelist.props = {
-                        tokenSymbol: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress),
+                        tokenSymbol: this.state.tokenSymbol(this.chainId, this.fromTokenAddress),
                         decimals: this.fromTokenDecimals,
                         addresses: this.addresses,
                         balance: this.model.govTokenBalance(),
@@ -4012,8 +4032,8 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                 this.isReverse = !this.isReverse;
                 const token = this.isReverse ? this.model.fromTokenObject() : this.model.toTokenObject();
                 this.secondTokenInput.token = token;
-                const firstSymbol = (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress);
-                const secondSymbol = (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress);
+                const firstSymbol = this.state.tokenSymbol(this.chainId, this.fromTokenAddress);
+                const secondSymbol = this.state.tokenSymbol(this.chainId, this.toTokenAddress);
                 this.lbOfferPrice1.caption = `(${this.isReverse ? firstSymbol : secondSymbol}`;
                 this.lbOfferPrice2.caption = `${this.isReverse ? secondSymbol : firstSymbol})`;
                 if (Number(this.secondInput.value) > 0) {
@@ -4028,18 +4048,18 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                     this.$render("i-icon", { class: "pointer", name: "cog", width: 20, height: 20, fill: Theme.text.primary, margin: { left: 'auto' }, onClick: this.handleCogClick.bind(this) }) :
                     [];
                 const elm = (this.$render("i-hstack", { verticalAlignment: "center" },
-                    this.$render("i-image", { width: "20px", class: "inline-block", url: fromToken?.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
-                    this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: toToken?.logoURI || scom_token_list_5.assets.tokenPath(toToken, this.chainId), fallbackUrl: index_7.fallbackUrl }),
-                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), class: "small-label", margin: { right: 8 } }),
+                    this.$render("i-image", { width: "20px", class: "inline-block", url: fromToken?.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_6.fallbackUrl }),
+                    this.$render("i-image", { width: "20px", class: "icon-right inline-block", url: toToken?.logoURI || scom_token_list_5.assets.tokenPath(toToken, this.chainId), fallbackUrl: index_6.fallbackUrl }),
+                    this.$render("i-label", { caption: this.state.tokenSymbol(this.chainId, this.fromTokenAddress), class: "small-label", margin: { right: 8 } }),
                     this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: Theme.text.primary, margin: { right: 8 } }),
-                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress), class: "small-label" }),
+                    this.$render("i-label", { caption: this.state.tokenSymbol(this.chainId, this.toTokenAddress), class: "small-label" }),
                     iconCog));
                 this.headerSection.appendChild(elm);
             };
             this.renderUI = async () => {
                 this.pnlForm.clearInnerHTML();
                 this.currentFocus = undefined;
-                const tokenMap = scom_token_list_5.tokenStore.getTokenMapByChainId(this.chainId);
+                const tokenMap = this.state.getTokenMapByChainId(this.chainId);
                 if (this.isCreate) {
                     this.inputStartDate = await components_10.Datepicker.create({ type: 'dateTime', enabled: !this.isStartDateDisabled, width: '100%', height: '60px' });
                     this.inputStartDate.classList.add('custom-datepicker');
@@ -4060,7 +4080,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                                 this.$render("i-vstack", { width: "50%" },
                                     this.$render("i-label", { caption: "You Are Selling", font: { bold: true } })),
                                 this.$render("i-vstack", { width: "50%", horizontalAlignment: "end" },
-                                    this.$render("i-label", { class: "text-right", opacity: 0.8, margin: { left: 'auto' }, caption: (0, index_8.renderBalanceTooltip)({ title: 'Balance', value: this.model.fromTokenBalance() }, tokenMap) }))),
+                                    this.$render("i-label", { class: "text-right", opacity: 0.8, margin: { left: 'auto' }, caption: (0, index_7.renderBalanceTooltip)({ title: 'Balance', value: this.model.fromTokenBalance() }, tokenMap) }))),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
                                     this.$render("i-vstack", { width: "calc(100% - 160px)", height: 48 },
@@ -4073,9 +4093,9 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                             this.$render("i-hstack", { class: "balance-info", horizontalAlignment: "space-between", verticalAlignment: "center", width: "100%" },
                                 this.$render("i-hstack", { gap: 4, verticalAlignment: "center" },
                                     this.$render("i-label", { font: { bold: true }, caption: "Offer Price" }),
-                                    this.$render("i-label", { id: "lbOfferPrice1", font: { bold: true }, caption: `(${(0, index_7.tokenSymbol)(this.chainId, this.toTokenAddress)}` }),
+                                    this.$render("i-label", { id: "lbOfferPrice1", font: { bold: true }, caption: `(${this.state.tokenSymbol(this.chainId, this.toTokenAddress)}` }),
                                     this.$render("i-icon", { name: "arrow-right", width: "16", height: "16", fill: Theme.text.primary }),
-                                    this.$render("i-label", { id: "lbOfferPrice2", font: { bold: true }, caption: `${(0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress)})` })),
+                                    this.$render("i-label", { id: "lbOfferPrice2", font: { bold: true }, caption: `${this.state.tokenSymbol(this.chainId, this.fromTokenAddress)})` })),
                                 this.$render("i-icon", { tooltip: { content: 'Switch Price' }, width: 32, height: 32, class: "toggle-icon", name: "arrows-alt-v", fill: Theme.input.fontColor, background: { color: Theme.input.background }, onClick: this.onSwitchPrice })),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: `input--token-box ${this.isOfferPriceStage && 'bordered'}`, verticalAlignment: "center", horizontalAlignment: "space-between", width: "100%" },
@@ -4133,14 +4153,14 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
                                 this.$render("i-label", { id: "lbWillGet", font: { bold: true } }),
                                 this.$render("i-label", { id: "lbFee", font: { bold: true } })),
                             this.$render("i-hstack", { horizontalAlignment: "end" },
-                                this.$render("i-label", { id: "lbGovBalance", opacity: 0.8, margin: { left: 'auto' }, caption: (0, index_8.renderBalanceTooltip)({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap) }))))) : [],
+                                this.$render("i-label", { id: "lbGovBalance", opacity: 0.8, margin: { left: 'auto' }, caption: (0, index_7.renderBalanceTooltip)({ title: 'Balance', value: this.model.govTokenBalance() }, tokenMap) }))))) : [],
                     this.isCreate ? (this.$render("i-panel", { id: "approveAllowancePanel", class: "token-box" },
                         this.$render("i-vstack", { class: "input--token-container" },
                             this.$render("i-label", { caption: "Approve Allowance", font: { bold: true } }),
                             this.$render("i-panel", { class: "bg-box", width: "100%" },
                                 this.$render("i-hstack", { class: "input--token-box", verticalAlignment: "center", horizontalAlignment: "center", width: "100%", gap: "15px", height: 60 },
-                                    this.$render("i-label", { caption: (0, index_7.tokenSymbol)(this.chainId, this.fromTokenAddress), font: { bold: true } }),
-                                    this.$render("i-image", { url: fromToken?.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_7.fallbackUrl, width: "30", class: "inline-block" }),
+                                    this.$render("i-label", { caption: this.state.tokenSymbol(this.chainId, this.fromTokenAddress), font: { bold: true } }),
+                                    this.$render("i-image", { url: fromToken?.logoURI || scom_token_list_5.assets.tokenPath(fromToken, this.chainId), fallbackUrl: index_6.fallbackUrl, width: "30", class: "inline-block" }),
                                     this.$render("i-label", { caption: "-", class: "inline-block", margin: { right: 8, left: 8 }, font: { bold: true } }),
                                     this.$render("i-image", { url: this.oswapIcon, width: "30", class: "inline-block" }),
                                     this.$render("i-label", { caption: this.oswapSymbol, font: { bold: true } })))))) : [],
@@ -4335,7 +4355,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             return this.model.offerPriceText();
         }
         get offerTokenDecimals() {
-            return (0, index_7.getTokenDecimals)(this.chainId, this.toTokenAddress);
+            return this.state.getTokenDecimals(this.chainId, this.toTokenAddress);
         }
         ;
         get newAmount() {
@@ -4355,7 +4375,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             return this.oswapToken && this.oswapToken.address ? scom_token_list_5.assets.tokenPath(this.oswapToken, this.chainId) : '';
         }
         get oswapSymbol() {
-            return this.oswapToken && this.oswapToken.address ? (0, index_7.tokenSymbol)(this.chainId, this.oswapToken.address) : this.oswapToken.symbol ?? '';
+            return this.oswapToken && this.oswapToken.address ? this.state.tokenSymbol(this.chainId, this.oswapToken.address) : this.oswapToken.symbol ?? '';
         }
         handleNext1() {
             this.onProceed(this.secondInput);
@@ -4392,7 +4412,7 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
             }
         }
         async fromTokenInputTextChange() {
-            (0, index_8.limitInputNumber)(this.firstInput, this.fromTokenDecimals);
+            (0, index_7.limitInputNumber)(this.firstInput, this.fromTokenDecimals);
             await this.model.fromTokenInputTextChange(this.firstInput.value || '');
             this.updateTextValues();
             this.handleBtnState();
@@ -4400,9 +4420,9 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
         }
         changeOfferPrice() {
             const decimals = this.isReverse ? this.fromTokenDecimals : this.offerTokenDecimals;
-            (0, index_8.limitInputNumber)(this.secondInput, decimals || 18);
+            (0, index_7.limitInputNumber)(this.secondInput, decimals || 18);
             const val = this.isReverse && Number(this.secondInput.value) > 0 ? new eth_wallet_8.BigNumber(1).dividedBy(this.secondInput.value) : new eth_wallet_8.BigNumber(this.secondInput.value || 0);
-            const offerPrice = (0, index_8.limitDecimals)(val.toFixed(), decimals || 18);
+            const offerPrice = (0, index_7.limitDecimals)(val.toFixed(), decimals || 18);
             this.model.offerPriceInputTextChange(offerPrice || '0');
             this.updateTextValues();
             this.handleBtnState();
@@ -4501,7 +4521,7 @@ define("@scom/scom-liquidity-provider/detail/progress.tsx", ["require", "exports
     ], LiquidityProgress);
     exports.LiquidityProgress = LiquidityProgress;
 });
-define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-token-list"], function (require, exports, components_12, index_9, index_10, eth_wallet_9, index_11, scom_token_list_6) {
+define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/liquidity-utils/index.ts"], function (require, exports, components_12, index_8, eth_wallet_9, index_9) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.LiquiditySummary = void 0;
@@ -4512,7 +4532,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
             this.formatDate = (date) => {
                 if (!date)
                     return 'dd/mm/yyyy hh:mm:ss';
-                return (0, index_10.formatDate)(date, index_10.DefaultDateTimeFormat, true);
+                return (0, index_8.formatDate)(date, index_8.DefaultDateTimeFormat, true);
             };
         }
         set state(value) {
@@ -4561,7 +4581,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
         showAddresses(addresses) {
             this.manageWhitelist.props = {
                 isReadOnly: true,
-                tokenSymbol: (0, index_9.tokenSymbol)(this.chainId, this.summaryData.fromTokenAddress),
+                tokenSymbol: this.state.tokenSymbol(this.chainId, this.summaryData.fromTokenAddress),
                 addresses,
             };
             this.manageWhitelist.showModal();
@@ -4576,18 +4596,18 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
             let whitelistRow = [];
             let receiveRow = [];
             let feeRow = [];
-            const fromSymbol = (0, index_9.tokenSymbol)(this.chainId, this.fromTokenAddress);
-            const toSymbol = (0, index_9.tokenSymbol)(this.chainId, toTokenAddress);
-            const tokenMap = scom_token_list_6.tokenStore.getTokenMapByChainId(this.chainId);
+            const fromSymbol = this.state.tokenSymbol(this.chainId, this.fromTokenAddress);
+            const toSymbol = this.state.tokenSymbol(this.chainId, toTokenAddress);
+            const tokenMap = this.state.getTokenMapByChainId(this.chainId);
             const isOfferPriceValid = newOfferPrice ? new eth_wallet_9.BigNumber(newOfferPrice).gt(0) : false;
-            if (this.actionType === index_11.Action.CREATE) {
+            if (this.actionType === index_9.Action.CREATE) {
                 amountRow = [
                     {
                         id: 'amountRow',
                         title: 'Amount',
                         data: {
                             row1: {
-                                display: (0, index_10.renderBalanceTooltip)({ value: newAmount || 0, symbol: fromSymbol }, tokenMap),
+                                display: (0, index_8.renderBalanceTooltip)({ value: newAmount || 0, symbol: fromSymbol }, tokenMap),
                                 className: 'highlight-value'
                             }
                         },
@@ -4602,11 +4622,11 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                         title: 'Amount',
                         data: {
                             row1: {
-                                display: (0, index_10.renderBalanceTooltip)({ value: amount || 0, symbol: fromSymbol }, tokenMap),
+                                display: (0, index_8.renderBalanceTooltip)({ value: amount || 0, symbol: fromSymbol }, tokenMap),
                                 className: 'text-left'
                             },
                             row2: {
-                                display: (0, index_10.renderBalanceTooltip)({ value: newAmount || 0, symbol: fromSymbol }, tokenMap),
+                                display: (0, index_8.renderBalanceTooltip)({ value: newAmount || 0, symbol: fromSymbol }, tokenMap),
                                 className: 'highlight-value text-right'
                             }
                         },
@@ -4622,12 +4642,12 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                     data: {
                         row1: {
                             display: isOfferPriceValid ?
-                                (0, index_10.renderBalanceTooltip)({ prefix: `1 ${fromSymbol} = `, value: newOfferPrice, symbol: toSymbol }, tokenMap) :
-                                newOfferPrice ? (0, index_10.renderBalanceTooltip)({ value: newOfferPrice, symbol: toSymbol }, tokenMap) : '-',
+                                (0, index_8.renderBalanceTooltip)({ prefix: `1 ${fromSymbol} = `, value: newOfferPrice, symbol: toSymbol }, tokenMap) :
+                                newOfferPrice ? (0, index_8.renderBalanceTooltip)({ value: newOfferPrice, symbol: toSymbol }, tokenMap) : '-',
                             className: 'highlight-value text-right'
                         },
                         row2: {
-                            display: (0, index_10.renderBalanceTooltip)({ prefix: `1 ${toSymbol} = `, value: 1 / newOfferPrice, symbol: fromSymbol, isWrapped: true }, tokenMap),
+                            display: (0, index_8.renderBalanceTooltip)({ prefix: `1 ${toSymbol} = `, value: 1 / newOfferPrice, symbol: fromSymbol, isWrapped: true }, tokenMap),
                             className: 'text-right',
                             shown: isOfferPriceValid,
                         },
@@ -4651,7 +4671,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                             className: 'highlight-value'
                         }
                     },
-                    shown: this.actionType === index_11.Action.CREATE || this.actionType === index_11.Action.REMOVE
+                    shown: this.actionType === index_9.Action.CREATE || this.actionType === index_9.Action.REMOVE
                 }
             ];
             endDateRow = [
@@ -4664,7 +4684,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                             className: 'highlight-value'
                         }
                     },
-                    shown: this.actionType === index_11.Action.CREATE || this.actionType === index_11.Action.REMOVE
+                    shown: this.actionType === index_9.Action.CREATE || this.actionType === index_9.Action.REMOVE
                 }
             ];
             statusRow = [
@@ -4686,9 +4706,9 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                     title: 'Whitelist address',
                     data: {
                         row1: {
-                            display: offerTo === index_11.OfferState.Whitelist ? `${newTotalAddress} ${newTotalAddress === 1 ? 'Address' : 'Addresses'}` : offerTo,
+                            display: offerTo === index_9.OfferState.Whitelist ? `${newTotalAddress} ${newTotalAddress === 1 ? 'Address' : 'Addresses'}` : offerTo,
                             className: 'highlight-value',
-                            onClick: offerTo === index_11.OfferState.Whitelist && newTotalAddress ? () => this.showAddresses(newAddresses) : undefined,
+                            onClick: offerTo === index_9.OfferState.Whitelist && newTotalAddress ? () => this.showAddresses(newAddresses) : undefined,
                         }
                     },
                     shown: true
@@ -4698,7 +4718,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                     title: 'Total Allocation',
                     data: {
                         row1: {
-                            display: (0, index_10.renderBalanceTooltip)({ value: offerTo === index_11.OfferState.Whitelist ? newTotalAllocation : newAmount, symbol: fromSymbol }, tokenMap),
+                            display: (0, index_8.renderBalanceTooltip)({ value: offerTo === index_9.OfferState.Whitelist ? newTotalAllocation : newAmount, symbol: fromSymbol }, tokenMap),
                             className: 'highlight-value'
                         }
                     },
@@ -4711,7 +4731,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                     title: 'You will get',
                     data: {
                         row1: {
-                            display: (0, index_10.renderBalanceTooltip)({ value: newAmount * newOfferPrice, symbol: toSymbol }, tokenMap),
+                            display: (0, index_8.renderBalanceTooltip)({ value: newAmount * newOfferPrice, symbol: toSymbol }, tokenMap),
                             className: 'highlight-value'
                         }
                     },
@@ -4724,7 +4744,7 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                     title: 'OSWAP Fee',
                     data: {
                         row1: {
-                            display: (0, index_10.renderBalanceTooltip)({ value: fee || 0, symbol: 'OSWAP' }, tokenMap),
+                            display: (0, index_8.renderBalanceTooltip)({ value: fee || 0, symbol: 'OSWAP' }, tokenMap),
                             className: 'highlight-value'
                         }
                     },
@@ -4732,16 +4752,16 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
                 }
             ];
             switch (stage) {
-                case index_11.Stage.SET_AMOUNT:
+                case index_9.Stage.SET_AMOUNT:
                     return [...amountRow, ...receiveRow];
-                case index_11.Stage.SET_OFFER_PRICE:
+                case index_9.Stage.SET_OFFER_PRICE:
                     return [...offerPriceRow, ...receiveRow];
-                case index_11.Stage.SET_START_DATE:
+                case index_9.Stage.SET_START_DATE:
                     return startDateRow;
-                case index_11.Stage.SET_END_DATE:
+                case index_9.Stage.SET_END_DATE:
                     return endDateRow;
-                case index_11.Stage.SET_OFFER_TO:
-                case index_11.Stage.SET_END_DATE:
+                case index_9.Stage.SET_OFFER_TO:
+                case index_9.Stage.SET_END_DATE:
                     return whitelistRow;
                 default:
                     return [
@@ -4855,22 +4875,22 @@ define("@scom/scom-liquidity-provider/detail/summary.tsx", ["require", "exports"
         onHighlight(stage) {
             this.resetHighlight();
             switch (stage) {
-                case index_11.Stage.SET_AMOUNT:
+                case index_9.Stage.SET_AMOUNT:
                     this.amountRow?.classList.add("highlight-row");
                     this.receiveRow?.classList.add("highlight-row");
                     break;
-                case index_11.Stage.SET_OFFER_PRICE:
+                case index_9.Stage.SET_OFFER_PRICE:
                     this.offerPriceRow?.classList.add("highlight-row");
                     this.receiveRow?.classList.add("highlight-row");
                     break;
-                case index_11.Stage.SET_START_DATE:
+                case index_9.Stage.SET_START_DATE:
                     this.startDateRow?.classList.add("highlight-row");
                     break;
-                case index_11.Stage.SET_END_DATE:
+                case index_9.Stage.SET_END_DATE:
                     this.endDateRow?.classList.add("highlight-row");
                     break;
-                case index_11.Stage.SET_OFFER_TO:
-                case index_11.Stage.SET_ADDRESS:
+                case index_9.Stage.SET_OFFER_TO:
+                case index_9.Stage.SET_ADDRESS:
                     this.whitelistRow?.classList.add("highlight-row");
                     this.allocationRow?.classList.add("highlight-row");
                     break;
@@ -4940,7 +4960,7 @@ define("@scom/scom-liquidity-provider/detail/index.tsx", ["require", "exports", 
     Object.defineProperty(exports, "LiquidityHelp", { enumerable: true, get: function () { return help_1.LiquidityHelp; } });
     Object.defineProperty(exports, "LiquidityProgress", { enumerable: true, get: function () { return progress_1.LiquidityProgress; } });
 });
-define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/store/index.ts", "@ijstech/eth-wallet", "@scom/scom-token-list", "@scom/scom-liquidity-provider/liquidity-utils/index.ts"], function (require, exports, components_14, index_12, eth_wallet_10, scom_token_list_7, index_13) {
+define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-liquidity-provider/store/index.ts", "@ijstech/eth-wallet", "@scom/scom-token-list", "@scom/scom-liquidity-provider/liquidity-utils/index.ts"], function (require, exports, components_14, index_10, eth_wallet_10, scom_token_list_6, index_11) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_14.Styles.Theme.ThemeVars;
@@ -4982,17 +5002,17 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
             }
         }
         async initializeWidgetConfig() {
-            const connected = (0, index_12.isClientWalletConnected)();
+            const connected = (0, index_10.isClientWalletConnected)();
             this.updateConnectStatus(connected);
             await this.initWallet();
             this.tokenInInput.chainId = this.chainId;
             this.tokenOutInput.chainId = this.chainId;
-            const tokens = scom_token_list_7.tokenStore.getTokenList(this.chainId);
+            const tokens = scom_token_list_6.tokenStore.getTokenList(this.chainId);
             this.tokenInInput.tokenDataListProp = tokens;
             this.tokenOutInput.tokenDataListProp = tokens;
         }
         async connectWallet() {
-            if (!(0, index_12.isClientWalletConnected)()) {
+            if (!(0, index_10.isClientWalletConnected)()) {
                 if (this.mdWallet) {
                     await components_14.application.loadPackage('@scom/scom-wallet-modal', '*');
                     this.mdWallet.networks = this.executionProperties.networks;
@@ -5064,10 +5084,10 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
                     if (chainId && chainId != wallet.chainId) {
                         await wallet.switchNetwork(chainId);
                     }
-                    const pairAddress = await (0, index_13.getPair)(this.state, this.tokenInInput.token, this.tokenOutInput.token);
+                    const pairAddress = await (0, index_11.getPair)(this.state, this.tokenInInput.token, this.tokenOutInput.token);
                     const fromTokenAddress = this.tokenInInput.token.address?.toLowerCase() || this.tokenInInput.token.symbol;
                     const toTokenAddress = this.tokenOutInput.token.address?.toLowerCase() || this.tokenOutInput.token.symbol;
-                    const offerIndexes = await (0, index_13.getOfferIndexes)(this.state, pairAddress, fromTokenAddress, toTokenAddress);
+                    const offerIndexes = await (0, index_11.getOfferIndexes)(this.state, pairAddress, fromTokenAddress, toTokenAddress);
                     this.comboOfferIndex.items = offerIndexes.map(v => { return { label: v.toString(), value: v.toString() }; });
                 }
                 else {
@@ -5158,7 +5178,7 @@ define("@scom/scom-liquidity-provider/flow/initialSetup.tsx", ["require", "expor
     ], ScomLiquidityProviderFlowInitialSetup);
     exports.default = ScomLiquidityProviderFlowInitialSetup;
 });
-define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-token-list", "@scom/scom-liquidity-provider/data.json.ts", "@scom/scom-liquidity-provider/index.css.ts", "@scom/scom-liquidity-provider/formSchema.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/flow/initialSetup.tsx"], function (require, exports, components_15, eth_wallet_11, assets_5, index_14, scom_token_list_8, data_json_1, index_css_1, formSchema_1, index_15, index_16, initialSetup_1) {
+define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/assets.ts", "@scom/scom-liquidity-provider/store/index.ts", "@scom/scom-token-list", "@scom/scom-liquidity-provider/data.json.ts", "@scom/scom-liquidity-provider/index.css.ts", "@scom/scom-liquidity-provider/formSchema.ts", "@scom/scom-liquidity-provider/liquidity-utils/index.ts", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/flow/initialSetup.tsx"], function (require, exports, components_15, eth_wallet_11, assets_5, index_12, scom_token_list_7, data_json_1, index_css_1, formSchema_1, index_13, index_14, initialSetup_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_15.Styles.Theme.ThemeVars;
@@ -5201,7 +5221,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                     this._data.offerIndex = generalSettings.offerIndex || 0;
                                 }
                                 if (!this._data.offerIndex) {
-                                    this.actionType = index_15.Action.CREATE;
+                                    this.actionType = index_13.Action.CREATE;
                                 }
                                 await this.resetRpcWallet();
                                 this.refreshUI();
@@ -5294,7 +5314,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                             this._data.offerIndex = 0;
                         }
                         if (!this._data.offerIndex) {
-                            this.actionType = index_15.Action.CREATE;
+                            this.actionType = index_13.Action.CREATE;
                         }
                         await this.setData(resultingData);
                     },
@@ -5406,10 +5426,10 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             return this._data.offerIndex || 0;
         }
         get fromTokenObject() {
-            return scom_token_list_8.tokenStore.getTokenMapByChainId(this.state.getChainId())[this.fromTokenAddress];
+            return this.state.getTokenMapByChainId(this.state.getChainId())[this.fromTokenAddress];
         }
         get toTokenObject() {
-            return scom_token_list_8.tokenStore.getTokenMapByChainId(this.state.getChainId())[this.toTokenAddress];
+            return this.state.getTokenMapByChainId(this.state.getChainId())[this.toTokenAddress];
         }
         constructor(parent, options) {
             super(parent, options);
@@ -5430,34 +5450,28 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     if (!hideLoading && this.loadingElm) {
                         this.loadingElm.visible = true;
                     }
-                    if (!(0, index_14.isClientWalletConnected)() || !this._data || !this.checkValidation()) {
+                    if (!(0, index_12.isClientWalletConnected)() || !this._data || !this.checkValidation()) {
                         await this.renderHome();
                         return;
                     }
                     await this.initWallet();
+                    this.state.setCustomTokens(this._data.customTokens);
                     const chainId = this.state.getChainId();
-                    const tokenA = this.fromTokenAddress.startsWith('0x') ? this.fromTokenAddress : scom_token_list_8.WETHByChainId[chainId].address || this.fromTokenAddress;
-                    const tokenB = this.toTokenAddress.startsWith('0x') ? this.toTokenAddress : scom_token_list_8.WETHByChainId[chainId].address || this.toTokenAddress;
-                    const isRegistered = await (0, index_15.isPairRegistered)(this.state, tokenA, tokenB);
+                    const tokenA = this.fromTokenAddress.startsWith('0x') ? this.fromTokenAddress : scom_token_list_7.WETHByChainId[chainId].address || this.fromTokenAddress;
+                    const tokenB = this.toTokenAddress.startsWith('0x') ? this.toTokenAddress : scom_token_list_7.WETHByChainId[chainId].address || this.toTokenAddress;
+                    const isRegistered = await (0, index_13.isPairRegistered)(this.state, tokenA, tokenB);
                     if (!isRegistered) {
                         await this.renderHome(undefined, 'Pair is not registered, please register the pair first!');
                         return;
                     }
-                    const customTokens = this._data.customTokens?.[chainId] ?? [];
-                    if (customTokens?.length) {
-                        for (let i = 0; i < customTokens.length; i++) {
-                            if (customTokens[i].address && !(0, scom_token_list_8.hasUserToken)(customTokens[i].address, chainId))
-                                (0, scom_token_list_8.setUserTokens)(customTokens[i], chainId);
-                        }
-                    }
-                    scom_token_list_8.tokenStore.updateTokenMapData(chainId);
+                    scom_token_list_7.tokenStore.updateTokenMapData(chainId);
                     const rpcWallet = this.rpcWallet;
                     if (rpcWallet.address) {
-                        await scom_token_list_8.tokenStore.updateTokenBalancesByChainId(chainId);
+                        await scom_token_list_7.tokenStore.updateTokenBalancesByChainId(chainId);
                     }
-                    this.pairAddress = await (0, index_15.getPair)(this.state, this.fromTokenObject, this.toTokenObject);
+                    this.pairAddress = await (0, index_13.getPair)(this.state, this.fromTokenObject, this.toTokenObject);
                     if (this.offerIndex) {
-                        const offerIndexes = await (0, index_15.getOfferIndexes)(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
+                        const offerIndexes = await (0, index_13.getOfferIndexes)(this.state, this.pairAddress, this.fromTokenAddress, this.toTokenAddress);
                         if (offerIndexes.some(v => v.eq(this.offerIndex))) {
                             if (this._data.action === 'add') {
                                 this.handleAdd();
@@ -5493,7 +5507,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 }
             };
             this.renderForm = async () => {
-                this.model = new index_15.Model(this.state, this.pairAddress, this.fromTokenAddress, this.offerIndex, this.actionType);
+                this.model = new index_13.Model(this.state, this.pairAddress, this.fromTokenAddress, this.offerIndex, this.actionType);
                 this.model.onBack = () => this.onBack();
                 this.model.onShowTxStatus = (status, content) => {
                     this.showMessage(status, content);
@@ -5534,7 +5548,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     this.detailSummary.summaryData = this.modelState.summaryData();
                     this.panelHome.visible = false;
                     this.panelLiquidity.visible = true;
-                    this.hStackBack.visible = this.actionType === index_15.Action.ADD || this.actionType === index_15.Action.REMOVE;
+                    this.hStackBack.visible = this.actionType === index_13.Action.ADD || this.actionType === index_13.Action.REMOVE;
                 }
                 catch (err) {
                     this.lbMsg.caption = 'Cannot fetch data!';
@@ -5546,7 +5560,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.detailForm.model = this.modelState;
             };
             this.connectWallet = async () => {
-                if (!(0, index_14.isClientWalletConnected)()) {
+                if (!(0, index_12.isClientWalletConnected)()) {
                     if (this.mdWallet) {
                         await components_15.application.loadPackage('@scom/scom-wallet-modal', '*');
                         this.mdWallet.networks = this.networks;
@@ -5562,14 +5576,14 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 }
             };
             this.renderHome = async (pairAddress, msg) => {
-                const walletConnected = (0, index_14.isClientWalletConnected)();
+                const walletConnected = (0, index_12.isClientWalletConnected)();
                 const isRpcWalletConnected = this.state.isRpcWalletConnected();
                 this.renderQueueItem(pairAddress);
                 if (pairAddress) {
                     this.panelHome.background.color = "hsla(0,0%,100%,0.10196078431372549)";
                     this.lbMsg.visible = false;
                     this.hStackActions.visible = true;
-                    const info = await (0, index_15.getPairInfo)(this.state, pairAddress, this.fromTokenAddress, this.offerIndex);
+                    const info = await (0, index_13.getPairInfo)(this.state, pairAddress, this.fromTokenAddress, this.offerIndex);
                     const { startDate, expire, locked } = info;
                     const expired = (0, components_15.moment)(Date.now()).isAfter(expire);
                     this.btnAdd.visible = !expired;
@@ -5600,7 +5614,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.panelHome.visible = true;
             };
             this.onActions = async () => {
-                if (this.actionType === index_15.Action.LOCK) {
+                if (this.actionType === index_13.Action.LOCK) {
                     this.showLockModal();
                 }
                 else {
@@ -5622,11 +5636,11 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this.lockOrderBtn.enabled = false;
                 this.lockModalTitle.clearInnerHTML();
                 this.lockModalTitle.appendChild(this.$render("i-hstack", { gap: 4, verticalAlignment: "center" },
-                    this.$render("i-image", { width: 28, height: 28, url: fromToken?.logoURI || scom_token_list_8.assets.tokenPath(fromToken, chainId), fallbackUrl: index_14.fallbackUrl }),
-                    this.$render("i-image", { width: 28, height: 28, url: toToken?.logoURI || scom_token_list_8.assets.tokenPath(toToken, chainId), fallbackUrl: index_14.fallbackUrl }),
-                    this.$render("i-label", { caption: (0, index_14.tokenSymbol)(chainId, this.fromTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
+                    this.$render("i-image", { width: 28, height: 28, url: fromToken?.logoURI || scom_token_list_7.assets.tokenPath(fromToken, chainId), fallbackUrl: index_12.fallbackUrl }),
+                    this.$render("i-image", { width: 28, height: 28, url: toToken?.logoURI || scom_token_list_7.assets.tokenPath(toToken, chainId), fallbackUrl: index_12.fallbackUrl }),
+                    this.$render("i-label", { caption: this.state.tokenSymbol(chainId, this.fromTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
                     this.$render("i-icon", { name: "arrow-right", fill: Theme.colors.primary.main, width: "14", height: "14" }),
-                    this.$render("i-label", { class: "hightlight-yellow", caption: (0, index_14.tokenSymbol)(chainId, this.toTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
+                    this.$render("i-label", { class: "hightlight-yellow", caption: this.state.tokenSymbol(chainId, this.toTokenAddress), font: { size: '24px', bold: true, color: Theme.colors.primary.main } }),
                     this.$render("i-label", { class: "hightlight-yellow", caption: `#${this.offerIndex}`, font: { size: '24px', bold: true, color: Theme.colors.primary.main } })));
                 this.lockModal.visible = true;
             };
@@ -5672,13 +5686,13 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     }
                     this.btnLock.rightIcon.visible = false;
                     this.btnLock.caption = 'Locked';
-                    (0, index_16.registerSendTxEvents)({});
+                    (0, index_14.registerSendTxEvents)({});
                 };
-                (0, index_16.registerSendTxEvents)({
+                (0, index_14.registerSendTxEvents)({
                     transactionHash: callback,
                     confirmation: confirmationCallback
                 });
-                (0, index_15.lockGroupQueueOffer)(chainId, this.pairAddress, fromToken, toToken, this.offerIndex);
+                (0, index_13.lockGroupQueueOffer)(chainId, this.pairAddress, fromToken, toToken, this.offerIndex);
             };
             this.initWallet = async () => {
                 try {
@@ -5711,7 +5725,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     return false;
                 return true;
             };
-            this.state = new index_14.State(data_json_1.default);
+            this.state = new index_12.State(data_json_1.default);
         }
         removeRpcWalletEvents() {
             const rpcWallet = this.rpcWallet;
@@ -5726,7 +5740,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
         }
         onViewContract(address) {
             const chainId = this.state.getChainId();
-            (0, index_14.viewOnExplorerByAddress)(chainId, address);
+            (0, index_12.viewOnExplorerByAddress)(chainId, address);
         }
         async renderQueueItem(pairAddress) {
             this.pnlQueueItem.clearInnerHTML();
@@ -5734,14 +5748,14 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 if (pairAddress) {
                     const chainId = this.state.getChainId();
                     const fromToken = this.fromTokenObject;
-                    const fromTokenSymbol = (0, index_14.tokenSymbol)(chainId, this.fromTokenAddress);
+                    const fromTokenSymbol = this.state.tokenSymbol(chainId, this.fromTokenAddress);
                     const toToken = this.toTokenObject;
-                    const toTokenSymbol = (0, index_14.tokenSymbol)(chainId, this.toTokenAddress);
-                    const info = await (0, index_15.getGroupQueueInfo)(this.state, pairAddress, fromToken, toToken, this.offerIndex);
+                    const toTokenSymbol = this.state.tokenSymbol(chainId, this.toTokenAddress);
+                    const info = await (0, index_13.getGroupQueueInfo)(this.state, pairAddress, fromToken, toToken, this.offerIndex);
                     const amount = `${components_15.FormatUtils.formatNumber(info.amount, { decimalFigures: 4, minValue: 0.0001 })} ${fromTokenSymbol}`;
                     const offerPrice = `1 ${fromTokenSymbol} = ${components_15.FormatUtils.formatNumber(info.offerPrice, { decimalFigures: 4, minValue: 0.0001 })} ${toTokenSymbol}`;
-                    const startDate = (0, index_16.formatDate)(info.startDate, index_16.DefaultDateTimeFormat, true);
-                    const endDate = (0, index_16.formatDate)(info.endDate, index_16.DefaultDateTimeFormat, true);
+                    const startDate = (0, index_14.formatDate)(info.startDate, index_14.DefaultDateTimeFormat, true);
+                    const endDate = (0, index_14.formatDate)(info.endDate, index_14.DefaultDateTimeFormat, true);
                     const whitelistedAddress = info.allowAll ? 'Everyone' : `${info.addresses.length} Address${info.addresses.length > 1 ? "es" : ""}`;
                     const totalAllocation = `${info.allowAll ? info.amount : info.allocation} ${fromTokenSymbol}`;
                     const youWillGet = `${info.willGet} ${toTokenSymbol}`;
@@ -5756,8 +5770,8 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                                     this.$render("i-label", { font: { size: '20px', bold: true }, caption: `#${this.offerIndex}`, margin: { right: 4 } }),
                                     this.$render("i-icon", { name: "question-circle", fill: "#fff", width: "18", height: "18", tooltip: { content: 'The offer index helps identifying your group queues.' } }))),
                             this.$render("i-hstack", { horizontalAlignment: "end", verticalAlignment: "center" },
-                                this.$render("i-image", { class: "icon-left", width: 35, height: 35, position: "initial", url: fromToken?.logoURI || scom_token_list_8.assets.tokenPath(fromToken, chainId), fallbackUrl: index_14.fallbackUrl }),
-                                this.$render("i-image", { width: 50, height: 50, position: "initial", url: toToken?.logoURI || scom_token_list_8.assets.tokenPath(toToken, chainId), fallbackUrl: index_14.fallbackUrl }))),
+                                this.$render("i-image", { class: "icon-left", width: 35, height: 35, position: "initial", url: fromToken?.logoURI || scom_token_list_7.assets.tokenPath(fromToken, chainId), fallbackUrl: index_12.fallbackUrl }),
+                                this.$render("i-image", { width: 50, height: 50, position: "initial", url: toToken?.logoURI || scom_token_list_7.assets.tokenPath(toToken, chainId), fallbackUrl: index_12.fallbackUrl }))),
                         this.$render("i-vstack", { width: "100%", margin: { top: '1rem' }, horizontalAlignment: "center", verticalAlignment: "center", gap: "1rem" },
                             this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4" },
                                 this.$render("i-label", { caption: "Amount" }),
@@ -5795,15 +5809,15 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
             }
         }
         handleAdd() {
-            this.actionType = index_15.Action.ADD;
+            this.actionType = index_13.Action.ADD;
             this.onActions();
         }
         handleRemove() {
-            this.actionType = index_15.Action.REMOVE;
+            this.actionType = index_13.Action.REMOVE;
             this.onActions();
         }
         handleLock() {
-            this.actionType = index_15.Action.LOCK;
+            this.actionType = index_13.Action.LOCK;
             this.onActions();
         }
         onChangeFirstChecked(source, event) {
@@ -5848,7 +5862,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                 this._data.offerIndex = data.offerIndex || 0;
             }
             if (!data.offerIndex) {
-                this.actionType = index_15.Action.CREATE;
+                this.actionType = index_13.Action.CREATE;
             }
             this.mdSettings.visible = false;
             this.refreshUI();

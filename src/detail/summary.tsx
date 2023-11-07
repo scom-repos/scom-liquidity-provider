@@ -1,10 +1,9 @@
 import { Module, customElements, ControlElement, Label, Panel, Container } from '@ijstech/components';
-import { State, tokenSymbol } from '../store/index';
+import { State } from '../store/index';
 import { DefaultDateTimeFormat, IAllocation, formatDate, renderBalanceTooltip } from '../global/index';
 import { BigNumber } from '@ijstech/eth-wallet';
 import { ManageWhitelist } from './whitelist';
 import { Stage, OfferState, Action } from '../liquidity-utils/index';
-import { tokenStore } from '@scom/scom-token-list';
 import { LiquidityProgress } from './progress';
 
 declare global {
@@ -117,7 +116,7 @@ export class LiquiditySummary extends Module {
   showAddresses(addresses: IAllocation[]) {
     this.manageWhitelist.props = {
       isReadOnly: true,
-      tokenSymbol: tokenSymbol(this.chainId, this.summaryData.fromTokenAddress),
+      tokenSymbol: this.state.tokenSymbol(this.chainId, this.summaryData.fromTokenAddress),
       addresses,
     }
     this.manageWhitelist.showModal();
@@ -148,9 +147,9 @@ export class LiquiditySummary extends Module {
     let whitelistRow: ISummaryData[] = [];
     let receiveRow: ISummaryData[] = [];
     let feeRow: ISummaryData[] = [];
-    const fromSymbol = tokenSymbol(this.chainId, this.fromTokenAddress);
-    const toSymbol = tokenSymbol(this.chainId, toTokenAddress);
-    const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
+    const fromSymbol = this.state.tokenSymbol(this.chainId, this.fromTokenAddress);
+    const toSymbol = this.state.tokenSymbol(this.chainId, toTokenAddress);
+    const tokenMap = this.state.getTokenMapByChainId(this.chainId);
     const isOfferPriceValid = newOfferPrice ? new BigNumber(newOfferPrice).gt(0) : false;
 
     if (this.actionType === Action.CREATE) {

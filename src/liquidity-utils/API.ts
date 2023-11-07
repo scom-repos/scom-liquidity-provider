@@ -48,11 +48,11 @@ const mapTokenObjectSet = (chainId: number, obj: any) => {
   return obj;
 }
 
-const getTokenObjectByAddress = (chainId: number, address: string) => {
+const getTokenObjectByAddress = (state: State, chainId: number, address: string) => {
   if (address.toLowerCase() === getAddressByKey(chainId, 'WETH9').toLowerCase()) {
     return getWETH(chainId);
   }
-  let tokenMap = tokenStore.getTokenMapByChainId(chainId);
+  let tokenMap = state.getTokenMapByChainId(chainId);
   return tokenMap[address.toLowerCase()];
 }
 
@@ -154,9 +154,9 @@ const getPairInfo = async (state: State, pairAddress: string, tokenAddress: stri
     groupPair.token1(),
     factoryContract.pairIdx(pairAddress)
   ]);
-  let token0 = getTokenObjectByAddress(chainId, token0Address);
-  let token1 = getTokenObjectByAddress(chainId, token1Address);
-  let token = getTokenObjectByAddress(chainId, tokenAddress);
+  let token0 = getTokenObjectByAddress(state, chainId, token0Address);
+  let token1 = getTokenObjectByAddress(state, chainId, token1Address);
+  let token = getTokenObjectByAddress(state, chainId, tokenAddress);
   let directDirection = !(new BigNumber(token0Address.toLowerCase()).lt(token1Address.toLowerCase()));
   let direction = directDirection ? token1Address.toLowerCase() != tokenAddress.toLowerCase() : token0Address.toLowerCase() != tokenAddress.toLowerCase();
   let queueSize = (await groupPair.counter(direction)).toNumber();

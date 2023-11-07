@@ -14,7 +14,7 @@ import {
   removeLiquidity,
   getOfferIndexes
 } from './API';
-import { State, getTokenDecimals } from '../store/index';
+import { State } from '../store/index';
 import { application, moment, Styles } from '@ijstech/components';
 import { ITokenObject, tokenStore } from "@scom/scom-token-list";
 import { Contracts } from "@scom/oswap-openswap-contract";
@@ -96,11 +96,11 @@ export class Model {
   onBack: () => void;
 
   private get fromTokenObject() {
-    const tokenMap = tokenStore.getTokenMapByChainId(this.state.getChainId());
+    const tokenMap = this.state.getTokenMapByChainId(this.state.getChainId());
     return tokenMap[this.fromTokenAddress];
   }
   private get toTokenObject() {
-    const tokenMap = tokenStore.getTokenMapByChainId(this.state.getChainId());
+    const tokenMap = this.state.getTokenMapByChainId(this.state.getChainId());
     return tokenMap[this.toTokenAddress];
   }
   private get fromTokenSymbol() {
@@ -505,7 +505,7 @@ export class Model {
   }
 
   private get fromTokenDecimals() {
-    return getTokenDecimals(this.state.getChainId(), this.fromTokenAddress);
+    return this.state.getTokenDecimals(this.state.getChainId(), this.fromTokenAddress);
   }
 
   private get adviceTexts() {
@@ -647,18 +647,29 @@ export class Model {
           if (this.onBack) this.onBack();
         }
         let message = this.actionType === Action.CREATE ? "Offer Index: " + offerIndex : undefined;
+        const fromToken = this.fromTokenObject;
+        const toToken = this.toTokenObject;
         if (this.state.handleUpdateStepStatus) {
-          this.state.handleUpdateStepStatus({
+          let data: any = {
             status: "Completed",
             color: Theme.colors.success.main,
             message
-          });
+          };
+          if (this.actionType === Action.CREATE) {
+            data.executionProperties = {
+              tokenIn: fromToken.address || fromToken.symbol,
+              tokenOut: toToken.address || toToken.symbol,
+              customTokens: this.state.customTokens,
+              offerIndex: offerIndex,
+              isCreate: true,
+              isFlow: true
+            }
+          }
+          this.state.handleUpdateStepStatus(data);
         }
         if (this.state.handleAddTransactions && receipt) {
           const action = this.actionType === Action.CREATE ? "Create" : this.actionType === Action.ADD ? "Add" : "Remove";
           const chainId = this.state.getChainId();
-          const fromToken = this.fromTokenObject;
-          const toToken = this.toTokenObject;
           const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
           const transactionsInfoArr = [
             {

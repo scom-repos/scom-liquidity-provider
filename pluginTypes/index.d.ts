@@ -1,7 +1,7 @@
 /// <reference path="@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
-/// <reference path="@ijstech/eth-contract/index.d.ts" />
 /// <reference path="@scom/scom-token-list/index.d.ts" />
+/// <reference path="@ijstech/eth-contract/index.d.ts" />
 /// <amd-module name="@scom/scom-liquidity-provider/assets.ts" />
 declare module "@scom/scom-liquidity-provider/assets.ts" {
     function fullPath(path: string): string;
@@ -13,6 +13,7 @@ declare module "@scom/scom-liquidity-provider/assets.ts" {
 /// <amd-module name="@scom/scom-liquidity-provider/store/utils.ts" />
 declare module "@scom/scom-liquidity-provider/store/utils.ts" {
     import { ERC20ApprovalModel, IERC20ApprovalEventOptions, INetwork } from '@ijstech/eth-wallet';
+    import { ITokenObject } from '@scom/scom-token-list';
     export type ProxyAddresses = {
         [key: number]: string;
     };
@@ -27,6 +28,7 @@ declare module "@scom/scom-liquidity-provider/store/utils.ts" {
         embedderCommissionFee: string;
         rpcWalletId: string;
         approvalModel: ERC20ApprovalModel;
+        customTokens?: Record<number, ITokenObject[]>;
         handleNextFlowStep: (data: any) => Promise<void>;
         handleAddTransactions: (data: any) => Promise<void>;
         handleJumpToStep: (data: any) => Promise<void>;
@@ -40,6 +42,10 @@ declare module "@scom/scom-liquidity-provider/store/utils.ts" {
         isRpcWalletConnected(): boolean;
         getChainId(): number;
         setApprovalModelAction(options: IERC20ApprovalEventOptions): Promise<import("@ijstech/eth-wallet").IERC20ApprovalAction>;
+        setCustomTokens(tokens?: Record<number, ITokenObject[]>): void;
+        getTokenMapByChainId(chainId: number): import("@scom/scom-token-list/interface.ts").TokenMapType;
+        getTokenDecimals(chainId: number, address: string): number;
+        tokenSymbol(chainId: number, address: string): string;
     }
     export function isClientWalletConnected(): boolean;
 }
@@ -63,8 +69,6 @@ declare module "@scom/scom-liquidity-provider/store/index.ts" {
     export const getChainNativeToken: (chainId: number) => ITokenObject;
     export const getNetworkInfo: (chainId: number) => any;
     export const viewOnExplorerByAddress: (chainId: number, address: string) => void;
-    export const getTokenDecimals: (chainId: number, address: string) => number;
-    export const tokenSymbol: (chainId: number, address: string) => string;
     export * from "@scom/scom-liquidity-provider/store/utils.ts";
     export * from "@scom/scom-liquidity-provider/store/core.ts";
 }
