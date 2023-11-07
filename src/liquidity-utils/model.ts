@@ -54,15 +54,6 @@ export enum LockState {
   Unlocked = 'Unlocked'
 }
 
-let onApproving: any;
-let onApproved: any;
-export const setOnApproving = (callback: any) => {
-  onApproving = callback
-}
-export const setOnApproved = (callback: any) => {
-  onApproved = callback
-}
-
 export const toLastSecond = (datetime: any): any => {
   return moment(datetime).endOf('day');
 }
@@ -89,6 +80,8 @@ export class Model {
   private endDate: any;
   private switchLock = LockState.Unlocked;
   private addresses: IAllocation[] = [];
+  private onApproving: any;
+  private onApproved: any;
 
   private approvalModelAction: IERC20ApprovalAction;
   onShowTxStatus: (status: 'success' | 'warning' | 'error', content: string | Error) => void;
@@ -353,6 +346,8 @@ export class Model {
       newTotalAddress: () => this.newTotalAddress,
       newTotalAllocation: () => this.newTotalAllocation,
       setSummaryData: (value: boolean) => this.setSummaryData({}, value),
+      setOnApproving: (callback: any) => { this.onApproving = callback },
+      setOnApproved: (callback: any) => { this.onApproved = callback }
     };
   }
 
@@ -617,14 +612,14 @@ export class Model {
         this.currentStage = waitingStage;
         this.showTxStatus('success', receipt);
         this.setSubmitBtnStatus(true, true);
-        if (onApproving)
-          onApproving(token, receipt);
+        if (this.onApproving)
+          this.onApproving(token, receipt);
       },
       onApproved: async (token: ITokenObject) => {
         await this.getNextTokenApprovalStage();
         this.setSubmitBtnStatus(false, true);
-        if (onApproved)
-          onApproved(token);
+        if (this.onApproved)
+          this.onApproved(token);
       },
       onApprovingError: async (token: ITokenObject, err: Error) => {
         this.showTxStatus('error', err);

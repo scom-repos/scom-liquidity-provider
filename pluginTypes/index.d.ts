@@ -269,8 +269,6 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
         Locked = "Locked",
         Unlocked = "Unlocked"
     }
-    export const setOnApproving: (callback: any) => void;
-    export const setOnApproved: (callback: any) => void;
     export const toLastSecond: (datetime: any) => any;
     export class Model {
         private state;
@@ -294,6 +292,8 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
         private endDate;
         private switchLock;
         private addresses;
+        private onApproving;
+        private onApproved;
         private approvalModelAction;
         onShowTxStatus: (status: 'success' | 'warning' | 'error', content: string | Error) => void;
         onSubmitBtnStatus: (isLoading: boolean, isApproval?: boolean, offerIndex?: number) => void;
@@ -363,6 +363,8 @@ declare module "@scom/scom-liquidity-provider/liquidity-utils/model.ts" {
             newTotalAddress: () => number;
             newTotalAllocation: () => number;
             setSummaryData: (value: boolean) => void;
+            setOnApproving: (callback: any) => void;
+            setOnApproved: (callback: any) => void;
         };
         private fetchData;
         private setSummaryData;
@@ -912,7 +914,6 @@ declare module "@scom/scom-liquidity-provider/detail/form.tsx" {
         updateProgress: () => void;
         onApproving: () => void;
         onApproved: () => void;
-        init(): void;
         render(): any;
     }
 }

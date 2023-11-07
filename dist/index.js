@@ -1642,7 +1642,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/API.ts", ["require", "expo
 define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-liquidity-provider/global/index.ts", "@scom/scom-liquidity-provider/liquidity-utils/API.ts", "@ijstech/components", "@scom/scom-token-list", "@scom/oswap-openswap-contract"], function (require, exports, eth_wallet_6, index_4, API_1, components_6, scom_token_list_4, oswap_openswap_contract_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.Model = exports.toLastSecond = exports.setOnApproved = exports.setOnApproving = exports.LockState = exports.OfferState = exports.Action = exports.Stage = void 0;
+    exports.Model = exports.toLastSecond = exports.LockState = exports.OfferState = exports.Action = exports.Stage = void 0;
     const Theme = components_6.Styles.Theme.ThemeVars;
     var Stage;
     (function (Stage) {
@@ -1677,16 +1677,6 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
         LockState["Locked"] = "Locked";
         LockState["Unlocked"] = "Unlocked";
     })(LockState = exports.LockState || (exports.LockState = {}));
-    let onApproving;
-    let onApproved;
-    const setOnApproving = (callback) => {
-        onApproving = callback;
-    };
-    exports.setOnApproving = setOnApproving;
-    const setOnApproved = (callback) => {
-        onApproved = callback;
-    };
-    exports.setOnApproved = setOnApproved;
     const toLastSecond = (datetime) => {
         return (0, components_6.moment)(datetime).endOf('day');
     };
@@ -2087,6 +2077,8 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     newTotalAddress: () => this.newTotalAddress,
                     newTotalAllocation: () => this.newTotalAllocation,
                     setSummaryData: (value) => this.setSummaryData({}, value),
+                    setOnApproving: (callback) => { this.onApproving = callback; },
+                    setOnApproved: (callback) => { this.onApproved = callback; }
                 };
             };
             this.fetchData = async () => {
@@ -2272,14 +2264,14 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     this.currentStage = waitingStage;
                     this.showTxStatus('success', receipt);
                     this.setSubmitBtnStatus(true, true);
-                    if (onApproving)
-                        onApproving(token, receipt);
+                    if (this.onApproving)
+                        this.onApproving(token, receipt);
                 },
                 onApproved: async (token) => {
                     await this.getNextTokenApprovalStage();
                     this.setSubmitBtnStatus(false, true);
-                    if (onApproved)
-                        onApproved(token);
+                    if (this.onApproved)
+                        this.onApproved(token);
                 },
                 onApprovingError: async (token, err) => {
                     this.showTxStatus('error', err);
@@ -4235,6 +4227,8 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
         }
         set model(value) {
             this._model = value;
+            this._model.setOnApproving(this.onApproving);
+            this._model.setOnApproved(this.onApproved);
             this.setData();
             this.renderUI();
         }
@@ -4437,11 +4431,6 @@ define("@scom/scom-liquidity-provider/detail/form.tsx", ["require", "exports", "
         handleCogClick() {
             if (this.onCogClick)
                 this.onCogClick();
-        }
-        init() {
-            super.init();
-            (0, liquidity_utils_2.setOnApproving)(this.onApproving);
-            (0, liquidity_utils_2.setOnApproved)(this.onApproved);
         }
         render() {
             return (this.$render("i-panel", { class: "detail-col" },

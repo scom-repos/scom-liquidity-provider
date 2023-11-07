@@ -1,7 +1,7 @@
 import { moment, Control, Module, Label, Input, ControlElement, customElements, Panel, Button, Datepicker, VStack, Modal, Container, Styles } from '@ijstech/components';
 import { BigNumber, Wallet } from '@ijstech/eth-wallet';
 import { State, fallbackUrl } from '../store/index';
-import { getQueueStakeToken, convertWhitelistedAddresses, Stage, OfferState, setOnApproving, setOnApproved, Action } from '../liquidity-utils';
+import { getQueueStakeToken, convertWhitelistedAddresses, Stage, OfferState, Action } from '../liquidity-utils';
 import { limitInputNumber, renderBalanceTooltip, limitDecimals, IAllocation } from '../global/index';
 import { ManageWhitelist } from './whitelist';
 import Assets from '../assets';
@@ -96,6 +96,8 @@ export class LiquidityForm extends Module {
 
   set model(value: any) {
     this._model = value;
+    this._model.setOnApproving(this.onApproving);
+    this._model.setOnApproved(this.onApproved);
     this.setData();
     this.renderUI();
   }
@@ -998,12 +1000,6 @@ export class LiquidityForm extends Module {
     this.submitBtn.enabled = !this.isSubmitButtonDisabled;
     this.submitBtn.caption = this.proceedButtonText;
     this.updateProgress();
-  }
-
-  init() {
-    super.init();
-    setOnApproving(this.onApproving);
-    setOnApproved(this.onApproved);
   }
 
   render() {
