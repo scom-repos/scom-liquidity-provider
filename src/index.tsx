@@ -561,6 +561,7 @@ export default class ScomLiquidityProvider extends Module {
 				const whitelistedAddress = info.allowAll ? 'Everyone' : `${info.addresses.length} Address${info.addresses.length > 1 ? "es" : ""}`;
 				const totalAllocation = `${info.allowAll ? info.amount : info.allocation} ${fromTokenSymbol}`;
 				const youWillGet = `${info.willGet} ${toTokenSymbol}`;
+				this.pnlQueueItem.clearInnerHTML();
 				this.pnlQueueItem.appendChild(
 					<i-vstack
 						horizontalAlignment="center"

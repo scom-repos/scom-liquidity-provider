@@ -5748,6 +5748,7 @@ define("@scom/scom-liquidity-provider", ["require", "exports", "@ijstech/compone
                     const whitelistedAddress = info.allowAll ? 'Everyone' : `${info.addresses.length} Address${info.addresses.length > 1 ? "es" : ""}`;
                     const totalAllocation = `${info.allowAll ? info.amount : info.allocation} ${fromTokenSymbol}`;
                     const youWillGet = `${info.willGet} ${toTokenSymbol}`;
+                    this.pnlQueueItem.clearInnerHTML();
                     this.pnlQueueItem.appendChild(this.$render("i-vstack", { horizontalAlignment: "center", verticalAlignment: "center", padding: { bottom: '0.5rem' } },
                         this.$render("i-hstack", { width: "100%", horizontalAlignment: "space-between", verticalAlignment: "center", padding: { bottom: 10 }, border: { bottom: { width: 2, style: 'solid', color: Theme.divider } } },
                             this.$render("i-hstack", { verticalAlignment: "center" },
