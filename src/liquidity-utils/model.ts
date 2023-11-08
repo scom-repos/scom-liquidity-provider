@@ -629,7 +629,7 @@ export class Model {
         this.showTxStatus('success', receipt);
         this.setSubmitBtnStatus(true);
       },
-      onPaid: async (receipt?: any) => {
+      onPaid: async (data?: any, receipt?: any) => {
         tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
         let offerIndex;
         if (this.actionType === Action.CREATE) {
@@ -662,11 +662,11 @@ export class Model {
           }
           this.state.handleUpdateStepStatus(data);
         }
-        if (this.state.handleAddTransactions && receipt) {
+        if (this.state.handleAddTransactions) {
           const action = this.actionType === Action.CREATE ? "Create" : this.actionType === Action.ADD ? "Add" : "Remove";
           const chainId = this.state.getChainId();
           const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
-          const transactionsInfoArr = [
+          const transactionsInfoArr: any[] = [
             {
               desc: `${action} Group Queue ${fromToken.symbol}/${toToken.symbol}`,
               chainId: chainId,
@@ -678,6 +678,9 @@ export class Model {
               timestamp
             }
           ];
+          if (this.actionType === Action.CREATE) {
+            transactionsInfoArr[0].value = "#" + offerIndex;
+          }
           this.state.handleAddTransactions({
               list: transactionsInfoArr
           });

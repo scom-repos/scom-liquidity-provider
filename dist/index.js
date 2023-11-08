@@ -2281,7 +2281,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                     this.showTxStatus('success', receipt);
                     this.setSubmitBtnStatus(true);
                 },
-                onPaid: async (receipt) => {
+                onPaid: async (data, receipt) => {
                     scom_token_list_4.tokenStore.updateTokenBalancesByChainId(this.state.getChainId());
                     let offerIndex;
                     if (this.actionType === Action.CREATE) {
@@ -2316,7 +2316,7 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                         }
                         this.state.handleUpdateStepStatus(data);
                     }
-                    if (this.state.handleAddTransactions && receipt) {
+                    if (this.state.handleAddTransactions) {
                         const action = this.actionType === Action.CREATE ? "Create" : this.actionType === Action.ADD ? "Add" : "Remove";
                         const chainId = this.state.getChainId();
                         const timestamp = await this.state.getRpcWallet().getBlockTimestamp(receipt.blockNumber.toString());
@@ -2332,6 +2332,9 @@ define("@scom/scom-liquidity-provider/liquidity-utils/model.ts", ["require", "ex
                                 timestamp
                             }
                         ];
+                        if (this.actionType === Action.CREATE) {
+                            transactionsInfoArr[0].value = "#" + offerIndex;
+                        }
                         this.state.handleAddTransactions({
                             list: transactionsInfoArr
                         });
